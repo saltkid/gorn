@@ -126,7 +126,7 @@ Series
 default formatting
 ```
 episodes: S<season_num>E<episode_num> <parent_parent_dir>.<ext>
-movies: <parent_parent_dir> <parent_parent_dir>.<ext>
+movies: <parent_parent_dir> <parent_dir>.<ext>
 ```
 ### 4. multiple season with movie/s
 directory input
@@ -167,7 +167,7 @@ Series
 default formatting
 ```
 episodes: S<season_num>E<episode_num> <parent_parent_dir>.<ext>
-movies: <parent_parent_dir> <parent_parent_dir>.<ext>
+movies: <parent_parent_dir> <parent_dir>.<ext>
 ```
 * note: `[0x1]` needs to be added manually since this **gorn** does not scrape data off tmdb/tvdb.
 ### 5. named seasons with or without movies
@@ -211,6 +211,6 @@ Series
 ```
 default formatting
 ```
-episodes: S<season_num>E<episode_num> <parent_parent_dir>.<ext>
-movies: <parent_parent_dir> <parent_parent_dir>.<ext>
+episodes: S<season_num>E<episode_num> <parent_parent_dir> <parent_dir>.<ext>
+movies: <parent_parent_dir> <parent_dir>.<ext>
 ```
