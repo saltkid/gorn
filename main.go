@@ -57,7 +57,7 @@ func get_root_dirs(root string) (map[string]string, error) {
 		if err != nil {
 			return err
 		}
-
+		// get only directories of depth 1 (directly under root)
 		if d.IsDir() && path != root {
 			parent_dir := filepath.Dir(path)
 			if filepath.Base(parent_dir) == filepath.Base(root) {
