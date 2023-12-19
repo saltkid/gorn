@@ -10,18 +10,22 @@
 - [ ] add metadata (mediainfo)
 - [ ] parallelize renaming
 
+Renames your movies and series based on directory naming and structure. Note that you still have to rename directories, just not the individual media files themselves. This is for easier metadata scraping when using jellyfin, kodi, plex, etc.
 
-Renames your movies and series based on directory naming and structure.
-
-you can choose to fully replace the filename
+You can choose to fully replace the filename
 - `a random filename.mkv` --> `S01E01 <series title>.mkv`
 - `another filename.mkv` --> `S01E02 <series title>.mkv`
 
-or keep a part of the filename (ie episode title) while only replacing the season and episode number that is already present, just reformatting it. 
-- `some series name season 1 episode 1 - episode title.mkv` --> `some series name S01E01 - episode title.mkv`
-- `some series name season 1 episode 3 - episode title.mkv` --> `some series name S01E03 - episode title.mkv`
+*where `<series title>` can be the parent directory's name*
 
-this can be useful if you only have episodes that are canon; aka you don't have filler episodes
+Or keep a part of the filename (ie episode title) while only replacing the season and episode number that is already present, just reformatting it. 
+- input custom naming scheme: `series name S<season_num>E<episode_num><35:>`
+- `some series name season 1 episode 1 - episode title.mkv` --> `series name S01E01 - episode title.mkv`
+- `some series name season 1 episode 3 - episode title.mkv` --> `series name S01E03 - episode title.mkv`
+
+*where `<season_num>` and `<episode_num>` are based of off the usual patterns in file naming (ie season X, episode X, SXXEXX, etc). `<35:>` just means 35th character until end of filename (the episode title)*
+
+this can be useful if you only have episodes that are canon, aka you don't have filler episodes, so you want to keep the season and episode number already in the filename
 
 # Series / TV Shows
 Series contain episodes which may be under a season. The filename of an episode number can be the ff:
