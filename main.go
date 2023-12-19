@@ -14,14 +14,24 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Println(root)
+	fmt.Println("root: ", root)
 
 	root_dirs, err := get_root_dirs(root)
 	if err != nil {
 		panic(err)
 	}
 	
-	fmt.Println(root_dirs)
+	fmt.Println("root_dirs: ", root_dirs)
+
+	entries, err := get_entries(root_dirs)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("series_dirs: ", entries["series_dirs"])
+
+
+	fmt.Println("movie_dirs: ", entries["movie_dirs"])
 }
 
 func parse_args(args []string) (string, error) {
@@ -68,6 +78,7 @@ func get_root_dirs(root string) (map[string]string, error) {
 					} else {
 						return fmt.Errorf("multiple movie directories found")
 					}
+					
 				} else if valid_series_path_names[dir_name] {
 					if root_dirs["series_dir"] == "" {
 						root_dirs["series_dir"] = path
@@ -90,4 +101,43 @@ func get_root_dirs(root string) (map[string]string, error) {
 	}
 
 	return root_dirs, nil
+}
+
+func get_entries(root_dirs map[string]string) (map[string][]string, error) {
+	entries := map[string][]string{
+		"movie_dirs": {},
+		"series_dirs": {},
+	}
+
+	err := filepath.WalkDir(root_dirs["movie_dir"], func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		// get only directories of depth 1 (directly under root)
+		if d.IsDir() && path != root_dirs["movie_dir"] {
+			entries["movie_dirs"] = append(entries["movie_dirs"], path)
+			return filepath.SkipDir
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	err = filepath.WalkDir(root_dirs["series_dir"], func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		// get only directories of depth 1 (directly under root)
+		if d.IsDir() && path != root_dirs["series_dir"] {
+			entries["series_dirs"] = append(entries["series_dirs"], path)
+			return filepath.SkipDir
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return entries, nil
 }
