@@ -57,6 +57,22 @@ func main() {
 	for _, v := range series.multiple_season_with_movies {
 		fmt.Println("\t", v)
 	}
+
+	var movie = Movies{}
+	err = movie.split_movies_by_type(entries["movie_dirs"])
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("categorized movies: ")
+	fmt.Println("standalone: ")
+	for _, v := range movie.standalone {
+		fmt.Println("\t", v)
+	}
+	fmt.Println("movie_set: ")
+	for _, v := range movie.movie_set {
+		fmt.Println("\t", v)
+	}
 }
 
 func parse_args(args []string) (string, error) {
