@@ -7,7 +7,6 @@ import (
 	"strings"
 )
 
-
 func main() {
 	root, err := parse_args(os.Args)
 	if err != nil {
@@ -20,10 +19,44 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	
-	fmt.Println("series_dirs: ", entries["series_dirs"])
 
-	fmt.Println("movie_dirs: ", entries["movie_dirs"])
+	fmt.Println("series dirs (", len(entries["series_dirs"]), "): ")
+	for _, series := range entries["series_dirs"] {
+		fmt.Println("\t",series)
+	}
+	fmt.Println("movie dirs (", len(entries["movie_dirs"]), "): ")
+	for _, movie := range entries["movie_dirs"] {
+		fmt.Println("\t",movie)
+	}
+	fmt.Println()
+
+	var series = Series{}
+	err = series.split_series_by_type(entries["series_dirs"])
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("categorized series: ")
+	fmt.Println("named_seasons: ")
+	for _, v := range series.named_seasons {
+		fmt.Println("\t", v)
+	}
+	fmt.Println("single_season_no_movies: ")
+	for _, v := range series.single_season_no_movies {
+		fmt.Println("\t", v)
+	}
+	fmt.Println("single_season_with_movies: ")
+	for _, v := range series.single_season_with_movies {
+		fmt.Println("\t", v)
+	}
+	fmt.Println("multiple_season_no_movies: ")
+	for _, v := range series.multiple_season_no_movies {
+		fmt.Println("\t", v)
+	}
+	fmt.Println("multiple_season_with_movies: ")
+	for _, v := range series.multiple_season_with_movies {
+		fmt.Println("\t", v)
+	}
 }
 
 func parse_args(args []string) (string, error) {
@@ -58,7 +91,7 @@ func get_root_dirs(root string) (map[string][]string, error) {
 		"tv show": true,
 		"tv":      true,
 	}
-	
+
 	err := filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -66,7 +99,7 @@ func get_root_dirs(root string) (map[string][]string, error) {
 
 		if d.IsDir() {
 			// get only directories of depth 1 (directly under root)
-			if path != root && filepath.Dir(path) == root && (root_dirs["movie_dir"] == ""  || root_dirs["series_dir"] == "") {
+			if path != root && filepath.Dir(path) == root && (root_dirs["movie_dir"] == "" || root_dirs["series_dir"] == "") {
 				dir_name := strings.ToLower(filepath.Base(path))
 				if valid_movie_path_names[dir_name] {
 					if root_dirs["movie_dir"] == "" {
@@ -74,7 +107,7 @@ func get_root_dirs(root string) (map[string][]string, error) {
 					} else {
 						return fmt.Errorf("multiple movie directories found")
 					}
-					
+
 				} else if valid_series_path_names[dir_name] {
 					if root_dirs["series_dir"] == "" {
 						root_dirs["series_dir"] = path
