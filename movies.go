@@ -7,7 +7,7 @@ import (
 
 type Movies struct {
 	standalone []string
-	movie_set []string
+	movie_set  []string
 }
 
 func (movie *Movies) split_movies_by_type(movie_entries []string) error {

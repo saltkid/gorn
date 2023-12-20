@@ -1,8 +1,8 @@
 # Rename movies and series (wip)
 ### current progress
 - [x] read directories and files
-- [ ] categorize series by type
-- [ ] categorize movies by type
+- [x] categorize series by type
+- [x] categorize movies by type
 - [ ] rename series by type
 - [ ] rename movies by type
 - [ ] cli commands
