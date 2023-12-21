@@ -73,6 +73,56 @@ func main() {
 	for _, v := range movie.movie_set {
 		fmt.Println("\t", v)
 	}
+
+	fmt.Println("test for named seasons")
+	for _, v := range series.named_seasons {
+		info, err := series_rename_prereqs(v, "named_seasons", false, 1, false)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(info)
+	}
+	fmt.Println()
+	
+	fmt.Println("test for single season no movies")
+	for _, v := range series.single_season_no_movies {
+		info, err := series_rename_prereqs(v, "single_season_no_movies", false, 1, false)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(info)
+	}
+	fmt.Println()
+
+	fmt.Println("test for single season with movies")
+	for _, v := range series.single_season_with_movies {
+		info, err := series_rename_prereqs(v, "single_season_with_movies", false, 1, false)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(info)
+	}
+	fmt.Println()
+
+	fmt.Println("test for multiple season no movies")
+	for _, v := range series.multiple_season_no_movies {
+		info, err := series_rename_prereqs(v, "multiple_season_no_movies", false, 1, false)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(info)
+	}
+	fmt.Println()
+
+	fmt.Println("test for multiple season with movies")
+	for _, v := range series.multiple_season_with_movies {
+		info, err := series_rename_prereqs(v, "multiple_season_with_movies", false, 1, false)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(info)
+	}
+	fmt.Println()
 }
 
 func parse_args(args []string) (string, error) {
