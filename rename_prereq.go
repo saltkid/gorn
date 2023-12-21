@@ -26,7 +26,7 @@ func series_rename_prereqs(path string, s_type string, keep_ep_nums bool, starti
 	}
 
 	if s_type == "named_seasons" || s_type == "multiple_season_no_movies" || s_type == "multiple_season_with_movies" {
-		seasons, extras_dirs, movies, err := get_content(path, s_type, has_season_0)
+		seasons, extras_dirs, movies, err := get_series_content(path, s_type, has_season_0)
 		if err != nil {
 			return nil, err
 		}
@@ -35,7 +35,7 @@ func series_rename_prereqs(path string, s_type string, keep_ep_nums bool, starti
 		info["extras_dirs"] = extras_dirs
 
 	} else if s_type == "single_season_no_movies" || s_type == "single_season_with_movies" {
-		_, extras_dirs, movies, err := get_content(path, s_type, has_season_0)
+		_, extras_dirs, movies, err := get_series_content(path, s_type, has_season_0)
 		if err != nil {
 			return nil, err
 		}
@@ -52,7 +52,7 @@ func series_rename_prereqs(path string, s_type string, keep_ep_nums bool, starti
 	return info, nil
 }
 
-func get_content (path string, s_type string, has_season_0 bool) (map[int]string, []string, []string, error) {
+func get_series_content (path string, s_type string, has_season_0 bool) (map[int]string, []string, []string, error) {
 	seasons := make(map[int]string)
 	extras := make([]string, 0)
 	movies := make([]string, 0)
@@ -124,4 +124,72 @@ func get_content (path string, s_type string, has_season_0 bool) (map[int]string
 	}
 
 	return seasons, extras, movies, nil
+}
+
+func movie_rename_prereqs (path string, m_type string) (map[string]any, error) {
+	info := map[string]any {
+		"path": path,
+		"m_type": m_type,
+		"movies": make([]string, 0),
+		"extras_dirs": make([]string, 0),
+	}
+
+	subdirs, err := os.ReadDir(path)
+	if err != nil {
+		return nil, err
+	}
+
+	extras_pattern := regexp.MustCompile(`^(?i)specials?|extras?|trailers?|ova`)
+
+	for _, subdir := range subdirs {
+		if m_type == "standalone" {
+			if subdir.IsDir() && extras_pattern.MatchString(subdir.Name()) {
+				info["extras_dirs"] = append(info["extras_dirs"].([]string), subdir.Name())
+				continue
+			}
+
+			if is_media_file(subdir.Name()) {
+				if len(info["movies"].([]string)) == 0 {
+					info["movies"] = append(info["movies"].([]string), subdir.Name())
+					continue
+				} else {
+					return nil, fmt.Errorf("multiple media files found in %s for an entry marked as a standalone movie", path)
+				}
+			}
+		}
+
+		if !subdir.IsDir() {
+			continue
+		}
+
+		if m_type == "movie_set" {
+			if extras_pattern.MatchString(subdir.Name()) {
+				info["extras_dirs"] = append(info["extras_dirs"].([]string), subdir.Name())
+				continue
+			}
+
+			files, err := os.ReadDir(filepath.Join(path, subdir.Name()))
+			if err != nil {
+				return nil, err
+			}
+
+			movie_count := 0
+			for _, file := range files {
+				if is_media_file(file.Name()) {
+					if movie_count > 0 {
+						return nil, fmt.Errorf("multiple media files found in %s", path)
+					}
+
+					info["movies"] = append(info["movies"].([]string), filepath.Join(subdir.Name(), file.Name()))
+					movie_count++
+				}
+			}
+
+			if movie_count == 0 {
+				return nil, fmt.Errorf("no media files found in %s", path)	
+			}
+		}
+	}
+
+	return info, nil
 }

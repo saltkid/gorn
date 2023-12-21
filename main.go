@@ -123,6 +123,26 @@ func main() {
 		fmt.Println(info)
 	}
 	fmt.Println()
+
+	fmt.Println("test for standalone")
+	for _, v := range movie.standalone {
+		info, err := movie_rename_prereqs(v, "standalone")
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(info)
+	}
+	fmt.Println()
+
+	fmt.Println("test for movie set")
+	for _, v := range movie.movie_set {
+		info, err := movie_rename_prereqs(v, "movie_set")
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(info)
+	}
+	fmt.Println()
 }
 
 func parse_args(args []string) (string, error) {
