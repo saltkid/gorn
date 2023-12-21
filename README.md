@@ -3,6 +3,8 @@
 - [x] read directories and files
 - [x] categorize series by type
 - [x] categorize movies by type
+- [x] get series renaming prerequisites
+- [x] get movie renaming prerequisites
 - [ ] rename series by type
 - [ ] rename movies by type
 - [ ] cli commands
