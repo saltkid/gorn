@@ -43,16 +43,24 @@ func has_movie (path string) (bool, error) {
 	return false, nil
 }
 
-// valid filename substring formats (case insensitive):
+// valid filename substring formats 
 //
-// S01E02 | S03.E04 | S05_E06 | S07xE08 | 09x10 | Episode 11 | EP12 | E13
+// case insensitive
+// can have spaces between season part and episode part (`S01 x E02`, `S01. E02`, `S01 _E02`, `S01 E02`)
+// but can't have spaces between episode/season indicator and episode/season number.
+// separators like `-` or `_` are allowed and can be repeated (`S01---E02`, `S01 __ E02`, `S01 xxE02`, `S01    E02`)
+//
+// S01E02 | S03.E04 | S05_E06 | S07-E08 | S09xE10 | S11 E12
+//
+// 01.02 | 03_04 | 05-06 | 07x08 | 09 10
+//
+// Episode 01 | Episode02 | EP03 | EP-04 | E_05 | EP.06
 func read_episode_num(file string) (int, error) {
 
-	// match_id:											 [1]				   [2]					[3]
-	// captured:                                             vv                    vv                   vv
-    // optional:                                 vvvvvv      ||     vvvv      v    ||   v    vvvvv      ||
-    //		                              s 01   x _  .   e  02 |   s 03  x   e    04 |ep    isode      05 
-	episode_pattern := regexp.MustCompile(`(?i)s\d+(?:x|_|[.])?e(\d+)|(?:s\d+)?x(?:e)?(\d+)|ep?(?:isode\s)?(\d+)`)
+	// match_id:											 				 [1]				   					  [2]										  [3]
+	// captured:                                             				 vv                    					  vv                 						  vv
+    // substring:		                       s 01      x  _  -   .      e  02 | 03      x  _  -   .            e    04 |ep    isode          _  -   .           05 
+	episode_pattern := regexp.MustCompile(`(?i)s\d+\s*(?:x*|_*|-*|[.]*)\s*e(\d+)|\d+\s*(?:x+|_+|-+|[.]+|\s)\s*(?:e)?(\d+)|ep?(?:isode\s)?\s*(?:_+|-+|[.]+|\s?)\s*(\d+)`)
 	match := episode_pattern.FindStringSubmatch(file)
 	if len(match) > 1 {
 		ep_num_str := ""
