@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"sort"
 )
@@ -111,5 +112,28 @@ func (info *SeriesInfo) rename() error {
 }
 
 func (info *MovieInfo) rename() error {
+	for _, file := range info.movies {
+		var temp_name string
+		if info.movie_type == "standalone" {
+			temp_name = filepath.Base(info.path)
+		} else {
+			temp_name = filepath.Dir(file)
+		}
+		// for movie sets with numbers in the name, remove the numbers in the name
+		// ex:	"3. movie 1" --> "movie 1"
+		//		"04 - movie 2" --> "movie 2"
+		// 		"005_movie 3" --> "movie 3"
+		//		"6 movie 4" --> "6 movie 4"
+		re := regexp.MustCompile(`^\d+\s*(?:[.]|\s*-|\s*_|\s)\s*`)
+		num_removed := re.ReplaceAllString(temp_name, "")
+
+		// remove year in parent directory name; must be enclosed in parens
+		// ex: "movie (2016)" --> "movie"
+		re = regexp.MustCompile(`\s*\(\d{4}\)\s*`)
+		new_name := re.ReplaceAllString(num_removed, "") + filepath.Ext(file)
+
+		old_name := filepath.Base(file)
+		fmt.Println(fmt.Sprintf("%-*s", 20, old_name), " --> ", fmt.Sprintf("%*s", 20, new_name))
+	}
 	return nil
 }

@@ -156,6 +156,11 @@ func main() {
 			panic(err)
 		}
 		fmt.Println(info)
+
+		err = info.rename()
+		if err != nil {
+			panic(err)
+		}
 	}
 	fmt.Println()
 
@@ -166,6 +171,11 @@ func main() {
 			panic(err)
 		}
 		fmt.Println(info)
+
+		err = info.rename()
+		if err != nil {
+			panic(err)
+		}
 	}
 	fmt.Println()
 }
