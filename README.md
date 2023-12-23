@@ -6,7 +6,7 @@
 - [x] get series renaming prerequisites
 - [x] get movie renaming prerequisites
 - [ ] rename series by type
-- [ ] rename movies by type
+- [x] rename movies by type
 - [ ] cli commands
 - [ ] custom naming scheme
 - [ ] add metadata (mediainfo)
