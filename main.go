@@ -81,6 +81,11 @@ func main() {
 			panic(err)
 		}
 		fmt.Println(info)
+
+		err = info.rename()
+		if err != nil {
+			panic(err)
+		}
 	}
 	fmt.Println()
 	
@@ -91,16 +96,26 @@ func main() {
 			panic(err)
 		}
 		fmt.Println(info)
+
+		err = info.rename()
+		if err != nil {
+			panic(err)
+		}
 	}
 	fmt.Println()
 
 	fmt.Println("test for single season with movies")
 	for _, v := range series.single_season_with_movies {
-		info, err := series_rename_prereqs(v, "single_season_with_movies", false, 1, false)
+		info, err := series_rename_prereqs(v, "single_season_with_movies", true, 1, false)
 		if err != nil {
 			panic(err)
 		}
 		fmt.Println(info)
+
+		err = info.rename()
+		if err != nil {
+			panic(err)
+		}
 	}
 	fmt.Println()
 
@@ -111,6 +126,11 @@ func main() {
 			panic(err)
 		}
 		fmt.Println(info)
+
+		err = info.rename()
+		if err != nil {
+			panic(err)
+		}
 	}
 	fmt.Println()
 
@@ -121,6 +141,11 @@ func main() {
 			panic(err)
 		}
 		fmt.Println(info)
+
+		err = info.rename()
+		if err != nil {
+			panic(err)
+		}
 	}
 	fmt.Println()
 

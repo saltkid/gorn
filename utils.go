@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -40,6 +41,40 @@ func has_movie (path string) (bool, error) {
 
 	// found no movie subdirs
 	return false, nil
+}
+
+// valid filename substring formats (case insensitive):
+//
+// S01E02 | S03.E04 | S05_E06 | S07xE08 | 09x10 | Episode 11 | EP12 | E13
+func read_episode_num(file string) (int, error) {
+
+	// match_id:											 [1]				   [2]					[3]
+	// captured:                                             vv                    vv                   vv
+    // optional:                                 vvvvvv      ||     vvvv      v    ||   v    vvvvv      ||
+    //		                              s 01   x _  .   e  02 |   s 03  x   e    04 |ep    isode      05 
+	episode_pattern := regexp.MustCompile(`(?i)s\d+(?:x|_|[.])?e(\d+)|(?:s\d+)?x(?:e)?(\d+)|ep?(?:isode\s)?(\d+)`)
+	match := episode_pattern.FindStringSubmatch(file)
+	if len(match) > 1 {
+		ep_num_str := ""
+		for _, v := range match[1:] {
+			if v != "" && ep_num_str != "" {
+				return 0, fmt.Errorf("multiple episode numbers found in %s: '%s', '%s' and '%s'", file, match[1], match[2], match[3])
+			} else if v != "" {
+				ep_num_str = v
+			}
+		}
+		if ep_num_str == "" {
+			return 0, fmt.Errorf("could not find episode number in %s", file)
+		}
+
+		ep_num, err := strconv.Atoi(ep_num_str)
+		if err != nil {
+			return 0, err
+		}
+		return ep_num, nil
+	} else {
+		return 0, fmt.Errorf("could not find episode number in %s", file)
+	}
 }
 
 
