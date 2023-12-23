@@ -8,24 +8,6 @@ import (
 	"strconv"
 )
 
-type SeriesInfo struct {
-	path string
-	series_type string
-	keep_ep_nums bool
-	starting_ep_num int
-	seasons map[int]string
-	movies []string
-	has_season_0 bool
-	extras_dirs []string
-}
-
-type MovieInfo struct {
-	path string
-	movie_type string
-	movies []string
-	extras_dirs []string
-}
-
 func series_rename_prereqs(path string, s_type string, keep_ep_nums bool, starting_ep_num int, has_season_0 bool) (SeriesInfo, error) {
 	// get prerequsite info for renaming series
 	info := SeriesInfo{
@@ -82,6 +64,7 @@ func get_series_content (path string, s_type string, has_season_0 bool) (map[int
 		}
 
 		// skip subdir with same name as directory if s_type is 'single_season_with_movies'
+		// season is assigned outside of this function
 		if s_type == "single_season_with_movies" && subdir.Name() == filepath.Base(path) {
 			continue
 		}
