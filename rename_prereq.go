@@ -13,7 +13,6 @@ type SeriesInfo struct {
 	series_type string
 	keep_ep_nums bool
 	starting_ep_num int
-	ep_nums []int
 	seasons map[int]string
 	movies []string
 	has_season_0 bool
@@ -34,7 +33,6 @@ func series_rename_prereqs(path string, s_type string, keep_ep_nums bool, starti
 		series_type: 		s_type,
 		keep_ep_nums: 		keep_ep_nums,
 		starting_ep_num: 	starting_ep_num,
-		ep_nums: 			make([]int, 0),
 		seasons: 			make(map[int]string),
 		movies: 			make([]string, 0),
 		has_season_0: 		has_season_0,
