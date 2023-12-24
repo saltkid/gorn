@@ -91,7 +91,7 @@ func main() {
 	
 	fmt.Println("test for single season no movies")
 	for _, v := range series.single_season_no_movies {
-		info, err := series_rename_prereqs(v, "single_season_no_movies", false, 1, false)
+		info, err := series_rename_prereqs(v, "single_season_no_movies", false, 1, true)
 		if err != nil {
 			panic(err)
 		}

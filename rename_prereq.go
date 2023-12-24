@@ -28,22 +28,22 @@ func series_rename_prereqs(path string, s_type string, keep_ep_nums bool, starti
 		"multiple_season_no_movies": true,
 		"multiple_season_with_movies": true,
 	}
-
-	if is_valid_type[s_type] {
-		seasons, extras_dirs, movies, err := get_series_content(path, s_type, has_season_0)
-		if err != nil {
-			return SeriesInfo{}, err
-		}
-		if s_type == "single_season_no_movies" || s_type == "single_season_with_movies" {
-			seasons[1] = filepath.Base(path)
-		}
-		info.seasons = seasons
-		info.movies = movies
-		info.extras_dirs = extras_dirs
-
-	} else {
+	if !is_valid_type[s_type] {
 		return SeriesInfo{}, fmt.Errorf("unknown series type: %s", s_type)
 	}
+
+	seasons, extras_dirs, movies, err := get_series_content(path, s_type, has_season_0)
+	if err != nil {
+		return SeriesInfo{}, err
+	}
+	if s_type == "single_season_no_movies" {
+		seasons[1] = ""
+	} else if s_type == "single_season_with_movies" {
+		seasons[1] = filepath.Base(path)
+	}
+	info.seasons = seasons
+	info.movies = movies
+	info.extras_dirs = extras_dirs
 
 	return info, nil
 }

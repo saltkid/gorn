@@ -39,14 +39,18 @@ func (info *SeriesInfo) rename() error {
 
 	// rename episodes
 	for num, season := range info.seasons {
-		var season_path string
-		if info.series_type == "single_season_no_movies" {
-			season_path = info.path
-		} else if info.series_type == "single_season_with_movies" || info.series_type == "named_seasons" || info.series_type == "multiple_season_no_movies" || info.series_type == "multiple_season_with_movies" {
-			season_path = info.path + "/" + season
-		} else {
+		is_valid_type := map[string]bool{
+			"single_season_no_movies": true,
+			"single_season_with_movies": true,
+			"named_seasons": true,
+			"multiple_season_no_movies": true,
+			"multiple_season_with_movies": true,
+		}
+		if !is_valid_type[info.series_type]{
 			return fmt.Errorf("unknown series type: %s", info.series_type)
 		}
+
+		season_path := info.path + "/" + season
 
 		fmt.Println("path: ", season_path)
 		files, err := os.ReadDir(season_path)
