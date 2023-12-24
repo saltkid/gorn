@@ -179,6 +179,7 @@ func (info *MovieInfo) rename() error {
 		old_name := file
 		if info.movie_type == "movie_set" {
 			old_name = dir + "/" + old_name
+			new_name = dir + "/" + new_name
 		}
 
 		fmt.Println(fmt.Sprintf("%-*s", 20, old_name), " --> ", fmt.Sprintf("%*s", 20, new_name))
