@@ -21,22 +21,22 @@ func series_rename_prereqs(path string, s_type string, keep_ep_nums bool, starti
 		extras_dirs: 		make([]string, 0),
 	}
 
-	if s_type == "named_seasons" || s_type == "multiple_season_no_movies" || s_type == "multiple_season_with_movies" {
+	is_valid_type := map[string]bool{
+		"single_season_no_movies": true,
+		"single_season_with_movies": true,
+		"named_seasons": true,
+		"multiple_season_no_movies": true,
+		"multiple_season_with_movies": true,
+	}
+
+	if is_valid_type[s_type] {
 		seasons, extras_dirs, movies, err := get_series_content(path, s_type, has_season_0)
 		if err != nil {
 			return SeriesInfo{}, err
 		}
-		info.seasons = seasons
-		info.movies = movies
-		info.extras_dirs = extras_dirs
-
-	} else if s_type == "single_season_no_movies" || s_type == "single_season_with_movies" {
-		_, extras_dirs, movies, err := get_series_content(path, s_type, has_season_0)
-		if err != nil {
-			return SeriesInfo{}, err
+		if s_type == "single_season_no_movies" || s_type == "single_season_with_movies" {
+			seasons[1] = filepath.Base(path)
 		}
-		seasons := make(map[int]string)
-		seasons[1] = filepath.Base(path)
 		info.seasons = seasons
 		info.movies = movies
 		info.extras_dirs = extras_dirs
@@ -72,7 +72,7 @@ func get_series_content (path string, s_type string, has_season_0 bool) (map[int
 
 		if has_season_0 {
 			if seasons[0] != "" {
-				return nil, nil, nil, fmt.Errorf("multiple seasons found in %s", path)
+				return nil, nil, nil, fmt.Errorf("multiple specials/extras directories found in %s", path)
 			}
 
 			if extras_pattern.MatchString(subdir.Name()) {
