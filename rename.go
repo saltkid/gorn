@@ -38,6 +38,7 @@ func (info *SeriesInfo) rename() error {
 		max_season_digits = 2
 	}
 
+	// rename episodes
 	for num, season := range info.seasons {
 		var season_path string
 		if info.series_type == "single_season_no_movies" {
@@ -100,10 +101,32 @@ func (info *SeriesInfo) rename() error {
 		}
 
 		for i, file := range media_files {
-			ep_num_str := fmt.Sprintf("%0*d", max_ep_digits, ep_nums[i])
-			season_num_str := fmt.Sprintf("%0*d", max_season_digits, num)
+			var title string
+			if info.series_type == "single_season_no_movies" || info.series_type == "multiple_season_no_movies" || info.series_type == "multiple_season_with_movies" {
+				title = filepath.Base(info.path)
+			} else if info.series_type == "single_season_with_movies" {
+				title = filepath.Base(season_path)
+			} else if info.series_type == "named_seasons" {
+				title = filepath.Base(info.path) + " " + filepath.Base(season_path)
+			}
 
-			new_name := "S" + season_num_str + "E" + ep_num_str + filepath.Ext(file)
+			// remove the numbers in the title
+			// ex:	"3. season 1 title" --> "season 1 title"
+			//		"04 - season 2 title" --> "season 2 title"
+			// 		"005_season 3" --> "season 3"
+			re := regexp.MustCompile(`\s\d+\s*([.]|-|_)\s*`)
+			title = re.ReplaceAllString(title, " ")
+
+			// remove year in title; must be enclosed in parens
+			// ex: "title (2016)" --> "title"
+			re = regexp.MustCompile(`\s*\(\d{4}\)\s*`)
+			title = re.ReplaceAllString(title, "") + filepath.Ext(file)
+
+			new_name := fmt.Sprintf("S%0*dE%0*d %s%s",
+									max_season_digits, num, 
+									max_ep_digits, ep_nums[i],
+									title, filepath.Ext(file))
+
 			fmt.Println(fmt.Sprintf("%-*s", 20, file), " --> ", fmt.Sprintf("%*s", 20, new_name))
 		}
 		fmt.Println()
@@ -123,8 +146,7 @@ func (info *MovieInfo) rename() error {
 		// ex:	"3. movie 1" --> "movie 1"
 		//		"04 - movie 2" --> "movie 2"
 		// 		"005_movie 3" --> "movie 3"
-		//		"6 movie 4" --> "6 movie 4"
-		re := regexp.MustCompile(`^\d+\s*(?:[.]|\s*-|\s*_|\s)\s*`)
+		re := regexp.MustCompile(`^\d+\s*([.]|-|_)\s*`)
 		num_removed := re.ReplaceAllString(temp_name, "")
 
 		// remove year in parent directory name; must be enclosed in parens
