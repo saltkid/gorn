@@ -26,7 +26,7 @@ type SeriesInfo struct {
 type MovieInfo struct {
 	path        string
 	movie_type  string
-	movies      []string
+	movies      map[string]string
 	extras_dirs []string
 }
 
@@ -174,15 +174,11 @@ func (info *SeriesInfo) rename() error {
 }
 
 func (info *MovieInfo) rename() error {
-	for _, file := range info.movies {
-		title := filepath.Dir(file)
-
-		new_name := clean_title(title) + filepath.Ext(file)
-		old_name := filepath.Base(file)
-
+	for dir, file := range info.movies {
+		new_name := clean_title(dir) + filepath.Ext(file)
+		old_name := file
 		if info.movie_type == "movie_set" {
-			new_name = filepath.Dir(file) + "/" + new_name
-			old_name = filepath.Dir(file) + "/" + old_name
+			old_name = dir + "/" + old_name
 		}
 
 		fmt.Println(fmt.Sprintf("%-*s", 20, old_name), " --> ", fmt.Sprintf("%*s", 20, new_name))

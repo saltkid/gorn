@@ -138,7 +138,7 @@ func movie_rename_prereqs (path string, m_type string) (MovieInfo, error) {
 	info := MovieInfo{
 		path: 			path,
 		movie_type: 	m_type,
-		movies: 		make([]string, 0),
+		movies: 		make(map[string]string),
 		extras_dirs: 	make([]string, 0),
 	}
 
@@ -158,7 +158,7 @@ func movie_rename_prereqs (path string, m_type string) (MovieInfo, error) {
 
 			if is_media_file(subdir.Name()) {
 				if len(info.movies) == 0 {
-					info.movies = append(info.movies, filepath.Base(path) + "/" + subdir.Name())
+					info.movies[filepath.Base(path)] = subdir.Name()
 					continue
 				} else {
 					return MovieInfo{}, fmt.Errorf("multiple media files found in %s for an entry marked as a standalone movie", path)
@@ -188,7 +188,7 @@ func movie_rename_prereqs (path string, m_type string) (MovieInfo, error) {
 						return MovieInfo{}, fmt.Errorf("multiple media files found in %s", path)
 					}
 
-					info.movies = append(info.movies, filepath.Join(subdir.Name(), file.Name()))
+					info.movies[subdir.Name()] = file.Name()
 					movie_count++
 				}
 			}
