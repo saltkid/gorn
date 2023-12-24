@@ -119,7 +119,11 @@ func (info *SeriesInfo) rename() error {
 									clean_title(title), filepath.Ext(file))
 
 			fmt.Println(fmt.Sprintf("%-*s", 20, file), " --> ", fmt.Sprintf("%*s", 20, new_name))
-			fmt.Println("old", season_path+"/"+file, "new", season_path+"/"+new_name)
+			if info.series_type == "single_season_no_movies" {
+				fmt.Println("old", season_path+"/"+file, "new", season_path+new_name)
+			} else {
+				fmt.Println("old", season_path+"/"+file, "new", season_path+"/"+new_name)
+			}
 			// err := os.Rename(info.path+"/"+season+"/"+file, info.path+"/"+season_path+"/"+new_name)
 		}
 		fmt.Println()
@@ -163,7 +167,7 @@ func (info *MovieInfo) rename() error {
 
 		new_name := clean_title(title) + filepath.Ext(file)
 		old_name := filepath.Base(file)
-		
+
 		if info.movie_type == "movie_set" {
 			new_name = filepath.Dir(file) + "/" + new_name
 			old_name = filepath.Dir(file) + "/" + old_name
