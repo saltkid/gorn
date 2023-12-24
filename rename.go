@@ -50,7 +50,8 @@ func (info *SeriesInfo) rename() error {
 			return fmt.Errorf("unknown series type: %s", info.series_type)
 		}
 
-		season_path := info.path + "/" + season
+		season_path := filepath.Clean(info.path + "/" + season)
+
 
 		fmt.Println("path: ", season_path)
 		files, err := os.ReadDir(season_path)
@@ -119,12 +120,19 @@ func (info *SeriesInfo) rename() error {
 									clean_title(title), filepath.Ext(file))
 
 			fmt.Println(fmt.Sprintf("%-*s", 20, file), " --> ", fmt.Sprintf("%*s", 20, new_name))
-			if info.series_type == "single_season_no_movies" {
-				fmt.Println("old", season_path+"/"+file, "new", season_path+new_name)
+			fmt.Println("old", season_path+"/"+file, "new", season_path+"/"+new_name)
+			_, err := os.Stat(season_path+new_name)
+			if err == nil {
+				fmt.Println("renaming", season_path+"/"+file, "to", season_path+"/"+new_name + " failed: file already exists")
+				continue
+			} else if os.IsNotExist(err) {
+				err = os.Rename(season_path+"/"+file, season_path+"/"+new_name)
 			} else {
-				fmt.Println("old", season_path+"/"+file, "new", season_path+"/"+new_name)
+				return err
 			}
-			// err := os.Rename(info.path+"/"+season+"/"+file, info.path+"/"+season_path+"/"+new_name)
+			if err != nil {
+				return err
+			}
 		}
 		fmt.Println()
 	}
@@ -156,6 +164,10 @@ func (info *SeriesInfo) rename() error {
 			new_name := fmt.Sprintf("%s %s%s", filepath.Base(info.path), filepath.Base(movie), filepath.Ext(media_files[0]))
 			fmt.Println(fmt.Sprintf("%-*s", 20, media_files[0]), " --> ", fmt.Sprintf("%*s", 20, new_name))
 			fmt.Println("old", info.path+"/"+movie+"/"+media_files[0], "new", info.path+"/"+movie+"/"+new_name)
+			err = os.Rename(info.path+"/"+movie+"/"+media_files[0], info.path+"/"+movie+"/"+new_name)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -175,6 +187,10 @@ func (info *MovieInfo) rename() error {
 
 		fmt.Println(fmt.Sprintf("%-*s", 20, old_name), " --> ", fmt.Sprintf("%*s", 20, new_name))
 		fmt.Println("old", info.path+"/"+old_name, "new", info.path+"/"+new_name)
+		err := os.Rename(info.path+"/"+old_name, info.path+"/"+new_name)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
