@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strconv"
 	"sort"
 )
@@ -109,23 +108,11 @@ func (info *SeriesInfo) rename() error {
 			} else if info.series_type == "named_seasons" {
 				title = filepath.Base(info.path) + " " + filepath.Base(season_path)
 			}
-
-			// remove the numbers in the title
-			// ex:	"3. season 1 title" --> "season 1 title"
-			//		"04 - season 2 title" --> "season 2 title"
-			// 		"005_season 3" --> "season 3"
-			re := regexp.MustCompile(`\s\d+\s*([.]|-|_)\s*`)
-			title = re.ReplaceAllString(title, " ")
-
-			// remove year in title; must be enclosed in parens
-			// ex: "title (2016)" --> "title"
-			re = regexp.MustCompile(`\s*\(\d{4}\)\s*`)
-			title = re.ReplaceAllString(title, "") + filepath.Ext(file)
-
+			
 			new_name := fmt.Sprintf("S%0*dE%0*d %s%s",
 									max_season_digits, num, 
 									max_ep_digits, ep_nums[i],
-									title, filepath.Ext(file))
+									clean_title(title), filepath.Ext(file))
 
 			fmt.Println(fmt.Sprintf("%-*s", 20, file), " --> ", fmt.Sprintf("%*s", 20, new_name))
 		}
@@ -165,24 +152,14 @@ func (info *SeriesInfo) rename() error {
 
 func (info *MovieInfo) rename() error {
 	for _, file := range info.movies {
-		var temp_name string
+		var title string
 		if info.movie_type == "standalone" {
-			temp_name = filepath.Base(info.path)
+			title = filepath.Base(info.path)
 		} else {
-			temp_name = filepath.Dir(file)
+			title = filepath.Dir(file)
 		}
-		// for movie sets with numbers in the name, remove the numbers in the name
-		// ex:	"3. movie 1" --> "movie 1"
-		//		"04 - movie 2" --> "movie 2"
-		// 		"005_movie 3" --> "movie 3"
-		re := regexp.MustCompile(`^\d+\s*([.]|-|_)\s*`)
-		num_removed := re.ReplaceAllString(temp_name, "")
 
-		// remove year in parent directory name; must be enclosed in parens
-		// ex: "movie (2016)" --> "movie"
-		re = regexp.MustCompile(`\s*\(\d{4}\)\s*`)
-		new_name := re.ReplaceAllString(num_removed, "") + filepath.Ext(file)
-
+		new_name := clean_title(title) + filepath.Ext(file)
 		old_name := filepath.Base(file)
 		fmt.Println(fmt.Sprintf("%-*s", 20, old_name), " --> ", fmt.Sprintf("%*s", 20, new_name))
 	}

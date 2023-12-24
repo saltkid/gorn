@@ -150,3 +150,21 @@ func is_numeric (s string) bool {
 	_, err := strconv.Atoi(s)
 	return err == nil
 }
+
+// remove the numbers in the title
+// 		"3. season 1 title" --> "season 1 title"
+//		"04 - season 2 title" --> "season 2 title"
+// 		"005_season 3" --> "season 3"
+// remove year in title; must be enclosed in parens
+// 		"title (2016)" --> "title"
+//		"title (2000)" --> "title"
+func clean_title (title string) string {
+	// remove numbers
+	re := regexp.MustCompile(`\d+\s*([.]|-|_)\s*`)
+	title = re.ReplaceAllString(title, "")
+
+	// remove year in parens
+	re = regexp.MustCompile(`\s*\(\d{4}\)\s*`)
+	title = re.ReplaceAllString(title, "")
+	return title
+}
