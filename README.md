@@ -1,17 +1,6 @@
+### current progress (to v1.0): see [this issue](https://github.com/saltkid/gorn/issues/1)
+___ 
 # Rename movies and series (wip)
-### current progress
-- [x] read directories and files
-- [x] categorize series by type
-- [x] categorize movies by type
-- [x] get series renaming prerequisites
-- [x] get movie renaming prerequisites
-- [ ] rename series by type
-- [x] rename movies by type
-- [ ] cli commands
-- [ ] custom naming scheme
-- [ ] add metadata (mediainfo)
-- [ ] parallelize renaming
-
 Renames your movies and series based on directory naming and structure. Note that you still have to rename directories, just not the individual media files themselves. This is for easier metadata scraping when using jellyfin, kodi, plex, etc.
 
 You can choose to fully replace the filename
@@ -185,7 +174,8 @@ movies: <parent_parent_dir> <parent_dir>.<ext>
 ```
 * note: `[0x1]` needs to be added manually since this **gorn** does not scrape data off tmdb/tvdb.
 ### 5. named seasons with or without movies
-* note: the `01.` before the season name is important to determine order
+* note: the `01. title` before the season name is important to determine order
+    * `.` after digits can be `-` or `_`, and can be separated by spaces: `02 - title` `03__title`
 
 directory input
 ```
