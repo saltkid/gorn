@@ -158,7 +158,7 @@ func movie_rename_prereqs (path string, m_type string) (MovieInfo, error) {
 
 			if is_media_file(subdir.Name()) {
 				if len(info.movies) == 0 {
-					info.movies = append(info.movies, subdir.Name())
+					info.movies = append(info.movies, filepath.Base(path) + "/" + subdir.Name())
 					continue
 				} else {
 					return MovieInfo{}, fmt.Errorf("multiple media files found in %s for an entry marked as a standalone movie", path)

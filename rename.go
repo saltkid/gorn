@@ -119,6 +119,8 @@ func (info *SeriesInfo) rename() error {
 									clean_title(title), filepath.Ext(file))
 
 			fmt.Println(fmt.Sprintf("%-*s", 20, file), " --> ", fmt.Sprintf("%*s", 20, new_name))
+			fmt.Println("old", season_path+"/"+file, "new", season_path+"/"+new_name)
+			// err := os.Rename(info.path+"/"+season+"/"+file, info.path+"/"+season_path+"/"+new_name)
 		}
 		fmt.Println()
 	}
@@ -149,6 +151,7 @@ func (info *SeriesInfo) rename() error {
 
 			new_name := fmt.Sprintf("%s %s%s", filepath.Base(info.path), filepath.Base(movie), filepath.Ext(media_files[0]))
 			fmt.Println(fmt.Sprintf("%-*s", 20, media_files[0]), " --> ", fmt.Sprintf("%*s", 20, new_name))
+			fmt.Println("old", info.path+"/"+movie+"/"+media_files[0], "new", info.path+"/"+movie+"/"+new_name)
 		}
 	}
 	return nil
@@ -156,16 +159,18 @@ func (info *SeriesInfo) rename() error {
 
 func (info *MovieInfo) rename() error {
 	for _, file := range info.movies {
-		var title string
-		if info.movie_type == "standalone" {
-			title = filepath.Base(info.path)
-		} else {
-			title = filepath.Dir(file)
-		}
+		title := filepath.Dir(file)
 
 		new_name := clean_title(title) + filepath.Ext(file)
 		old_name := filepath.Base(file)
+		
+		if info.movie_type == "movie_set" {
+			new_name = filepath.Dir(file) + "/" + new_name
+			old_name = filepath.Dir(file) + "/" + old_name
+		}
+
 		fmt.Println(fmt.Sprintf("%-*s", 20, old_name), " --> ", fmt.Sprintf("%*s", 20, new_name))
+		fmt.Println("old", info.path+"/"+old_name, "new", info.path+"/"+new_name)
 	}
 	return nil
 }
