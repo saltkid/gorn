@@ -131,6 +131,35 @@ func (info *SeriesInfo) rename() error {
 		}
 		fmt.Println()
 	}
+
+	// rename movies if needed
+	if info.series_type == "single_season_with_movies" || info.series_type == "multiple_season_with_movies" {
+		for _,movie := range info.movies {
+			files, err := os.ReadDir(info.path + "/" + movie)
+			if err != nil {
+				return err
+			}
+
+			media_files := make([]string, 0)
+			for _, file := range files {
+				if file.IsDir() {
+					continue
+				}
+				if is_media_file(file.Name()) {
+					media_files = append(media_files, file.Name())
+				}
+			}
+
+			if len(media_files) > 1 {
+				return fmt.Errorf("multiple media files found in %s for a movie direcotry in %s", movie, info.path+"/"+filepath.Base(movie))
+			} else if len(media_files) == 0 {
+				return fmt.Errorf("no media files found in %s for a movie directory in %s", movie, info.path+"/"+filepath.Base(movie))
+			}
+
+			new_name := fmt.Sprintf("%s %s%s", filepath.Base(info.path), filepath.Base(movie), filepath.Ext(media_files[0]))
+			fmt.Println(fmt.Sprintf("%-*s", 20, media_files[0]), " --> ", fmt.Sprintf("%*s", 20, new_name))
+		}
+	}
 	return nil
 }
 
