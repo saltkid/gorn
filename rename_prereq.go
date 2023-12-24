@@ -58,6 +58,7 @@ func get_series_content (path string, s_type string, has_season_0 bool) (map[int
 		return nil, nil, nil, err
 	}
 
+	extras_pattern := regexp.MustCompile(`^(?i)specials?|extras?|trailers?|ova`)
 	for _, subdir := range subdirs {
 		if !subdir.IsDir() {
 			continue
@@ -74,7 +75,6 @@ func get_series_content (path string, s_type string, has_season_0 bool) (map[int
 				return nil, nil, nil, fmt.Errorf("multiple seasons found in %s", path)
 			}
 
-			extras_pattern := regexp.MustCompile(`^(?i)specials?|extras?|trailers?|ova`)
 			if extras_pattern.MatchString(subdir.Name()) {
 				seasons[0] = subdir.Name()
 				continue
@@ -85,8 +85,13 @@ func get_series_content (path string, s_type string, has_season_0 bool) (map[int
 		    extras = append(extras, subdir.Name())
 			continue
 		} else if s_type == "single_season_with_movies"{
-			movies = append(movies, subdir.Name())
-			continue
+			if extras_pattern.MatchString(subdir.Name()) {
+				extras = append(extras, subdir.Name())
+				continue
+			} else {
+				movies = append(movies, subdir.Name())
+				continue
+			}
 		}
 
 		// get season number from subdir name
@@ -105,7 +110,13 @@ func get_series_content (path string, s_type string, has_season_0 bool) (map[int
 		season_num := season_name_pattern.FindStringSubmatch(subdir.Name())
 		if season_num == nil {
 			if s_type == "multiple_season_with_movies" {
-				movies = append(movies, subdir.Name())
+				if extras_pattern.MatchString(subdir.Name()) {
+					extras = append(extras, subdir.Name())
+					continue
+				} else {
+					movies = append(movies, subdir.Name())
+					continue
+				}
 			} else {
 				extras = append(extras, subdir.Name())
 			}
