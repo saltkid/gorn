@@ -8,14 +8,14 @@ import (
 )
 
 func main() {
-	root, err := parse_args(os.Args)
+	args, err := parse_args(os.Args)
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println("root: ", root)
+	fmt.Println("root: ", args.root.value)
 
-	entries, err := get_root_dirs(root)
+	entries, err := get_root_dirs(args.root.value)
 	if err != nil {
 		panic(err)
 	}
@@ -248,3 +248,5 @@ func get_root_dirs(root string) (map[string][]string, error) {
 
 	return entries, nil
 }
+
+// make a test for parse_args
