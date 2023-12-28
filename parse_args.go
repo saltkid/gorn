@@ -49,7 +49,7 @@ func parse_args(args []string) (Args, error) {
 		} else if directory_args[arg] {
 			// no value after flag / flag after flag
 			if len(args) < i+1 || args[i+1][0] == '-' {
-				return Args{}, fmt.Errorf("missing root dir path for flag '%s'", arg)
+				return Args{}, fmt.Errorf("missing dir path value for flag '%s'", arg)
 
 			// not a valid directory
 			} else if _, err := filepath.Abs(args[i+1]); err != nil {
