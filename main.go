@@ -180,18 +180,6 @@ func main() {
 	fmt.Println()
 }
 
-func parse_args(args []string) (string, error) {
-	if len(args) < 2 {
-		return "", fmt.Errorf("please add a root directory as an argument")
-	}
-
-	root, err := filepath.Abs(args[1])
-	if err != nil {
-		return "", err
-	}
-	return root, nil
-}
-
 func get_root_dirs(root string) (map[string][]string, error) {
 	root_dirs := map[string]string{
 		"movie_dir":  "",
