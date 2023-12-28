@@ -60,7 +60,7 @@ func parse_args(args []string) (Args, error) {
 			if err != nil {
 				return Args{}, err
 			}
-			
+
 			if arg == "--root" || arg == "-r" {
 				parsed_args.root = append(parsed_args.root, Arg{flag: arg, value: dir})
 			} else if arg == "--series" || arg == "-s" {
@@ -78,7 +78,7 @@ func parse_args(args []string) (Args, error) {
 				return Args{}, fmt.Errorf("missing value for flag '%s'", arg)
 
 			} else if args[i+1] != "all" && args[i+1] != "var" {
-				return Args{}, fmt.Errorf("invalid value '%s' for flag '%s'", args[i+1], arg)
+				return Args{}, fmt.Errorf("invalid value '%s' for flag '%s'. Must be 'all' or 'var", args[i+1], arg)
 
 			} else if args[i+1] == "all" {
 				if len(args) < i+2 || args[i+2][0] == '-' {
@@ -86,12 +86,12 @@ func parse_args(args []string) (Args, error) {
 
 				} else if (arg == "--season-0" || arg == "-s0" || arg == "--keep-ep-nums" || arg == "-ken") &&
 				          (args[i+2] != "yes" && args[i+2] != "no") {
-					return Args{}, fmt.Errorf("invalid value '%s' for flag '%s'", args[i+2], arg)
+					return Args{}, fmt.Errorf("all must be followed by 'yes' or 'no' for flag '%s'", arg)
 
 				} else if (arg == "--starting-ep-num" || arg == "-sen") {
 					_, err := strconv.Atoi(args[i+2])
 					if err != nil {
-						return Args{}, fmt.Errorf("invalid value '%s' for flag '%s'. Must be a positive integer", args[i+2], arg)
+						return Args{}, fmt.Errorf("all must be followed by an int for flag '%s'", arg)
 					}
 				}
 
