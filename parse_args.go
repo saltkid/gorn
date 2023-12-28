@@ -48,7 +48,7 @@ func parse_args(args []string) (Args, error) {
 
 		} else if directory_args[arg] {
 			// no value after flag / flag after flag
-			if len(args) < i+1 || args[i+1][0] == '-' {
+			if len(args) <= i+1 || (len(args) > i+1 && args[i+1][0] == '-') {
 				return Args{}, fmt.Errorf("missing dir path value for flag '%s'", arg)
 
 			// not a valid directory
@@ -70,46 +70,94 @@ func parse_args(args []string) (Args, error) {
 			}
 			skip_iter = i + 1
 
-		} else if arg == "--season-0" || arg == "-s0" || 
-				  arg == "--keep-ep-nums" || arg == "-ken" || 
-				  arg == "--starting-ep-num" || arg == "-sen" {
+		} else if arg == "--season-0" || arg == "-s0" {
+			if parsed_args.has_season_0.flag != "" {
+				return Args{}, fmt.Errorf("only one --season-0 flag is allowed")
+			}
 
-			if len(args) < i+1 || args[i+1][0] == '-' {
-				return Args{}, fmt.Errorf("missing value for flag '%s'", arg)
+			// default value
+			if len(args) <= i+1 || (len(args) > i+1 && args[i+1][0] == '-') {
+				parsed_args.has_season_0 = Arg{flag: arg, value: "all yes"}
 
 			} else if args[i+1] != "all" && args[i+1] != "var" {
 				return Args{}, fmt.Errorf("invalid value '%s' for flag '%s'. Must be 'all' or 'var", args[i+1], arg)
 
 			} else if args[i+1] == "all" {
 				if len(args) < i+2 || args[i+2][0] == '-' {
-					return Args{}, fmt.Errorf("missing value for flag '%s'", arg)
+					return Args{}, fmt.Errorf("all must be followed by 'yes' or 'no' for --season-0. %s is invalid", args[i+2])
 
-				} else if (arg == "--season-0" || arg == "-s0" || arg == "--keep-ep-nums" || arg == "-ken") &&
-				          (args[i+2] != "yes" && args[i+2] != "no") {
-					return Args{}, fmt.Errorf("all must be followed by 'yes' or 'no' for flag '%s'", arg)
-
-				} else if (arg == "--starting-ep-num" || arg == "-sen") {
-					_, err := strconv.Atoi(args[i+2])
-					if err != nil {
-						return Args{}, fmt.Errorf("all must be followed by an int for flag '%s'", arg)
-					}
+				} else if args[i+2] != "yes" && args[i+2] != "no" {
+					return Args{}, fmt.Errorf("all must be followed by 'yes' or 'no' for --season-0. %s is invalid", args[i+2])
 				}
 
-				parsed_args.has_season_0 = Arg{flag: arg, value: fmt.Sprintf("%s %s", args[i+1], args[i+2])}
+				parsed_args.has_season_0 = Arg{flag: arg, value: args[i+1] + " " + args[i+2]}
 				skip_iter = i + 2
 
 			} else if args[i+1] == "var" {
-				// if "var", must not be followed by anything; aka must be followed by a command
-				if len(args) > i+2 && args[i+2][0] != '-' {
-					return Args{}, fmt.Errorf("unexpected value '%s' for flag '%s'", args[i+1], arg)
-				}
-
-				// parsed_args = append(parsed_args, Arg{flag: arg})
 				parsed_args.has_season_0 = Arg{flag: arg}
 			}
 
+		} else if arg == "--keep-ep-nums" || arg == "-ken"  {
+			if parsed_args.keep_ep_nums.flag != "" {
+				return Args{}, fmt.Errorf("only one --keep-ep-nums flag is allowed")
+			}
+
+			// default value
+			if len(args) <= i+1 || (len(args) > i+1 && args[i+1][0] == '-') {
+				parsed_args.keep_ep_nums = Arg{flag: arg, value: "all yes"}
+
+			} else if args[i+1] != "all" && args[i+1] != "var" {
+				return Args{}, fmt.Errorf("invalid value '%s' for --keep-ep-nums. Must be 'all' or 'var", args[i+1])
+
+			} else if args[i+1] == "all" {
+				if len(args) < i+2 || args[i+2][0] == '-' {
+					return Args{}, fmt.Errorf("all must be followed by 'yes' or 'no' for --keep-ep-nums. %s is invalid", args[i+2])
+
+				} else if args[i+2] != "yes" && args[i+2] != "no" {
+					return Args{}, fmt.Errorf("all must be followed by 'yes' or 'no' for --keep-ep-nums. %s is invalid", args[i+2])
+				}
+
+				parsed_args.keep_ep_nums = Arg{flag: arg, value: args[i+1] + " " + args[i+2]}
+				skip_iter = i + 2
+
+			} else if args[i+1] == "var" {
+				parsed_args.has_season_0 = Arg{flag: arg}
+			}
+
+		} else if arg == "--starting-ep-num" || arg == "-sen" {
+			if parsed_args.starting_ep_num.flag != "" {
+				return Args{}, fmt.Errorf("only one --starting-ep-num flag is allowed")
+			}
+
+			// default value
+			if len(args) <= i+1 || (len(args) > i+1 && args[i+1][0] == '-') {
+				parsed_args.starting_ep_num = Arg{flag: arg, value: "all yes"}
+
+			} else if args[i+1] != "all" && args[i+1] != "var" {
+				return Args{}, fmt.Errorf("invalid value '%s' for --starting-ep-num. Must be 'all' or 'var", args[i+1])
+
+			} else if args[i+1] == "all" {
+				if len(args) < i+2 || args[i+2][0] == '-' {
+					return Args{}, fmt.Errorf("all must be followed by a positive int for --starting-ep-num. %s is not a valid positive int", args[i+2])
+				}
+
+				_, err := strconv.Atoi(args[i+2])
+				if err != nil {
+					return Args{}, fmt.Errorf("all must be followed by a positive int for --starting-ep-num. %s is not a valid positive int", args[i+2])
+				}
+
+				parsed_args.starting_ep_num = Arg{flag: arg, value: args[i+1] + " " + args[i+2]}
+				skip_iter = i + 2
+
+			} else if args[i+1] == "var" {
+				parsed_args.starting_ep_num = Arg{flag: arg}
+			}
+
 		} else if arg == "--naming-scheme" || arg == "-ns" {
-			if len(args) < i+1 || args[i+1][0] == '-' {
+			if parsed_args.naming_scheme.flag != "" {
+				return Args{}, fmt.Errorf("only one --naming-scheme flag is allowed")
+			}
+			if len(args) <= i+1 || (len(args) > i+1 && args[i+1][0] == '-') {
 				return Args{}, fmt.Errorf("missing value for flag '%s'", arg)
 			
 			} else if args[i+1][0] != '"' && args[i+1][len(args[i+1])] != '"' {
