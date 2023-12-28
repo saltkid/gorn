@@ -36,9 +36,15 @@ func parse_args(args []string) (Args, error) {
 	}
 
 	var parsed_args Args
+	var skip_iter int
 	for i, arg := range args {
-		if arg[0] != '-' {
+		// valid values will be skipped
+		if i < skip_iter {
 			continue
+
+		// catch invalid values acting as flags
+		} else if arg[0] != '-' {
+			return Args{}, fmt.Errorf("invalid argument: '%s'", arg)
 
 		} else if directory_args[arg] {
 			// no value after flag / flag after flag
@@ -68,7 +74,6 @@ func parse_args(args []string) (Args, error) {
 			} else if args[i+1] != "all" && args[i+1] != "var" {
 				return Args{}, fmt.Errorf("invalid value '%s' for flag '%s'", args[i+1], arg)
 
-			// if "all", must be followed by "yes" or "no"
 			} else if args[i+1] == "all" {
 				if len(args) < i+2 || args[i+2][0] == '-' {
 					return Args{}, fmt.Errorf("missing value for flag '%s'", arg)
@@ -105,6 +110,9 @@ func parse_args(args []string) (Args, error) {
 			}
 
 			parsed_args.naming_scheme = Arg{flag: arg, value: args[i+1][1:len(args[i+1])-1]}
+
+		} else {
+			return Args{}, fmt.Errorf("unknown flag: %s", arg)
 		}
 	}
 
