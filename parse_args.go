@@ -36,15 +36,15 @@ func parse_args(args []string) (Args, error) {
 	}
 
 	var parsed_args Args
-	var skip_iter int
+	skip_iter := 0
 	for i, arg := range args {
 		// valid values will be skipped
-		if i < skip_iter {
+		if skip_iter != 0 && i <= skip_iter {
 			continue
 
 		// catch invalid values acting as flags
 		} else if arg[0] != '-' {
-			return Args{}, fmt.Errorf("invalid argument: '%s'", arg)
+			return Args{}, fmt.Errorf("invalid flag: '%s'", arg)
 
 		} else if directory_args[arg] {
 			// no value after flag / flag after flag
@@ -63,6 +63,7 @@ func parse_args(args []string) (Args, error) {
 			} else if arg == "--movies" || arg == "-m" {
 				parsed_args.movies = append(parsed_args.movies, Arg{flag: arg, value: args[i+1]})
 			}
+			skip_iter = i + 1
 
 		} else if arg == "--season-0" || arg == "-s0" || 
 				  arg == "--keep-ep-nums" || arg == "-ken" || 
@@ -90,6 +91,7 @@ func parse_args(args []string) (Args, error) {
 				}
 
 				parsed_args.has_season_0 = Arg{flag: arg, value: fmt.Sprintf("%s %s", args[i+1], args[i+2])}
+				skip_iter = i + 2
 
 			} else if args[i+1] == "var" {
 				// if "var", must not be followed by anything; aka must be followed by a command
@@ -110,6 +112,7 @@ func parse_args(args []string) (Args, error) {
 			}
 
 			parsed_args.naming_scheme = Arg{flag: arg, value: args[i+1][1:len(args[i+1])-1]}
+			skip_iter = i + 1
 
 		} else {
 			return Args{}, fmt.Errorf("unknown flag: %s", arg)
