@@ -55,13 +55,18 @@ func parse_args(args []string) (Args, error) {
 			} else if _, err := filepath.Abs(args[i+1]); err != nil {
 				return Args{}, err
 			}
-
+			
+			dir, err := filepath.Abs(args[i+1])
+			if err != nil {
+				return Args{}, err
+			}
+			
 			if arg == "--root" || arg == "-r" {
-				parsed_args.root = append(parsed_args.root, Arg{flag: arg, value: args[i+1]})
+				parsed_args.root = append(parsed_args.root, Arg{flag: arg, value: dir})
 			} else if arg == "--series" || arg == "-s" {
-				parsed_args.series = append(parsed_args.series, Arg{flag: arg, value: args[i+1]})
+				parsed_args.series = append(parsed_args.series, Arg{flag: arg, value: dir})
 			} else if arg == "--movies" || arg == "-m" {
-				parsed_args.movies = append(parsed_args.movies, Arg{flag: arg, value: args[i+1]})
+				parsed_args.movies = append(parsed_args.movies, Arg{flag: arg, value: dir})
 			}
 			skip_iter = i + 1
 
