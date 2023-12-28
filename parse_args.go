@@ -12,9 +12,9 @@ type Arg struct {
 }
 
 type Args struct {
-	root Arg
-	series Arg
-	movies Arg
+	root []Arg
+	series []Arg
+	movies []Arg
 	has_season_0 Arg
 	keep_ep_nums Arg
 	starting_ep_num Arg
@@ -51,11 +51,11 @@ func parse_args(args []string) (Args, error) {
 			}
 
 			if arg == "--root" || arg == "-r" {
-				parsed_args.root = Arg{flag: arg, value: args[i+1]}
+				parsed_args.root = append(parsed_args.root, Arg{flag: arg, value: args[i+1]})
 			} else if arg == "--series" || arg == "-s" {
-				parsed_args.series = Arg{flag: arg, value: args[i+1]}
+				parsed_args.series = append(parsed_args.series, Arg{flag: arg, value: args[i+1]})
 			} else if arg == "--movies" || arg == "-m" {
-				parsed_args.movies = Arg{flag: arg, value: args[i+1]}
+				parsed_args.movies = append(parsed_args.movies, Arg{flag: arg, value: args[i+1]})
 			}
 
 		} else if arg == "--season-0" || arg == "-s0" || 
@@ -106,6 +106,10 @@ func parse_args(args []string) (Args, error) {
 
 			parsed_args.naming_scheme = Arg{flag: arg, value: args[i+1][1:len(args[i+1])-1]}
 		}
+	}
+
+	if len(parsed_args.root) == 0 && len(parsed_args.series) == 0 && len(parsed_args.movies) == 0 {
+		return Args{}, fmt.Errorf("must specify at least one of --root, --series, or --movie")
 	}
 
 	return parsed_args, nil
