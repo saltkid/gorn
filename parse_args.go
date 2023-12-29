@@ -7,32 +7,32 @@ import (
 )
 
 type Arg struct {
-	flag string
+	flag  string
 	value string
 }
 
 type Args struct {
-	root []Arg
-	series []Arg
-	movies []Arg
-	has_season_0 Arg
-	keep_ep_nums Arg
+	root            []Arg
+	series          []Arg
+	movies          []Arg
+	has_season_0    Arg
+	keep_ep_nums    Arg
 	starting_ep_num Arg
-	naming_scheme Arg
+	naming_scheme   Arg
 }
 
 func parse_args(args []string) (Args, error) {
-	if len(args) < 2 {
+	if len(args) < 1 {
 		return Args{}, fmt.Errorf("not enough arguments")
 	}
 
 	directory_args := map[string]bool{
-		"--root": true,
-		"-r": true,
+		"--root":   true,
+		"-r":       true,
 		"--series": true,
-		"-s": true,
+		"-s":       true,
 		"--movies": true,
-		"-m": true,
+		"-m":       true,
 	}
 
 	var parsed_args Args
@@ -42,7 +42,7 @@ func parse_args(args []string) (Args, error) {
 		if skip_iter != 0 && i <= skip_iter {
 			continue
 
-		// catch invalid values acting as flags
+			// catch invalid values acting as flags
 		} else if arg[0] != '-' {
 			return Args{}, fmt.Errorf("invalid flag: '%s'", arg)
 
@@ -51,11 +51,11 @@ func parse_args(args []string) (Args, error) {
 			if len(args) <= i+1 || (len(args) > i+1 && args[i+1][0] == '-') {
 				return Args{}, fmt.Errorf("missing dir path value for flag '%s'", arg)
 
-			// not a valid directory
+				// not a valid directory
 			} else if _, err := filepath.Abs(args[i+1]); err != nil {
 				return Args{}, err
 			}
-			
+
 			dir, err := filepath.Abs(args[i+1])
 			if err != nil {
 				return Args{}, err
@@ -97,7 +97,7 @@ func parse_args(args []string) (Args, error) {
 				parsed_args.has_season_0 = Arg{flag: arg}
 			}
 
-		} else if arg == "--keep-ep-nums" || arg == "-ken"  {
+		} else if arg == "--keep-ep-nums" || arg == "-ken" {
 			if parsed_args.keep_ep_nums.flag != "" {
 				return Args{}, fmt.Errorf("only one --keep-ep-nums flag is allowed")
 			}
@@ -157,15 +157,25 @@ func parse_args(args []string) (Args, error) {
 			if parsed_args.naming_scheme.flag != "" {
 				return Args{}, fmt.Errorf("only one --naming-scheme flag is allowed")
 			}
-			if len(args) <= i+1 || (len(args) > i+1 && args[i+1][0] == '-') {
-				return Args{}, fmt.Errorf("missing value for flag '%s'", arg)
-			
-			} else if args[i+1][0] != '"' && args[i+1][len(args[i+1])] != '"' {
-				return Args{}, fmt.Errorf("invalid value '%s' for flag '%s'", args[i+1], arg)
-			}
 
-			parsed_args.naming_scheme = Arg{flag: arg, value: args[i+1][1:len(args[i+1])-1]}
-			skip_iter = i + 1
+			if len(args) <= i+1 || (len(args) > i+1 && args[i+1][0] == '-') {
+				return Args{}, fmt.Errorf("missing value for --naming-scheme")
+
+			} else if args[i+1] != "all" && args[i+1] != "var" {
+				return Args{}, fmt.Errorf("invalid value '%s' for --naming-scheme. Must be 'all' or 'var", args[i+1])
+			
+			} else if args[i+1] == "all" {
+				if len(args) < i+2 || args[i+2][0] == '-' {
+					return Args{}, fmt.Errorf("'all' must be followed by a naming scheme string enclosed in double quotes")
+				}
+				// todo validate naming scheme
+
+				parsed_args.naming_scheme = Arg{flag: arg, value: args[i+1] + " " + args[i+2]}
+				skip_iter = i + 2
+
+			} else if args[i+1] == "var" {
+				parsed_args.naming_scheme = Arg{flag: arg}
+			}
 
 		} else {
 			return Args{}, fmt.Errorf("unknown flag: %s", arg)
