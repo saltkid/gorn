@@ -348,3 +348,87 @@ func Test_naming_scheme_validation(t *testing.T) {
 		t.Log(`S<season_num: 3>E<episode_num: 2> - <parent-parent: 0,1> <parent: '\d+(.*)-.*'> <p-3: '(\d+)'> <self: 5,5>`)
 	}
 }
+
+func Test_split_regex_by_pipe(t *testing.T) {
+	t.Log("------------expects errors------------")
+	parts := split_regex_by_pipe(``)
+	if parts[0] != "" {
+		t.Errorf("expected empty string")
+	} else {
+		t.Log(`''`, "\n\t", parts, "\n")
+	}
+
+	parts = split_regex_by_pipe(`|`)
+	if len(parts) != 2 {
+		if parts[0] != "" && parts[1] != "" {
+			t.Errorf("expected empty string; got '%s', '%s'", parts[0], parts[1])
+		}
+	} else {
+		t.Log(`'|'`, "\n\t", parts)
+		for _, part := range parts {
+			t.Log("\t",part, "has only one match group?", has_only_one_match_group(part))
+		}
+	}
+
+	parts = split_regex_by_pipe(`a|b|c`)
+	if len(parts) != 3 {
+		if parts[0] != "a" {
+			t.Errorf("expected 'a'; got '%s'", parts[0])
+		}
+		if parts[1] != "b" {
+			t.Errorf("expected 'b'; got '%s'", parts[1])
+		}
+		if parts[2] != "c" {
+			t.Errorf("expected 'c'; got '%s'", parts[2])
+		}
+	} else {
+		t.Log(`'a|b|c'`, "\n\t", parts)
+		for _, part := range parts {
+			t.Log("\t",part, "has only one match group?", has_only_one_match_group(part))
+		}
+	}
+
+	parts = split_regex_by_pipe(`(a|b|c)`)
+	if len(parts) != 1 {
+		if parts[0] != "(a|b|c)" {
+			t.Errorf("expected '(a|b|c)'; got '%s'", parts[0])
+		}
+	} else {
+		t.Log(`'(a|b|c)'`, "\n\t", parts)
+		for _, part := range parts {
+			t.Log("\t",part, "has only one match group?", has_only_one_match_group(part))
+		}
+	}
+
+	parts = split_regex_by_pipe(`(a)b(c)|(d|f)e`)
+	if len(parts) != 2 {
+		if parts[0] != "(a)b(c)" {
+			t.Errorf("expected '(a)b(c)'; got '%s'", parts[0])
+		}
+		if parts[1] != "(d|f)e" {
+			t.Errorf("expected '(d|f)e'; got '%s'", parts[1])
+		}
+	} else {
+		t.Log(`'(a)b(c)|(d|f)e'`, "\n\t", parts)
+		for _, part := range parts {
+			t.Log("\t",part, "has only one match group?", has_only_one_match_group(part))
+		}
+	}
+
+	t.Log("------------expects success------------")
+
+	parts = split_regex_by_pipe(`(a)bc|(d|f)e`)
+	if len(parts) != 2 {
+		if parts[0] != "(a)bc" {
+			t.Errorf("expected '(a)bc'; got '%s'", parts[0])
+		}
+		if parts[1] != "(d|f)e" {
+			t.Errorf("expected '(d|f)e'; got '%s'", parts[1])
+		}
+	} else {
+		t.Log(`'(a)bc|(d|f)e'`, "\n\t", parts)
+		for _, part := range parts {
+			t.Log("\t",part, "has only one match group?", has_only_one_match_group(part))
+		}
+	}
+}

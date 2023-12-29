@@ -256,17 +256,26 @@ func validate_naming_scheme(s string) error {
 
 				if _, err := regexp.Compile(val_trimmed); err != nil {
 					return fmt.Errorf("invalid regex: %s", val)
+
+				} else {
+					parts := split_regex_by_pipe(val_trimmed)
+					for _, part := range parts {
+						if !has_only_one_match_group(part) {
+							return fmt.Errorf("regex should have only one match group per part (parts are separated by outermost pipes |): %s", val)
+						}
+					}
+					// valid regex
+					continue
 				}
 
 			} else if !valid_range.MatchString(val) {
 				return fmt.Errorf("%s's value must be in the format <start>,<end> where <start> and <end> are positive integers and 0. '%s' is not a valid range", api, val)
-
-			} else {
-				res := strings.SplitN(val, ",", 2)
-				begin, end := strings.TrimSpace(res[0]), strings.TrimSpace(res[1])
-				if begin > end {
-					return fmt.Errorf("%s is an invalid range. begin (%s) must be less than or equal to end (%s)", val, begin, end)
-				}
+			}
+			// valid range
+			res := strings.SplitN(val, ",", 2)
+			begin, end := strings.TrimSpace(res[0]), strings.TrimSpace(res[1])
+			if begin > end {
+				return fmt.Errorf("%s is an invalid range. begin (%s) must be less than or equal to end (%s)", val, begin, end)
 			}
 		}
 	}
