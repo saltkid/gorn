@@ -23,6 +23,32 @@ type Args struct {
 	naming_scheme   Arg
 }
 
+// returns root directories as a slice of strings
+func (a Args) Roots() []string {
+	var roots []string
+	for _, arg := range a.root {
+		roots = append(roots, arg.value)
+	}
+	return roots
+}
+// returns series directories as a slice of strings
+func (a Args) Series() []string {
+	var series []string
+	for _, arg := range a.series {
+		series = append(series, arg.value)
+	}
+	return series
+}
+// returns movies directories as a slice of strings
+func (a Args) Movies() []string {
+	var movies []string
+	for _, arg := range a.movies {
+		movies = append(movies, arg.value)
+	}
+	return movies
+}
+
+
 func parse_args(args []string) (Args, error) {
 	if len(args) < 1 {
 		return Args{}, fmt.Errorf("not enough arguments")
