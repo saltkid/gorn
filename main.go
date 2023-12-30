@@ -14,19 +14,31 @@ func main() {
 	}
 
 	if len(args.root) > 0 {
-		fmt.Println("root: ", args.root[0].value)
+		fmt.Println("root: ", args.root[0])
 	}
 	if len(args.series) > 0 {
-		fmt.Println("series: ", args.series[0].value)
+		fmt.Println("series: ", args.series[0])
 	}
 	if len(args.movies) > 0 {
-		fmt.Println("movies: ", args.movies[0].value)
+		fmt.Println("movies: ", args.movies[0])
 	}
-	fmt.Println("keep episode numbers: ", args.keep_ep_nums.value)
-	fmt.Println("starting episode number: ", args.starting_ep_num.value)
-	fmt.Println("naming scheme: ", args.naming_scheme.value)
+	ken, err := args.keep_ep_nums.find().get()
+	if err != nil {
+		panic(err)
+	} 
+	fmt.Println("keep episode numbers: ", ken)
+	sen, err := args.starting_ep_num.find().get()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("starting episode number: ", sen)
+	ns, err := args.naming_scheme.find().get()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("naming scheme: ", ns)
 
-	series_entries, movie_entries, err := fetch_entries(args.Roots(), args.Series(), args.Movies())
+	series_entries, movie_entries, err := fetch_entries(args.root, args.series, args.movies)
 	if err != nil {
 		panic(err)
 	}

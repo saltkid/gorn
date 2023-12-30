@@ -8,46 +8,26 @@ import (
 	"strings"
 )
 
-type Arg struct {
-	flag  string
-	value string
-}
-
 type Args struct {
-	root            []Arg
-	series          []Arg
-	movies          []Arg
-	has_season_0    Arg
-	keep_ep_nums    Arg
-	starting_ep_num Arg
-	naming_scheme   Arg
+	root            []string
+	series          []string
+	movies          []string
+	has_season_0    Option[bool]
+	keep_ep_nums    Option[bool]
+	starting_ep_num Option[int]
+	naming_scheme   Option[string]
 }
-
-// returns root directories as a slice of strings
-func (a Args) Roots() []string {
-	var roots []string
-	for _, arg := range a.root {
-		roots = append(roots, arg.value)
+func new_Args() Args {
+	return Args{
+		root:            make([]string, 0),
+		series:          make([]string, 0),
+		movies:          make([]string, 0),
+		has_season_0:    none[bool](),
+		keep_ep_nums:    none[bool](),
+		starting_ep_num: none[int](),
+		naming_scheme:   none[string](),
 	}
-	return roots
 }
-// returns series directories as a slice of strings
-func (a Args) Series() []string {
-	var series []string
-	for _, arg := range a.series {
-		series = append(series, arg.value)
-	}
-	return series
-}
-// returns movies directories as a slice of strings
-func (a Args) Movies() []string {
-	var movies []string
-	for _, arg := range a.movies {
-		movies = append(movies, arg.value)
-	}
-	return movies
-}
-
 
 func parse_args(args []string) (Args, error) {
 	if len(args) < 1 {
@@ -63,7 +43,7 @@ func parse_args(args []string) (Args, error) {
 		"-m":       true,
 	}
 
-	var parsed_args Args
+	parsed_args := new_Args()
 	skip_iter := 0
 	for i, arg := range args {
 		// valid values will be skipped
@@ -90,22 +70,22 @@ func parse_args(args []string) (Args, error) {
 			}
 
 			if arg == "--root" || arg == "-r" {
-				parsed_args.root = append(parsed_args.root, Arg{flag: arg, value: dir})
+				parsed_args.root = append(parsed_args.root, dir)
 			} else if arg == "--series" || arg == "-s" {
-				parsed_args.series = append(parsed_args.series, Arg{flag: arg, value: dir})
+				parsed_args.series = append(parsed_args.series, dir)
 			} else if arg == "--movies" || arg == "-m" {
-				parsed_args.movies = append(parsed_args.movies, Arg{flag: arg, value: dir})
+				parsed_args.movies = append(parsed_args.movies, dir)
 			}
 			skip_iter = i + 1
 
 		} else if arg == "--season-0" || arg == "-s0" {
-			if parsed_args.has_season_0.flag != "" {
+			if parsed_args.has_season_0.is_some() {
 				return Args{}, fmt.Errorf("only one --season-0 flag is allowed")
 			}
 
 			// default value
 			if len(args) <= i+1 || (len(args) > i+1 && args[i+1][0] == '-') {
-				parsed_args.has_season_0 = Arg{flag: arg, value: "all yes"}
+				parsed_args.has_season_0 = some[bool](false)
 
 			} else if args[i+1] != "all" && args[i+1] != "var" {
 				return Args{}, fmt.Errorf("invalid value '%s' for flag '%s'. Must be 'all' or 'var", args[i+1], arg)
@@ -117,22 +97,27 @@ func parse_args(args []string) (Args, error) {
 				} else if args[i+2] != "yes" && args[i+2] != "no" {
 					return Args{}, fmt.Errorf("all must be followed by 'yes' or 'no' for --season-0. %s is invalid", args[i+2])
 				}
-
-				parsed_args.has_season_0 = Arg{flag: arg, value: args[i+1] + " " + args[i+2]}
+				var value bool
+				if args[i+2] == "yes" {
+					value = true
+				} else {
+					value = false
+				}
+				parsed_args.has_season_0 = some[bool](value)
 				skip_iter = i + 2
 
 			} else if args[i+1] == "var" {
-				parsed_args.has_season_0 = Arg{flag: arg}
+				parsed_args.has_season_0 = none[bool]()
 			}
 
 		} else if arg == "--keep-ep-nums" || arg == "-ken" {
-			if parsed_args.keep_ep_nums.flag != "" {
+			if parsed_args.keep_ep_nums.is_some() {
 				return Args{}, fmt.Errorf("only one --keep-ep-nums flag is allowed")
 			}
 
 			// default value
 			if len(args) <= i+1 || (len(args) > i+1 && args[i+1][0] == '-') {
-				parsed_args.keep_ep_nums = Arg{flag: arg, value: "all yes"}
+				parsed_args.keep_ep_nums = some[bool](false)
 
 			} else if args[i+1] != "all" && args[i+1] != "var" {
 				return Args{}, fmt.Errorf("invalid value '%s' for --keep-ep-nums. Must be 'all' or 'var", args[i+1])
@@ -145,21 +130,27 @@ func parse_args(args []string) (Args, error) {
 					return Args{}, fmt.Errorf("all must be followed by 'yes' or 'no' for --keep-ep-nums. %s is invalid", args[i+2])
 				}
 
-				parsed_args.keep_ep_nums = Arg{flag: arg, value: args[i+1] + " " + args[i+2]}
+				var value bool
+				if args[i+2] == "yes" {
+					value = true
+				} else {
+					value = false
+				}
+				parsed_args.keep_ep_nums = some[bool](value)
 				skip_iter = i + 2
 
 			} else if args[i+1] == "var" {
-				parsed_args.has_season_0 = Arg{flag: arg}
+				parsed_args.has_season_0 = none[bool]()
 			}
 
 		} else if arg == "--starting-ep-num" || arg == "-sen" {
-			if parsed_args.starting_ep_num.flag != "" {
+			if parsed_args.starting_ep_num.is_some() {
 				return Args{}, fmt.Errorf("only one --starting-ep-num flag is allowed")
 			}
 
 			// default value
 			if len(args) <= i+1 || (len(args) > i+1 && args[i+1][0] == '-') {
-				parsed_args.starting_ep_num = Arg{flag: arg, value: "all yes"}
+				parsed_args.starting_ep_num = some[int](1)
 
 			} else if args[i+1] != "all" && args[i+1] != "var" {
 				return Args{}, fmt.Errorf("invalid value '%s' for --starting-ep-num. Must be 'all' or 'var", args[i+1])
@@ -169,20 +160,20 @@ func parse_args(args []string) (Args, error) {
 					return Args{}, fmt.Errorf("all must be followed by a positive int for --starting-ep-num. %s is not a valid positive int", args[i+2])
 				}
 
-				_, err := strconv.Atoi(args[i+2])
+				value, err := strconv.Atoi(args[i+2])
 				if err != nil {
 					return Args{}, fmt.Errorf("all must be followed by a positive int for --starting-ep-num. %s is not a valid positive int", args[i+2])
 				}
 
-				parsed_args.starting_ep_num = Arg{flag: arg, value: args[i+1] + " " + args[i+2]}
+				parsed_args.starting_ep_num = some[int](value)
 				skip_iter = i + 2
 
 			} else if args[i+1] == "var" {
-				parsed_args.starting_ep_num = Arg{flag: arg}
+				parsed_args.starting_ep_num = none[int]()
 			}
 
 		} else if arg == "--naming-scheme" || arg == "-ns" {
-			if parsed_args.naming_scheme.flag != "" {
+			if parsed_args.naming_scheme.is_some() {
 				return Args{}, fmt.Errorf("only one --naming-scheme flag is allowed")
 			}
 
@@ -201,11 +192,11 @@ func parse_args(args []string) (Args, error) {
 					return Args{}, err
 				}
 
-				parsed_args.naming_scheme = Arg{flag: arg, value: args[i+1] + " " + args[i+2]}
+				parsed_args.naming_scheme = some[string](args[i+2])
 				skip_iter = i + 2
 
 			} else if args[i+1] == "var" {
-				parsed_args.naming_scheme = Arg{flag: arg}
+				parsed_args.naming_scheme = none[string]()
 			}
 
 		} else {

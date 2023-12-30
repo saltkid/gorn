@@ -15,12 +15,12 @@ type Rename interface {
 type SeriesInfo struct {
 	path            string
 	series_type     string
-	keep_ep_nums    bool
-	starting_ep_num int
 	seasons         map[int]string
 	movies          []string
-	has_season_0    bool
 	extras_dirs     []string
+	keep_ep_nums    Option[bool]
+	starting_ep_num Option[int]
+	has_season_0    Option[bool]
 }
 
 type MovieInfo struct {
@@ -75,14 +75,24 @@ func (info *SeriesInfo) rename() error {
 		}
 		
 		var ep_num int
-		if info.starting_ep_num > 0 {
-			ep_num = info.starting_ep_num
+		sen, err := info.starting_ep_num.find().get()
+		if err != nil {
+			return err
+		}
+
+		if sen > 0 {
+			ep_num = sen
 		} else {
 			ep_num = 1
 		}
 
 		ep_nums := make([]int, 0)
-		if info.keep_ep_nums {
+		ken, err := info.keep_ep_nums.find().get()
+		if err != nil {
+			return err
+		}
+
+		if ken {
 			for _, file := range media_files {
 				ep_num, err = read_episode_num(file)
 				if err != nil {
