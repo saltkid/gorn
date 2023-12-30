@@ -8,16 +8,31 @@ import (
 )
 
 func main() {
-	root, err := parse_args(os.Args)
+	args, err := parse_args(os.Args[1:])
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println("root: ", root)
+	if len(args.root) > 0 {
+		fmt.Println("root: ", args.root[0].value)
+	}
+	if len(args.series) > 0 {
+		fmt.Println("series: ", args.series[0].value)
+	}
+	if len(args.movies) > 0 {
+		fmt.Println("movies: ", args.movies[0].value)
+	}
+	fmt.Println("keep episode numbers: ", args.keep_ep_nums.value)
+	fmt.Println("starting episode number: ", args.starting_ep_num.value)
+	fmt.Println("naming scheme: ", args.naming_scheme.value)
 
-	entries, err := get_root_dirs(root)
-	if err != nil {
-		panic(err)
+	// TODO: get entries differently for: root, series, movies
+	var entries map[string][]string
+	if len(args.root) > 0 {
+		entries, err = get_root_dirs(args.root[0].value)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	fmt.Println("series dirs (", len(entries["series_dirs"]), "): ")
@@ -178,18 +193,6 @@ func main() {
 		}
 	}
 	fmt.Println()
-}
-
-func parse_args(args []string) (string, error) {
-	if len(args) < 2 {
-		return "", fmt.Errorf("please add a root directory as an argument")
-	}
-
-	root, err := filepath.Abs(args[1])
-	if err != nil {
-		return "", err
-	}
-	return root, nil
 }
 
 func get_root_dirs(root string) (map[string][]string, error) {
