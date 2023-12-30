@@ -26,27 +26,23 @@ func main() {
 	fmt.Println("starting episode number: ", args.starting_ep_num.value)
 	fmt.Println("naming scheme: ", args.naming_scheme.value)
 
-	// TODO: get entries differently for: root, series, movies
-	var entries map[string][]string
-	if len(args.root) > 0 {
-		entries, err = get_root_dirs(args.root[0].value)
-		if err != nil {
-			panic(err)
-		}
+	series_entries, movie_entries, err := fetch_entries(args.Roots(), args.Series(), args.Movies())
+	if err != nil {
+		panic(err)
 	}
 
-	fmt.Println("series dirs (", len(entries["series_dirs"]), "): ")
-	for _, series := range entries["series_dirs"] {
-		fmt.Println("\t",series)
+	fmt.Println("series dirs (", len(series_entries), "): ")
+	for series := range series_entries {
+		fmt.Println("\t", series)
 	}
-	fmt.Println("movie dirs (", len(entries["movie_dirs"]), "): ")
-	for _, movie := range entries["movie_dirs"] {
-		fmt.Println("\t",movie)
+	fmt.Println("movie dirs (", len(movie_entries), "): ")
+	for movie := range movie_entries {
+		fmt.Println("\t", movie)
 	}
 	fmt.Println()
 
 	var series = Series{}
-	err = series.split_series_by_type(entries["series_dirs"])
+	err = series.split_series_by_type(series_entries)
 	if err != nil {
 		panic(err)
 	}
@@ -74,7 +70,7 @@ func main() {
 	}
 
 	var movie = Movies{}
-	err = movie.split_movies_by_type(entries["movie_dirs"])
+	err = movie.split_movies_by_type(movie_entries)
 	if err != nil {
 		panic(err)
 	}
@@ -103,7 +99,7 @@ func main() {
 		}
 	}
 	fmt.Println()
-	
+
 	fmt.Println("test for single season no movies")
 	for _, v := range series.single_season_no_movies {
 		info, err := series_rename_prereqs(v, "single_season_no_movies", false, 1, true)
@@ -195,14 +191,100 @@ func main() {
 	fmt.Println()
 }
 
-func get_root_dirs(root string) (map[string][]string, error) {
-	root_dirs := map[string]string{
-		"movie_dir":  "",
-		"series_dir": "",
+// set implementation for entries
+
+type SeriesEntries map[string]struct{}
+type MovieEntries map[string]struct{}
+type Entries interface {
+	Add(s ...string)
+	Delete(s ...string)
+	Has(s string) bool
+}
+
+func (se SeriesEntries) Add(s ...string) {
+	for _, v := range s {
+		se[v] = struct{}{}
 	}
-	entries := map[string][]string{
-		"movie_dirs": {},
-		"series_dirs": {},
+}
+func (se SeriesEntries) Delete(s ...string) {
+	for _, v := range s {
+		delete(se, v)
+	}
+}
+func (se SeriesEntries) Has(s string) bool {
+	_, ok := se[s]
+	return ok
+}
+func (me MovieEntries) Add(s ...string) {
+	for _, v := range s {
+		me[v] = struct{}{}
+	}
+}
+func (me MovieEntries) Delete(s ...string) {
+	for _, v := range s {
+		delete(me, v)
+	}
+}
+func (me MovieEntries) Has(s string) bool {
+	_, ok := me[s]
+	return ok
+}
+
+// fetch_entries retrieves the series and movie entries from the given root, series, and movie directories.
+//
+// root_dirs: A slice of root directories to search for entries.
+// series_dirs: A slice of series directories to search for entries.
+// movie_dirs: A slice of movie directories to search for entries.
+//
+// Returns the series entries and movie entries as SeriesEntries and MovieEntries respectively.
+func fetch_entries(root_dirs []string, series_dirs []string, movie_dirs []string) (SeriesEntries, MovieEntries, error) {
+	if len(root_dirs) == 0 && len(series_dirs) == 0 && len(movie_dirs) == 0 {
+		return nil, nil, fmt.Errorf("passed no root, series, or movie directories")
+	}
+
+	entries := map[string]Entries{
+		"movies":  MovieEntries{},
+		"series": SeriesEntries{},
+	}
+	for _, root := range root_dirs {
+		separated, err := separate_roots(root)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		for key, roots := range separated {
+			for _, dir := range roots {
+				subdirs, err := fetch_subdirs(dir)
+				if err != nil {
+					return nil, nil, err
+				}
+				entries[key].Add(subdirs...)
+			}
+		}
+	}
+
+	for _, v := range series_dirs {
+		subdirs, err := fetch_subdirs(v)
+		if err != nil {
+			return nil, nil, err
+		}
+		entries["series"].Add(subdirs...)
+	}
+	for _, v := range movie_dirs {
+		subdirs, err := fetch_subdirs(v)
+		if err != nil {
+			return nil, nil, err
+		}
+		entries["movies"].Add(subdirs...)
+	}
+
+	return entries["series"].(SeriesEntries), entries["movies"].(MovieEntries), nil
+}
+
+func separate_roots(root string) (map[string][]string, error) {
+	root_dirs := map[string][]string{
+		"movies": {},
+		"series": {},
 	}
 	valid_movie_path_names := map[string]bool{
 		"movies": true,
@@ -223,33 +305,18 @@ func get_root_dirs(root string) (map[string][]string, error) {
 
 		if d.IsDir() {
 			// get only directories of depth 1 (directly under root)
-			if path != root && filepath.Dir(path) == root && (root_dirs["movie_dir"] == "" || root_dirs["series_dir"] == "") {
+			if path != root && filepath.Dir(path) == root {
 				dir_name := strings.ToLower(filepath.Base(path))
 				if valid_movie_path_names[dir_name] {
-					if root_dirs["movie_dir"] == "" {
-						root_dirs["movie_dir"] = path
-					} else {
-						return fmt.Errorf("multiple movie directories found")
-					}
+					root_dirs["movies"] = append(root_dirs["movies"], path)
+					return filepath.SkipDir
 
 				} else if valid_series_path_names[dir_name] {
-					if root_dirs["series_dir"] == "" {
-						root_dirs["series_dir"] = path
-					} else {
-						return fmt.Errorf("multiple series directories found")
-					}
+					root_dirs["series"] = append(root_dirs["series"], path)
+					return filepath.SkipDir
 				}
-
-			// get only directories of depth 2 (directly under movie or series)
-			} else if root_dirs["movie_dir"] != "" && filepath.Dir(path) == root_dirs["movie_dir"] {
-				entries["movie_dirs"] = append(entries["movie_dirs"], path)
-				return filepath.SkipDir
-			} else if root_dirs["series_dir"] != "" && filepath.Dir(path) == root_dirs["series_dir"] {
-				entries["series_dirs"] = append(entries["series_dirs"], path)
-				return filepath.SkipDir
 			}
 		}
-
 		return nil
 	})
 
@@ -257,8 +324,34 @@ func get_root_dirs(root string) (map[string][]string, error) {
 		return nil, err
 	}
 
-	if root_dirs["movie_dir"] == "" || root_dirs["series_dir"] == "" {
-		return nil, fmt.Errorf("no movie or series directory found")
+	if len(root_dirs["movies"]) == 0 && len(root_dirs["series"]) == 0 {
+		return nil, fmt.Errorf("no movie and series directory found")
+	}
+
+	return root_dirs, nil
+}
+
+func fetch_subdirs(dir string) ([]string, error) {
+	entries := []string{}
+	err := filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			// get only directories of depth 1 (directly under series dir) and does not start with a '.'
+			if path != dir && filepath.Dir(path) == dir && !strings.HasPrefix(filepath.Base(path), ".") {
+				entries = append(entries, path)
+				return filepath.SkipDir
+			}
+		}
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+	if len(entries) == 0 {
+		return nil, fmt.Errorf("no entries found under %s", dir)
 	}
 
 	return entries, nil

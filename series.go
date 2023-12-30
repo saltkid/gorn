@@ -14,8 +14,8 @@ type Series struct {
 	multiple_season_with_movies []string
 }
 
-func (series *Series) split_series_by_type(series_entries []string) error {
-	for _, series_entry := range series_entries {
+func (series *Series) split_series_by_type(series_entries SeriesEntries) error {
+	for series_entry := range series_entries {
 		files, err := os.ReadDir(series_entry)
 		if err != nil {
 			return err

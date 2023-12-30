@@ -10,8 +10,8 @@ type Movies struct {
 	movie_set  []string
 }
 
-func (movie *Movies) split_movies_by_type(movie_entries []string) error {
-	for _, movie_entry := range movie_entries {
+func (movie *Movies) split_movies_by_type(movie_entries MovieEntries) error {
+	for movie_entry := range movie_entries {
 		files, err := os.ReadDir(movie_entry)
 		if err != nil {
 			return err
