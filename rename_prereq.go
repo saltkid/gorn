@@ -8,17 +8,17 @@ import (
 	"strconv"
 )
 
-func series_rename_prereqs(path string, s_type string, keep_ep_nums bool, starting_ep_num int, has_season_0 bool) (SeriesInfo, error) {
+func series_rename_prereqs(path string, s_type string, keep_ep_nums Option[bool], starting_ep_num Option[int], has_season_0 Option[bool]) (SeriesInfo, error) {
 	// get prerequsite info for renaming series
 	info := SeriesInfo{
 		path: 				path,
 		series_type: 		s_type,
-		keep_ep_nums: 		keep_ep_nums,
-		starting_ep_num: 	starting_ep_num,
 		seasons: 			make(map[int]string),
 		movies: 			make([]string, 0),
-		has_season_0: 		has_season_0,
 		extras_dirs: 		make([]string, 0),
+		keep_ep_nums: 		keep_ep_nums,
+		starting_ep_num: 	starting_ep_num,
+		has_season_0: 		has_season_0,
 	}
 
 	is_valid_type := map[string]bool{
@@ -31,8 +31,11 @@ func series_rename_prereqs(path string, s_type string, keep_ep_nums bool, starti
 	if !is_valid_type[s_type] {
 		return SeriesInfo{}, fmt.Errorf("unknown series type: %s", s_type)
 	}
-
-	seasons, extras_dirs, movies, err := get_series_content(path, s_type, has_season_0)
+	s0, err := has_season_0.find().get()
+	if err != nil {
+		return SeriesInfo{}, err
+	}
+	seasons, extras_dirs, movies, err := get_series_content(path, s_type, s0)
 	if err != nil {
 		return SeriesInfo{}, err
 	}
