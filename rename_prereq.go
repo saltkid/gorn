@@ -15,10 +15,8 @@ func series_rename_prereqs(path string, s_type string, keep_ep_nums Option[bool]
 		series_type: 		s_type,
 		seasons: 			make(map[int]string),
 		movies: 			make([]string, 0),
-		extras_dirs: 		make([]string, 0),
 		keep_ep_nums: 		keep_ep_nums,
 		starting_ep_num: 	starting_ep_num,
-		has_season_0: 		has_season_0,
 	}
 
 	is_valid_type := map[string]bool{
@@ -35,7 +33,7 @@ func series_rename_prereqs(path string, s_type string, keep_ep_nums Option[bool]
 	if err != nil {
 		return SeriesInfo{}, err
 	}
-	seasons, extras_dirs, movies, err := get_series_content(path, s_type, s0)
+	seasons, movies, err := get_series_content(path, s_type, s0)
 	if err != nil {
 		return SeriesInfo{}, err
 	}
@@ -46,19 +44,17 @@ func series_rename_prereqs(path string, s_type string, keep_ep_nums Option[bool]
 	}
 	info.seasons = seasons
 	info.movies = movies
-	info.extras_dirs = extras_dirs
 
 	return info, nil
 }
 
-func get_series_content (path string, s_type string, has_season_0 bool) (map[int]string, []string, []string, error) {
+func get_series_content (path string, s_type string, has_season_0 bool) (map[int]string, []string, error) {
 	seasons := make(map[int]string)
-	extras := make([]string, 0)
 	movies := make([]string, 0)
 	
 	subdirs, err := os.ReadDir(path)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 
 	extras_pattern := regexp.MustCompile(`^(?i)specials?|extras?|trailers?|ova`)
@@ -75,7 +71,7 @@ func get_series_content (path string, s_type string, has_season_0 bool) (map[int
 
 		if has_season_0 {
 			if seasons[0] != "" {
-				return nil, nil, nil, fmt.Errorf("multiple specials/extras directories found in %s", path)
+				return nil, nil, fmt.Errorf("multiple specials/extras directories found in %s", path)
 			}
 
 			if extras_pattern.MatchString(subdir.Name()) {
@@ -85,11 +81,9 @@ func get_series_content (path string, s_type string, has_season_0 bool) (map[int
 		}
 
 		if s_type == "single_season_no_movies" {
-		    extras = append(extras, subdir.Name())
 			continue
 		} else if s_type == "single_season_with_movies"{
 			if extras_pattern.MatchString(subdir.Name()) {
-				extras = append(extras, subdir.Name())
 				continue
 			} else {
 				movies = append(movies, subdir.Name())
@@ -104,24 +98,21 @@ func get_series_content (path string, s_type string, has_season_0 bool) (map[int
 		} else if s_type == "multiple_season_no_movies" || s_type == "multiple_season_with_movies" {
 			season_name_pattern = regexp.MustCompile(`^(?i)season\s+(\d+).*$`)
 		} else {
-			return nil, nil, nil, fmt.Errorf("unknown series type: %s; series type must be one of 'named_seasons', 'multiple_season_no_movies', 'multiple_season_with_movies'", s_type)
+			return nil, nil, fmt.Errorf("unknown series type: %s; series type must be one of 'named_seasons', 'multiple_season_no_movies', 'multiple_season_with_movies'", s_type)
 		}
 		if season_name_pattern == nil {
-			return nil, nil, nil, fmt.Errorf("unknown series type: %s; series type must be one of 'named_seasons', 'multiple_season_no_movies', 'multiple_season_with_movies'", s_type)
+			return nil, nil, fmt.Errorf("unknown series type: %s; series type must be one of 'named_seasons', 'multiple_season_no_movies', 'multiple_season_with_movies'", s_type)
 		}
 
 		season_num := season_name_pattern.FindStringSubmatch(subdir.Name())
 		if season_num == nil {
 			if s_type == "multiple_season_with_movies" {
 				if extras_pattern.MatchString(subdir.Name()) {
-					extras = append(extras, subdir.Name())
 					continue
 				} else {
 					movies = append(movies, subdir.Name())
 					continue
 				}
-			} else {
-				extras = append(extras, subdir.Name())
 			}
 			continue
 		}
@@ -129,12 +120,12 @@ func get_series_content (path string, s_type string, has_season_0 bool) (map[int
 		// season_num[0] is the whole string so we only need season_num[1] (first matched group)
 		num, err := strconv.Atoi(season_num[1])
 		if err != nil {
-			return nil, nil, nil, err
+			return nil, nil, err
 		}
 		seasons[num] = subdir.Name()
 	}
 
-	return seasons, extras, movies, nil
+	return seasons, movies, nil
 }
 
 func movie_rename_prereqs (path string, m_type string) (MovieInfo, error) {
@@ -142,7 +133,6 @@ func movie_rename_prereqs (path string, m_type string) (MovieInfo, error) {
 		path: 			path,
 		movie_type: 	m_type,
 		movies: 		make(map[string]string),
-		extras_dirs: 	make([]string, 0),
 	}
 
 	subdirs, err := os.ReadDir(path)
@@ -155,7 +145,6 @@ func movie_rename_prereqs (path string, m_type string) (MovieInfo, error) {
 	for _, subdir := range subdirs {
 		if m_type == "standalone" {
 			if subdir.IsDir() && extras_pattern.MatchString(subdir.Name()) {
-				info.extras_dirs = append(info.extras_dirs, subdir.Name())
 				continue
 			}
 
@@ -175,7 +164,6 @@ func movie_rename_prereqs (path string, m_type string) (MovieInfo, error) {
 
 		if m_type == "movie_set" {
 			if extras_pattern.MatchString(subdir.Name()) {
-				info.extras_dirs = append(info.extras_dirs, subdir.Name())
 				continue
 			}
 

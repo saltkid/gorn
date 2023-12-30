@@ -17,17 +17,14 @@ type SeriesInfo struct {
 	series_type     string
 	seasons         map[int]string
 	movies          []string
-	extras_dirs     []string
 	keep_ep_nums    Option[bool]
 	starting_ep_num Option[int]
-	has_season_0    Option[bool]
 }
 
 type MovieInfo struct {
 	path        string
 	movie_type  string
 	movies      map[string]string
-	extras_dirs []string
 }
 
 func (info *SeriesInfo) rename() error {
