@@ -31,7 +31,7 @@ func series_rename_prereqs(path string, s_type string, keep_ep_nums Option[bool]
 	if !is_valid_type[s_type] {
 		return SeriesInfo{}, fmt.Errorf("unknown series type: %s", s_type)
 	}
-	s0, err := has_season_0.find().get()
+	s0, err := has_season_0.get()
 	if err != nil {
 		return SeriesInfo{}, err
 	}

@@ -22,21 +22,18 @@ func main() {
 	if len(args.movies) > 0 {
 		fmt.Println("movies: ", args.movies[0])
 	}
-	ken, err := args.keep_ep_nums.find().get()
-	if err != nil {
-		panic(err)
-	} 
-	fmt.Println("keep episode numbers: ", ken)
-	sen, err := args.starting_ep_num.find().get()
-	if err != nil {
-		panic(err)
+	ken, err := args.keep_ep_nums.get()
+	if err == nil {
+		fmt.Println("keep episode numbers: ", ken)
 	}
-	fmt.Println("starting episode number: ", sen)
-	ns, err := args.naming_scheme.find().get()
-	if err != nil {
-		panic(err)
+	sen, err := args.starting_ep_num.get()
+	if err == nil {
+		fmt.Println("starting episode number: ", sen)
 	}
-	fmt.Println("naming scheme: ", ns)
+	ns, err := args.naming_scheme.get()
+	if err == nil {
+		fmt.Println("naming scheme: ", ns)
+	}
 
 	series_entries, movie_entries, err := fetch_entries(args.root, args.series, args.movies)
 	if err != nil {

@@ -75,7 +75,7 @@ func (info *SeriesInfo) rename() error {
 		}
 		
 		var ep_num int
-		sen, err := info.starting_ep_num.find().get()
+		sen, err := info.starting_ep_num.get()
 		if err != nil {
 			return err
 		}
@@ -87,7 +87,7 @@ func (info *SeriesInfo) rename() error {
 		}
 
 		ep_nums := make([]int, 0)
-		ken, err := info.keep_ep_nums.find().get()
+		ken, err := info.keep_ep_nums.get()
 		if err != nil {
 			return err
 		}
