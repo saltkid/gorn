@@ -2,10 +2,18 @@ package main
 
 import (
 	"os"
+	"regexp"
 	"path/filepath"
-	"regexp"	
 )
 
+type MediaFiles interface {
+	split_by_type(entries Entries) error
+}
+
+type Movies struct {
+	standalone []string
+	movie_set  []string
+}
 type Series struct {
 	named_seasons               []string
 	single_season_no_movies     []string
@@ -14,8 +22,31 @@ type Series struct {
 	multiple_season_with_movies []string
 }
 
-func (series *Series) split_series_by_type(series_entries SeriesEntries) error {
-	for series_entry := range series_entries {
+func (movie *Movies) split_by_type(movie_entries Entries) error {
+	for movie_entry := range movie_entries.(MovieEntries) {
+		files, err := os.ReadDir(movie_entry)
+		if err != nil {
+			return err
+		}
+
+		extras_pattern := regexp.MustCompile(`^(?i)specials?|extras?|trailers?`)
+
+		for _, file := range files {
+			if file.IsDir() && !extras_pattern.MatchString(file.Name()) {
+				movie.movie_set = append(movie.movie_set, movie_entry)
+				break
+
+			} else if is_media_file(file.Name()) {
+				movie.standalone = append(movie.standalone, movie_entry)
+				break
+			} 
+		}
+	}
+	return nil
+}
+
+func (series *Series) split_by_type(series_entries Entries) error {
+	for series_entry := range series_entries.(SeriesEntries) {
 		files, err := os.ReadDir(series_entry)
 		if err != nil {
 			return err

@@ -51,7 +51,7 @@ func main() {
 	fmt.Println()
 
 	var series = Series{}
-	err = series.split_series_by_type(series_entries)
+	err = series.split_by_type(series_entries)
 	if err != nil {
 		panic(err)
 	}
@@ -79,7 +79,7 @@ func main() {
 	}
 
 	var movie = Movies{}
-	err = movie.split_movies_by_type(movie_entries)
+	err = movie.split_by_type(movie_entries)
 	if err != nil {
 		panic(err)
 	}
