@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"sort"
+	"strings"
 )
 
 type Rename interface {
@@ -19,6 +21,7 @@ type SeriesInfo struct {
 	movies          []string
 	keep_ep_nums    Option[bool]
 	starting_ep_num Option[int]
+	naming_scheme   Option[string]
 }
 
 type MovieInfo struct {
@@ -48,7 +51,6 @@ func (info *SeriesInfo) rename() error {
 		}
 
 		season_path := filepath.Clean(info.path + "/" + season)
-
 
 		fmt.Println("path: ", season_path)
 		files, err := os.ReadDir(season_path)
@@ -112,23 +114,18 @@ func (info *SeriesInfo) rename() error {
 		}
 
 		for i, file := range media_files {
-			var title string
-			if info.series_type == "single_season_no_movies" || info.series_type == "multiple_season_no_movies" || info.series_type == "multiple_season_with_movies" {
-				title = filepath.Base(info.path)
-			} else if info.series_type == "single_season_with_movies" {
-				title = filepath.Base(season_path)
-			} else if info.series_type == "named_seasons" {
-				title = filepath.Base(info.path) + " " + filepath.Base(season_path)
+			title := default_title(info.series_type, info.naming_scheme, info.path, season_path)
+			new_name, err := generate_new_name(info.naming_scheme,
+										  max_season_digits, num, 	// season_pad, season_num
+										  max_ep_digits, ep_nums[i],// ep_pad, ep_num 
+										  title, file) 				// title, file path
+			if err != nil {
+				return err
 			}
-			
-			new_name := fmt.Sprintf("S%0*dE%0*d %s%s",
-									max_season_digits, num, 
-									max_ep_digits, ep_nums[i],
-									clean_title(title), filepath.Ext(file))
 
 			fmt.Println(fmt.Sprintf("%-*s", 20, file), " --> ", fmt.Sprintf("%*s", 20, new_name))
 			fmt.Println("old", season_path+"/"+file, "new", season_path+"/"+new_name)
-			_, err := os.Stat(season_path+new_name)
+			_, err = os.Stat(season_path+new_name)
 			if err == nil {
 				fmt.Println("renaming", season_path+"/"+file, "to", season_path+"/"+new_name + " failed: file already exists")
 				continue
@@ -197,4 +194,120 @@ func (info *MovieInfo) rename() error {
 		}
 	}
 	return nil
+}
+
+func default_title(series_type string, naming_scheme Option[string], path string, season_path string) string {
+	var title string
+	if series_type == "single_season_no_movies" || series_type == "multiple_season_no_movies" || series_type == "multiple_season_with_movies" {
+		title = filepath.Base(path)
+	} else if series_type == "single_season_with_movies" {
+		title = filepath.Base(season_path)
+	} else if series_type == "named_seasons" {
+		title = filepath.Base(path) + " " + filepath.Base(season_path)
+	}
+	return title
+}
+
+func generate_new_name(naming_scheme Option[string], season_pad int, season_num int, ep_pad int, ep_num int, title string, file string) (string, error) {
+	var new_name string
+	if naming_scheme.is_some() {
+		scheme, err := naming_scheme.get()
+		if err != nil {
+			return "", err
+		}
+		// replace <season_num>
+		new_name = regexp.MustCompile(`<season_num(\s*:\s*\d+)?>`).ReplaceAllStringFunc(scheme, func(match string) string {
+			// <season_num: \d+>
+			if strings.Contains(match, ":") {
+				pad := regexp.MustCompile(`\d+`).FindString(match)
+				pad_num, err := strconv.Atoi(pad)
+				if err != nil {
+					return match
+				}
+				return fmt.Sprintf("%0*d", pad_num, season_num)
+			}
+			// <season_num>
+			return fmt.Sprintf("%0*d", season_pad, season_num)
+		})
+		// replace <episode_num>
+		new_name = regexp.MustCompile(`<episode_num(\s*:\s*\d+)?>`).ReplaceAllStringFunc(new_name, func(match string) string {
+			// <episode_num: \d+>
+			if strings.Contains(match, ":") {
+				pad := regexp.MustCompile(`\d+`).FindString(match)
+				pad_num, err := strconv.Atoi(pad)
+				if err != nil {
+					return match
+				}
+				return fmt.Sprintf("%0*d", pad_num, ep_num)
+			}
+			// <episode_num>
+			return fmt.Sprintf("%0*d", ep_pad, ep_num)
+		})
+		// replace <self: start,end> with filepath.Base(file)[start:end]
+		new_name = regexp.MustCompile(`<self\s*:\s*\d+,\d+>`).ReplaceAllStringFunc(new_name, func(match string) string {
+			parts := regexp.MustCompile(`\d+`).FindAllString(match, 2)
+			if len(parts) != 2 {
+				return match
+			}
+			start, err := strconv.Atoi(parts[0])
+			if err != nil {
+				return match
+			}
+			end, err := strconv.Atoi(parts[1])
+			if err != nil {
+				return match
+			}
+			fmt.Println(filepath.Base(file)[start:end])
+			return filepath.Base(file)[start:end]
+		})
+		// replace <parent> tokens with nth parent's name
+		// lol goodluck: https://regex-vis.com/?r=%3C%28parent%28-parent%29*%28%5Cs*%3A%5Cs*%28%28%5Cd%2B%5Cs*%2C%5Cs*%5Cd%2B%29%7C%28%27%5B%5E%27%5D*%27%29%29%29%3F%7Cp%28-%5Cd%2B%29%3F%28%5Cs*%3A%5Cs*%28%28%5Cd%2B%5Cs*%2C%5Cs*%5Cd%2B%29%7C%28%27%5B%5E%27%5D*%27%29%29%29%3F%29%5Cs*%3E&e=0
+		new_name = regexp.MustCompile(`<(parent(-parent)*(\s*:\s*((\d+\s*,\s*\d+)|('[^']*')))?|p(-\d+)?(\s*:\s*((\d+\s*,\s*\d+)|('[^']*')))?)\s*>`).ReplaceAllStringFunc(new_name, func(match string) string {
+			n, err := parent_token_to_int(match)
+			if err != nil {
+				return match
+			}
+			parent_name := nth_parent(file, n)
+
+			if strings.Contains(match, ":") {
+				parts := regexp.MustCompile(`\d+`).FindAllString(match, 2)
+
+				if len(parts) == 2 {
+					start, err := strconv.Atoi(parts[0])
+					if err != nil {
+						return parent_name
+					}
+					end, err := strconv.Atoi(parts[1])
+					if err != nil {
+						return parent_name
+					}
+					return parent_name[start:end]
+				}
+				regex_pattern := regexp.MustCompile(`'[^']*'`).FindString(match)
+				if len(regex_pattern) > 0 {
+					regex_pattern = strings.Trim(regex_pattern, "'")
+					re, err := regexp.Compile(regex_pattern)
+					if err != nil {
+						return parent_name
+					}
+					
+					substrings := re.FindStringSubmatch(parent_name)
+					if len(substrings) > 1 {
+						return substrings[1]
+					} 
+				}
+			}
+			return parent_name
+		})
+		// append ext
+		new_name = fmt.Sprintf("%s%s", new_name, filepath.Ext(file))
+
+	} else {
+		new_name = fmt.Sprintf("S%0*dE%0*d %s%s",
+							season_pad, season_num, 
+							ep_pad, ep_num,
+							title, filepath.Ext(file))
+	}
+
+	return new_name, nil
 }

@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-func series_rename_prereqs(path string, s_type string, keep_ep_nums Option[bool], starting_ep_num Option[int], has_season_0 Option[bool]) (SeriesInfo, error) {
+func series_rename_prereqs(path string, s_type string, keep_ep_nums Option[bool], starting_ep_num Option[int], has_season_0 Option[bool], naming_scheme Option[string]) (SeriesInfo, error) {
 	// get prerequsite info for renaming series
 	info := SeriesInfo{
 		path: 				path,
