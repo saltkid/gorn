@@ -1,6 +1,7 @@
 package main
 
 import (
+	"path/filepath"
 	"testing"
 )
 
@@ -15,20 +16,20 @@ func Test_parse_args(t *testing.T) {
 		t.Log("--root", "--series", "--movies", "\n\t", err, "\n")
 	}
 
-	command =[]string{"-r", "-s", "-m"}
-	_, err = parse_args(command)
-	if err == nil {
-		t.Errorf("expected error 'missing root dir path'")
-	} else {
-		t.Log("-r", "-s", "-m", "\n\t", err, "\n")
-	}
-
 	command =[]string{"-s", "--series", "-r", "--root",  "-m", "--movies"}
 	_, err = parse_args(command)
 	if err == nil {
 		t.Errorf("expected error 'missing series dir path'")
 	} else {
 		t.Log("-s", "--series", "-r", "--root",  "-m", "--movies", "\n\t", err, "\n")
+	}
+
+	command =[]string{"-r", "-s", "-m"}
+	_, err = parse_args(command)
+	if err == nil {
+		t.Errorf("expected error 'missing root dir path'")
+	} else {
+		t.Log("-r", "-s", "-m", "\n\t", err, "\n")
 	}
 
 	command =[]string{"-m", "--movies", "-r", "--root",  "-s", "--series"}
@@ -46,14 +47,6 @@ func Test_parse_args(t *testing.T) {
 	} else {
 		t.Log("--root", "./test_files", "./test_files", "\n\t", err, "\n")
 	}
-	
-	command = []string{"-s", "./test_files", "./test_files"} 
-	_, err = parse_args(command)
-	if err == nil {
-		t.Errorf("expected error 'multiple values for one flag is not allowed'")
-	} else {
-		t.Log("-s", "./test_files", "./test_files", "\n\t", err, "\n")
-	}
 
 	command = []string{"-m", "./test_files", "./test_files"}
 	_, err = parse_args(command)
@@ -61,6 +54,14 @@ func Test_parse_args(t *testing.T) {
 		t.Errorf("expected error 'multiple values for one flag is not allowed'")
 	} else {
 		t.Log("-m", "./test_files", "./test_files", "\n\t", err, "\n")
+	}
+	
+	command = []string{"-s", "./test_files", "./test_files"} 
+	_, err = parse_args(command)
+	if err == nil {
+		t.Errorf("expected error 'multiple values for one flag is not allowed'")
+	} else {
+		t.Log("-s", "./test_files", "./test_files", "\n\t", err, "\n")
 	}
 
 	command = []string{"./test_files"}
@@ -71,20 +72,20 @@ func Test_parse_args(t *testing.T) {
 		t.Log("./test_files", "\n\t", err, "\n")
 	}
 
-	command = []string{"-s0", "all", "yes"}
-	_, err = parse_args(command)
-	if err == nil {
-		t.Errorf("expected error 'missing root/series/movies dir path'")
-	} else {
-		t.Log("-s0", "all", "yes", "\n\t", err, "\n")
-	}
-
 	command = []string{"-r", "./test_files", "--season-0", "all", "1"}
 	_, err = parse_args(command)
 	if err == nil {
 		t.Errorf("expected error '1 is not a valid arg. must be yes or no'")
 	} else {
 		t.Log("-r", "./test_files", "--season-0", "all", "1", "\n\t", err, "\n")
+	}
+
+	command = []string{"-s0", "all", "yes"}
+	_, err = parse_args(command)
+	if err == nil {
+		t.Errorf("expected error 'missing root/series/movies dir path'")
+	} else {
+		t.Log("-s0", "all", "yes", "\n\t", err, "\n")
 	}
 
 	command = []string{"-r", "./test_files", "--season-0", "yes"}
@@ -95,14 +96,6 @@ func Test_parse_args(t *testing.T) {
 		t.Log("-r", "./test_files", "--season-0", "yes", "\n\t", err, "\n")
 	}
 
-	command = []string{"-r", "./test_files", "--season-0", "-s0"}
-	_, err = parse_args(command)
-	if err == nil {
-		t.Errorf("expected error '-s0 is not a valid arg. must be all or var'")
-	} else {
-		t.Log("-r", "./test_files", "--season-0", "-s0", "\n\t", err, "\n")
-	}
-
 	command = []string{"-ken", "all", "yes"}
 	_, err = parse_args(command)
 	if err == nil {
@@ -110,7 +103,7 @@ func Test_parse_args(t *testing.T) {
 	} else {
 		t.Log("-ken", "all", "yes", "\n\t", err, "\n")
 	}
-
+	
 	command = []string{"-r", "./test_files", "-ken", "all", "1"}
 	_, err = parse_args(command)
 	if err == nil {
@@ -119,6 +112,14 @@ func Test_parse_args(t *testing.T) {
 		t.Log("-r", "./test_files", "-ken", "all", "1", "\n\t", err, "\n")
 	}
 
+	command = []string{"-r", "./test_files", "--season-0", "-s0"}
+	_, err = parse_args(command)
+	if err == nil {
+		t.Errorf("expected error '-s0 is not a valid arg. must be all or var'")
+	} else {
+		t.Log("-r", "./test_files", "--season-0", "-s0", "\n\t", err, "\n")
+	}
+	
 	command = []string{"-r", "./test_files", "-ken", "yes"}
 	_, err = parse_args(command)
 	if err == nil {
@@ -166,23 +167,7 @@ func Test_parse_args(t *testing.T) {
 	} else {
 		t.Log("-r", "./test_files", "--starting-ep-num", "-sen", "\n\t", err, "\n")
 	}
-
-	command = []string{"-r", "./test_files", "--naming-scheme", "S01E01"}
-	_, err = parse_args(command)
-	if err == nil {
-		t.Errorf("expected error 'multiple starting-ep-num flags'")
-	} else {
-		t.Log("-r", "./test_files", "--starting-ep-num", "-sen", "\n\t", err, "\n")
-	}
 	
-	command = []string{"--root", `C:\Users\Cid\Documents\projects\Go\gorn\test_files`, "-s", `C:\Users\Cid\Documents\Projects\Go\gorn\test_files\Series`, "-m", "./test_files/Movies"}
-	_, err = parse_args(command)
-	if err == nil {
-		t.Errorf("expected error 'series directory ./test_files/Series is a subdirectory of root directory ./test_files'")
-	} else {
-		t.Log("--root", "./test_files", "-s", "./test_files/Series", "-m", "./test_files/Movies", "\n\t", err, "\n")
-	}
-
 	command = []string{"--root", "./test_files", "-r", "./test_files"}
 	_, err = parse_args(command)
 	if err == nil {
@@ -190,23 +175,39 @@ func Test_parse_args(t *testing.T) {
 	} else {
 		t.Log("--root", "./test_files", "-r", "./test_files", "\n\t", err, "\n")
 	}
-
-	t.Log("------------expects success------------")
-
-	command = []string{"--root", "./test_files"}
+	
+	command = []string{"--root", `.\test_files`, "-s", `.\test_files\Series`, "-m", "./test_files/Movies"}
 	_, err = parse_args(command)
-	if err != nil {
-		t.Errorf("unexpected error: %s", err)
+	if err == nil {
+		t.Errorf("expected error 'series directory ./test_files/Series is a subdirectory of root directory ./test_files'")
 	} else {
-		t.Log("--root", "./test_files")
+		t.Log("--root", "./test_files", "-s", "./test_files/Series", "-m", "./test_files/Movies", "\n\t", err, "\n")
 	}
-
+	
+	
+		command = []string{"-r", "./test_files", "--naming-scheme", "S01E01"}
+		_, err = parse_args(command)
+		if err == nil {
+			t.Errorf("expected error 'multiple starting-ep-num flags'")
+		} else {
+			t.Log("-r", "./test_files", "--starting-ep-num", "-sen", "\n\t", err, "\n")
+		}
+	t.Log("------------expects success------------")
+	
 	command = []string{"--root", "./test_files", "-s0", "all", "yes"}
 	_, err = parse_args(command)
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
 	} else {
 		t.Log("--root", "./test_files", "-s0", "all", "yes")
+	}
+	
+	command = []string{"--root", "./test_files"}
+	_, err = parse_args(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log("--root", "./test_files")
 	}
 
 	command = []string{"--root", "./test_files", "-s0"}
@@ -226,26 +227,19 @@ func Test_naming_scheme_validation(t *testing.T) {
 	} else {
 		t.Log("S<season_num:>E<episode_num:>", "\n\t", err, "\n")
 	}
-
-	err = validate_naming_scheme(`S<season_num: 3`)
-	if err == nil {
-		t.Errorf("expected error 'reached end of string but still in an unclosed api: <season_num: 3'")
-	} else {
-		t.Log(`S<season_num: 3`, "\n\t", err, "\n")
-	}
-
+	
 	err = validate_naming_scheme(`S<season_num: 3l>`)
 	if err == nil {
 		t.Errorf("expected error '3l is not a valid arg. must be a valid positive integer'")
 	} else {
 		t.Log(`S<season_num: 3l>`, "\n\t", err, "\n")
 	}
-
-	err = validate_naming_scheme(`E<episode_num: -2>`)
+		
+	err = validate_naming_scheme(`S<season_num: 3`)
 	if err == nil {
-		t.Errorf("expected error '-2 is not a valid arg. must be a valid positive integer'")
+		t.Errorf("expected error 'reached end of string but still in an unclosed api: <season_num: 3'")
 	} else {
-		t.Log(`E<episode_num: -2>`, "\n\t", err, "\n")
+		t.Log(`S<season_num: 3`, "\n\t", err, "\n")
 	}
 
 	err = validate_naming_scheme(`<parent-parent:>`)
@@ -254,7 +248,14 @@ func Test_naming_scheme_validation(t *testing.T) {
 	} else {
 		t.Log(`<parent-parent:>`, "\n\t", err, "\n")
 	}
-
+	
+	err = validate_naming_scheme(`E<episode_num: -2>`)
+	if err == nil {
+		t.Errorf("expected error '-2 is not a valid arg. must be a valid positive integer'")
+	} else {
+		t.Log(`E<episode_num: -2>`, "\n\t", err, "\n")
+	}
+	
 	err = validate_naming_scheme(`<parent-parent:1>`)
 	if err == nil {
 		t.Errorf("expected error '1 is not a valid arg. must be two valid positive integers separated by a comma'")
@@ -430,5 +431,20 @@ func Test_split_regex_by_pipe(t *testing.T) {
 		for _, part := range parts {
 			t.Log("\t",part, "has only one match group?", has_only_one_match_group(part))
 		}
+	}
+}
+
+
+func Test_generate_new_name(t *testing.T) {
+	path := filepath.Clean(`.test_files\Series\Series_seasonal\Season 1\1234567890.mp4`)
+	t.Log("------------expects success------------")
+	name, err := generate_new_name(some[string](`S<season_num: 3>E<episode_num: 2> - <parent-parent: 0,1> <parent: '\d+(.*)-.*'> <p-3: '(\d+)'> <self: 5,6>`),
+									2, 1, 3, 2,
+									"title", ".ext",
+									path)
+	if err != nil {
+		t.Error(err)
+	} else {
+		t.Log("\n\told: ", `S<season_num: 3>E<episode_num: 2> - <parent-parent: 0,1> <parent: '\d+(.*)-.*'> <p-3: '(\d+)'> <self: 5,5>`, "\n\tnew: ", name)
 	}
 }
