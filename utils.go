@@ -168,3 +168,43 @@ func clean_title (title string) string {
 	title = re.ReplaceAllString(title, "")
 	return title
 }
+
+func split_regex_by_pipe (s string) []string {
+	var parts []string
+	depth := 0
+	part_start := 0
+
+	for i, c := range s {
+		if c == '|' && depth == 0 {
+			parts = append(parts, s[part_start:i])
+			part_start = i + 1
+		} else if c == '(' {
+			depth++
+		} else if c == ')' {
+			depth--
+		}
+	}
+
+	parts = append(parts, s[part_start:])
+	return parts
+}
+
+func has_only_one_match_group (s string) bool {
+	openingCount := 0
+	closingCount := 0
+	matchGroupCount := 0
+	depth := 0
+
+	for _, c := range s {
+		if c == '(' && depth == 0 {
+			openingCount++
+			depth++
+		} else if c == ')' && depth == 1{
+			closingCount++
+			matchGroupCount++
+			depth--
+		}
+	}
+
+	return matchGroupCount == 1
+}
