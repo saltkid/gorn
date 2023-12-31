@@ -105,7 +105,7 @@ func main() {
 
 	fmt.Println("test for named seasons")
 	for _, v := range series.named_seasons {
-		info, err := series_rename_prereqs(v, "named_seasons", some[bool](false), some[int](1), some[bool](false))
+		info, err := series_rename_prereqs(v, "named_seasons", some[bool](false), some[int](1), some[bool](false), none[string]())
 		if err != nil {
 			panic(err)
 		}
@@ -120,7 +120,7 @@ func main() {
 
 	fmt.Println("test for single season no movies")
 	for _, v := range series.single_season_no_movies {
-		info, err := series_rename_prereqs(v, "single_season_no_movies", some[bool](false), some[int](1), some[bool](true))
+		info, err := series_rename_prereqs(v, "single_season_no_movies", some[bool](false), some[int](1), some[bool](true), none[string]())
 		if err != nil {
 			panic(err)
 		}
@@ -135,7 +135,7 @@ func main() {
 
 	fmt.Println("test for single season with movies")
 	for _, v := range series.single_season_with_movies {
-		info, err := series_rename_prereqs(v, "single_season_with_movies", some[bool](true), some[int](1), some[bool](false))
+		info, err := series_rename_prereqs(v, "single_season_with_movies", some[bool](true), some[int](1), some[bool](false), none[string]())
 		if err != nil {
 			panic(err)
 		}
@@ -150,7 +150,7 @@ func main() {
 
 	fmt.Println("test for multiple season no movies")
 	for _, v := range series.multiple_season_no_movies {
-		info, err := series_rename_prereqs(v, "multiple_season_no_movies", some[bool](false), some[int](1), some[bool](false))
+		info, err := series_rename_prereqs(v, "multiple_season_no_movies", some[bool](false), some[int](1), some[bool](false), none[string]())
 		if err != nil {
 			panic(err)
 		}
@@ -165,7 +165,7 @@ func main() {
 
 	fmt.Println("test for multiple season with movies")
 	for _, v := range series.multiple_season_with_movies {
-		info, err := series_rename_prereqs(v, "multiple_season_with_movies", some[bool](false), some[int](1), some[bool](false))
+		info, err := series_rename_prereqs(v, "multiple_season_with_movies", some[bool](false), some[int](1), some[bool](false), none[string]())
 		if err != nil {
 			panic(err)
 		}

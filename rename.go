@@ -19,6 +19,7 @@ type SeriesInfo struct {
 	movies          []string
 	keep_ep_nums    Option[bool]
 	starting_ep_num Option[int]
+	naming_scheme   Option[string]
 }
 
 type MovieInfo struct {
