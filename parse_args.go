@@ -360,12 +360,14 @@ func validate_roots(root []string, series []string, movies []string) error {
 		}
 	}
 
-	// check if any of the series and movies directories are subdirectories of a root directory
+	// check if any of the series and movies directories are subdirectories of a root directory OR vice versa
 	// and in turn checking if any of the series and movies directories are duplicates of root directories
 	for _, r := range root {
 		for _, s := range series {
 			if strings.EqualFold(filepath.Dir(s), r) {
 				return fmt.Errorf("series directory %s is a subdirectory of root directory %s", s, r)
+			} else if strings.EqualFold(filepath.Dir(r), s) {
+				return fmt.Errorf("root directory %s is a subdirectory of series directory %s", r, s)
 			} else if strings.EqualFold(s, r) {
 				return fmt.Errorf("series directory %s is a duplicate of root directory %s", s, r)
 			}
@@ -373,6 +375,8 @@ func validate_roots(root []string, series []string, movies []string) error {
 		for _, m := range movies {
 			if strings.EqualFold(filepath.Dir(m), r) {
 				return fmt.Errorf("movies directory %s is a subdirectory of root directory %s", m, r)
+			} else if strings.EqualFold(filepath.Dir(r), m) {
+				return fmt.Errorf("root directory %s is a subdirectory of movies directory %s", r, m)
 			} else if strings.EqualFold(m, r) {
 				return fmt.Errorf("movies directory %s is a duplicate of root directory %s", m, r)
 			}
@@ -385,13 +389,12 @@ func validate_roots(root []string, series []string, movies []string) error {
 		for _, m := range movies {
 			if strings.EqualFold(filepath.Dir(m), s) {
 				return fmt.Errorf("series directory %s is a subdirectory of movies directory %s", s, m)
-			} else if strings.EqualFold(s, m) {
-				return fmt.Errorf("series directory %s is a duplicate of movies directory %s", s, m)
 
 			} else if strings.EqualFold(filepath.Dir(s), m) {
 				return fmt.Errorf("movies directory %s is a subdirectory of series directory %s", m, s)
+
 			} else if strings.EqualFold(s, m) {
-				return fmt.Errorf("movies directory %s is a duplicate of series directory %s", m, s)
+				return fmt.Errorf("series directory %s is a duplicate of movies directory %s", s, m)
 			}
 		}
 	}
