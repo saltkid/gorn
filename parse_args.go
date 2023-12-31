@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"os"
 )
 
 type Args struct {
@@ -204,8 +205,9 @@ func parse_args(args []string) (Args, error) {
 		}
 	}
 
-	if len(parsed_args.root) == 0 && len(parsed_args.series) == 0 && len(parsed_args.movies) == 0 {
-		return Args{}, fmt.Errorf("must specify at least one of --root, --series, or --movie")
+	err := validate_roots(parsed_args.root, parsed_args.series, parsed_args.movies)
+	if err != nil {
+		return Args{}, err
 	}
 
 	return parsed_args, nil
@@ -333,4 +335,90 @@ func tokenize_naming_scheme(s string) ([]string, error) {
 	}
 
 	return naming_scheme, nil
+}
+
+func validate_roots(root []string, series []string, movies []string) error {
+	// must at least have one of any
+	if len(root) == 0 && len(series) == 0 && len(movies) == 0 {
+		return fmt.Errorf("must specify at least one root directory")
+	}
+
+	// check if exists
+	for _, r := range root {
+		if _, err := os.Stat(r); err != nil {
+			return fmt.Errorf("root directory %s does not exist", r)
+		}
+	}
+	for _, r := range series {
+		if _, err := os.Stat(r); err != nil {
+			return fmt.Errorf("series directory %s does not exist", r)
+		}
+	}
+	for _, r := range movies {
+		if _, err := os.Stat(r); err != nil {
+			return fmt.Errorf("movies directory %s does not exist", r)
+		}
+	}
+
+	// check if any of the series and movies directories are subdirectories of a root directory
+	// and in turn checking if any of the series and movies directories are duplicates of root directories
+	for _, r := range root {
+		for _, s := range series {
+			if strings.EqualFold(filepath.Dir(s), r) {
+				return fmt.Errorf("series directory %s is a subdirectory of root directory %s", s, r)
+			} else if strings.EqualFold(s, r) {
+				return fmt.Errorf("series directory %s is a duplicate of root directory %s", s, r)
+			}
+		}
+		for _, m := range movies {
+			if strings.EqualFold(filepath.Dir(m), r) {
+				return fmt.Errorf("movies directory %s is a subdirectory of root directory %s", m, r)
+			} else if strings.EqualFold(m, r) {
+				return fmt.Errorf("movies directory %s is a duplicate of root directory %s", m, r)
+			}
+		}
+	}
+
+	// check if any of the series and movies directories are subdirectories of each other
+	// and in turn checking if any of the series and movies directories are duplicates of each other
+	for _, s := range series {
+		for _, m := range movies {
+			if strings.EqualFold(filepath.Dir(m), s) {
+				return fmt.Errorf("series directory %s is a subdirectory of movies directory %s", s, m)
+			} else if strings.EqualFold(s, m) {
+				return fmt.Errorf("series directory %s is a duplicate of movies directory %s", s, m)
+
+			} else if strings.EqualFold(filepath.Dir(s), m) {
+				return fmt.Errorf("movies directory %s is a subdirectory of series directory %s", m, s)
+			} else if strings.EqualFold(s, m) {
+				return fmt.Errorf("movies directory %s is a duplicate of series directory %s", m, s)
+			}
+		}
+	}
+
+	// check if there are any duplicates in each individually
+	for i, r := range root {
+		for _, r1 := range root[i+1:] {
+			if strings.EqualFold(r, r1) {
+				return fmt.Errorf("there are multiple root directories that share the same path: %s", r)
+			}
+		}
+	}
+	for i, s := range series {
+		for _, s1 := range series[i+1:] {
+			if strings.EqualFold(s, s1) {
+				return fmt.Errorf("there are multiple series directories that share the same path: %s", s)
+			}
+		}
+	}
+	for i, m := range movies {
+		for _, m1 := range movies[i+1:] {
+			if strings.EqualFold(m, m1) {
+				return fmt.Errorf("there are multiple movies directories that share the same path: %s", m)
+			}
+		}
+	}
+
+	// all done
+	return nil
 }
