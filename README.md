@@ -64,11 +64,11 @@ User can specify series and movie root dirs separately, can specify only one of 
 ___
 ## Additional Options
 ### 1. --keep-ep-num
-By default, episode numbers are padded to 2 digits and will start at 01. These are automatically generated and renames the files based on natural sorting. This can be useful if you only have episodes that are canon, aka you don't have filler episodes, so you want to keep the episode number already in the filename.
+By default, episode numbers are padded to 2 digits and will start at 01. These are automatically generated and renames the files based on natural sorting.
 
 `--keep-ep-nums all no` is the default behavior if the flag is not present.
 
-If `--keep-ep-nums` flag is present or user inputted `--keep-ep-nums all yes`, gorn will keep the original episode numbers in the filename based on common naming patterns. if none was found in the filename, it will not rename for that specific file.
+If `--keep-ep-nums` flag is present or user inputted `--keep-ep-nums all yes`, gorn will keep the original episode numbers in the filename based on common naming patterns. if none was found in the filename, it will not rename for that specific file. This can be useful if you only have episodes that are canon, aka you don't have filler episodes, so you want to keep the episode number already in the filename.
 
 If user inputted `--keep-ep-nums var`, gorn will ask for user input whether or not to keep the episode numbers again for each series entry.
 
