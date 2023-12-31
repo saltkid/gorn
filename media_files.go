@@ -7,7 +7,7 @@ import (
 )
 
 type MediaFiles interface {
-	split_by_type(entries Entries) error
+	split_by_type(entries []string) error
 }
 
 type Movies struct {
@@ -22,8 +22,8 @@ type Series struct {
 	multiple_season_with_movies []string
 }
 
-func (movie *Movies) split_by_type(movie_entries Entries) error {
-	for movie_entry := range movie_entries.(MovieEntries) {
+func (movie *Movies) split_by_type(movie_entries []string) error {
+	for _, movie_entry := range movie_entries {
 		files, err := os.ReadDir(movie_entry)
 		if err != nil {
 			return err
@@ -45,8 +45,8 @@ func (movie *Movies) split_by_type(movie_entries Entries) error {
 	return nil
 }
 
-func (series *Series) split_by_type(series_entries Entries) error {
-	for series_entry := range series_entries.(SeriesEntries) {
+func (series *Series) split_by_type(series_entries []string) error {
+	for _, series_entry := range series_entries {
 		files, err := os.ReadDir(series_entry)
 		if err != nil {
 			return err

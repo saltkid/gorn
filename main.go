@@ -14,13 +14,22 @@ func main() {
 	}
 
 	if len(args.root) > 0 {
-		fmt.Println("root: ", args.root[0])
+		fmt.Println("roots:")
+		for _, root := range args.root {
+			fmt.Println("\t", root)
+		}
 	}
 	if len(args.series) > 0 {
-		fmt.Println("series: ", args.series[0])
+		fmt.Println("series:")
+		for _, series := range args.series {
+			fmt.Println("\t", series)
+		}
 	}
 	if len(args.movies) > 0 {
-		fmt.Println("movies: ", args.movies[0])
+		fmt.Println("movies:")
+		for _, movie := range args.movies {
+			fmt.Println("\t", movie)
+		}
 	}
 	ken, err := args.keep_ep_nums.get()
 	if err == nil {
@@ -41,11 +50,11 @@ func main() {
 	}
 
 	fmt.Println("series dirs (", len(series_entries), "): ")
-	for series := range series_entries {
+	for _, series := range series_entries {
 		fmt.Println("\t", series)
 	}
 	fmt.Println("movie dirs (", len(movie_entries), "): ")
-	for movie := range movie_entries {
+	for _, movie := range movie_entries {
 		fmt.Println("\t", movie)
 	}
 	fmt.Println()
@@ -200,60 +209,21 @@ func main() {
 	fmt.Println()
 }
 
-// set implementation for entries
-
-type SeriesEntries map[string]struct{}
-type MovieEntries map[string]struct{}
-type Entries interface {
-	Add(s ...string)
-	Delete(s ...string)
-	Has(s string) bool
-}
-
-func (se SeriesEntries) Add(s ...string) {
-	for _, v := range s {
-		se[v] = struct{}{}
-	}
-}
-func (se SeriesEntries) Delete(s ...string) {
-	for _, v := range s {
-		delete(se, v)
-	}
-}
-func (se SeriesEntries) Has(s string) bool {
-	_, ok := se[s]
-	return ok
-}
-func (me MovieEntries) Add(s ...string) {
-	for _, v := range s {
-		me[v] = struct{}{}
-	}
-}
-func (me MovieEntries) Delete(s ...string) {
-	for _, v := range s {
-		delete(me, v)
-	}
-}
-func (me MovieEntries) Has(s string) bool {
-	_, ok := me[s]
-	return ok
-}
-
 // fetch_entries retrieves the series and movie entries from the given root, series, and movie directories.
 //
 // root_dirs: A slice of root directories to search for entries.
 // series_dirs: A slice of series directories to search for entries.
 // movie_dirs: A slice of movie directories to search for entries.
 //
-// Returns the series entries and movie entries as SeriesEntries and MovieEntries respectively.
-func fetch_entries(root_dirs []string, series_dirs []string, movie_dirs []string) (SeriesEntries, MovieEntries, error) {
+// Returns the series entries and movie entries as string slices.
+func fetch_entries(root_dirs []string, series_dirs []string, movie_dirs []string) ([]string, []string, error) {
 	if len(root_dirs) == 0 && len(series_dirs) == 0 && len(movie_dirs) == 0 {
 		return nil, nil, fmt.Errorf("passed no root, series, or movie directories")
 	}
 
-	entries := map[string]Entries{
-		"movies":  MovieEntries{},
-		"series": SeriesEntries{},
+	entries := map[string][]string{
+		"movies":  make([]string, 0),
+		"series": make([]string, 0),
 	}
 	for _, root := range root_dirs {
 		separated, err := separate_roots(root)
@@ -267,7 +237,7 @@ func fetch_entries(root_dirs []string, series_dirs []string, movie_dirs []string
 				if err != nil {
 					return nil, nil, err
 				}
-				entries[key].Add(subdirs...)
+				entries[key] = append(entries[key], subdirs...)
 			}
 		}
 	}
@@ -277,17 +247,17 @@ func fetch_entries(root_dirs []string, series_dirs []string, movie_dirs []string
 		if err != nil {
 			return nil, nil, err
 		}
-		entries["series"].Add(subdirs...)
+		entries["series"] = append(entries["series"], subdirs...)
 	}
 	for _, v := range movie_dirs {
 		subdirs, err := fetch_subdirs(v)
 		if err != nil {
 			return nil, nil, err
 		}
-		entries["movies"].Add(subdirs...)
+		entries["movies"] = append(entries["movies"], subdirs...)
 	}
 
-	return entries["series"].(SeriesEntries), entries["movies"].(MovieEntries), nil
+	return entries["series"], entries["movies"], nil
 }
 
 func separate_roots(root string) (map[string][]string, error) {

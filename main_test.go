@@ -174,6 +174,22 @@ func Test_parse_args(t *testing.T) {
 	} else {
 		t.Log("-r", "./test_files", "--starting-ep-num", "-sen", "\n\t", err, "\n")
 	}
+	
+	command = []string{"--root", `C:\Users\Cid\Documents\projects\Go\gorn\test_files`, "-s", `C:\Users\Cid\Documents\Projects\Go\gorn\test_files\Series`, "-m", "./test_files/Movies"}
+	_, err = parse_args(command)
+	if err == nil {
+		t.Errorf("expected error 'series directory ./test_files/Series is a subdirectory of root directory ./test_files'")
+	} else {
+		t.Log("--root", "./test_files", "-s", "./test_files/Series", "-m", "./test_files/Movies", "\n\t", err, "\n")
+	}
+
+	command = []string{"--root", "./test_files", "-r", "./test_files"}
+	_, err = parse_args(command)
+	if err == nil {
+		t.Errorf("expected error 'root directory ./test_files is a duplicate'")
+	} else {
+		t.Log("--root", "./test_files", "-r", "./test_files", "\n\t", err, "\n")
+	}
 
 	t.Log("------------expects success------------")
 
@@ -183,22 +199,6 @@ func Test_parse_args(t *testing.T) {
 		t.Errorf("unexpected error: %s", err)
 	} else {
 		t.Log("--root", "./test_files")
-	}
-
-	command = []string{"--root", "./test_files", "-r", "./test_files"}
-	_, err = parse_args(command)
-	if err != nil {
-		t.Errorf("multiple root directories are allowed: %s", err)
-	} else {
-		t.Log("--root", "./test_files", "-r", "./test_files")
-	}
-
-	command = []string{"--root", "./test_files", "-s", "./test_files/Series", "-m", "./test_files/Movies"}
-	_, err = parse_args(command)
-	if err != nil {
-		t.Errorf("multiple input directories are allowed: %s", err)
-	} else {
-		t.Log("--root", "./test_files", "-s", "./test_files/Series", "-m", "./test_files/Movies")
 	}
 
 	command = []string{"--root", "./test_files", "-s0", "all", "yes"}
