@@ -208,3 +208,41 @@ func has_only_one_match_group (s string) bool {
 
 	return matchGroupCount == 1
 }
+
+func parent_token_to_int(s string) (int, error) {
+	// lmao https://regex-vis.com/?r=%3Cparent%28-parent%29*%28%5Cs*%3A%5Cs*%28%28%5Cd+%5Cs*%2C%5Cs*%5Cd+%29%7C%28%27%5B%5E%27%5D*%27%29%29%29%3F%5Cs*%3E&e=0
+	long_form := regexp.MustCompile(`<parent(-parent)*(\s*:\s*((\d \s*,\s*\d )|('[^']*')))?\s*>`)
+	// lul https://regex-vis.com/?r=%3Cp%28-%5Cd%2B%29%3F%28%5Cs*%3A%5Cs*%28%28%5Cd%5Cs*%2C%5Cs*%5Cd%29%7C%28%27%5B%5E%27%5D*%27%29%29%29%3F%5Cs*%3E&e=0
+	short_form := regexp.MustCompile(`<p(-\d+)?(\s*:\s*((\d\s*,\s*\d)|('[^']*')))?\s*>`)
+	
+	if long_form.MatchString(s) {
+		return strings.Count(s, "parent"), nil
+		
+	} else if short_form.MatchString(s) {
+		// only p
+		single_p := regexp.MustCompile(`p\s*:`)
+		if single_p.MatchString(s) {
+			return 1, nil
+		}
+		// p-int
+		match_num := regexp.MustCompile(`p-(\d+)`).FindStringSubmatch(s)
+		if len(match_num) != 2 {
+			return 0, fmt.Errorf("invalid parent token: %s", s)
+		}
+		num, err := strconv.Atoi(match_num[1])
+		if err != nil {
+			return 0, err
+		}
+		return num, nil
+
+	} else {
+		return 0, fmt.Errorf("invalid parent token: %s", s)
+	}
+}
+
+func nth_parent(path string, n int) string {
+	for i := 0; i < n; i++ {
+		path = filepath.Dir(path)
+	}
+	return filepath.Base(path)
+}

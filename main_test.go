@@ -2,6 +2,7 @@ package main
 
 import (
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -438,13 +439,16 @@ func Test_split_regex_by_pipe(t *testing.T) {
 func Test_generate_new_name(t *testing.T) {
 	path := filepath.Clean(`.test_files\Series\Series_seasonal\Season 1\1234567890.mp4`)
 	t.Log("------------expects success------------")
-	name, err := generate_new_name(some[string](`S<season_num: 3>E<episode_num: 2> - <parent-parent: 0,1> <parent: '\d+(.*)-.*'> <p-3: '(\d+)'> <self: 5,6>`),
+	name, err := generate_new_name(some[string](`S<season_num: 3>E<episode_num: 2> - <parent-parent: '([^_]+)_.*$'> <parent: '([^ ]+) \d+'> <p-3: 'r(.*)$'> <self: 5,6>`),
 									2, 1, 3, 2,
-									"title", ".ext",
-									path)
+									"title", path)
 	if err != nil {
 		t.Error(err)
 	} else {
-		t.Log("\n\told: ", `S<season_num: 3>E<episode_num: 2> - <parent-parent: 0,1> <parent: '\d+(.*)-.*'> <p-3: '(\d+)'> <self: 5,5>`, "\n\tnew: ", name)
+		if strings.ReplaceAll(name, "S001E02 - Series Season ies 6.mp4", "") != "" {
+			t.Errorf("expected 'S001E02 - Series Season ies 6.mp4' got '%s'", name)
+		} else {
+			t.Log("\n\told:\t\t", filepath.Base(path), "\n\tnaming scheme:\t", `S<season_num: 3>E<episode_num: 2> - <parent-parent: '([^_]+)_.*$'> <parent: '([^ ]+) \d+'> <p-3: '.*r(.*)$'> <self: 5,6>`, "\n\tnew:\t\t", name)
+		}
 	}
 }
