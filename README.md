@@ -63,7 +63,7 @@ gorn --series path/to/series/root/dir --movies path/to/movies/root/dir -s path/t
 User can specify series and movie root dirs separately, can specify only one of either, and can specify any number of dirs. Other than that, it shares the same default renaming behavior as specifying a root dir
 ___
 ## Additional Options
-### --keep-ep-num
+### 1. --keep-ep-num
 By default, episode numbers are padded to 2 digits and will start at 01. These are automatically generated and renames the files based on natural sorting. This can be useful if you only have episodes that are canon, aka you don't have filler episodes, so you want to keep the episode number already in the filename.
 
 `--keep-ep-nums all no` is the default behavior if the flag is not present.
@@ -74,14 +74,14 @@ If user inputted `--keep-ep-nums var`, gorn will ask for user input whether or n
 
 `-ken` is the short form
 
-### --starting-ep-num
+### 2. --starting-ep-num
 By default, episode numbers are padded to 2 digits and will start at 01. You can specify a different starting number to start at by `--starting-ep-num all <num>`.
 
 If user inputted `--starting-ep-num var`, gorn will ask for user input again on what starting episode number to start at for each series entry.
 
 `-sen` is the short form
 
-### --has-season-0
+### 3. --has-season-0
 By default, the media files in specials/extras directory under a series entry are not renamed. `--has-season-0 all no` is the default behavior if the flag is not present. This will ignore the specials/extras directory.
 
 If the flag `--has-season-0` or user inputted `--has-season-0 all yes`, gorn will rename the files in the specials/extras directory under a series entry, treating it as the *season 0* of the series entry.
@@ -92,14 +92,15 @@ If user inputted `--has-season-0 var`, gorn will ask for user input again on whe
 
 `-s0` is the short form
 
-### --naming-scheme
+### 4. --naming-scheme
 By default, gorn will rename the files differently based on the type of media. User can override this by `--naming-scheme all "<scheme>"` or `--naming-scheme var`.
 
 `all "<scheme>"` overrides the naming scheme for all media files regardless of type (series only; movies will ignore these additional options)
 
 `-ns` is the short form
 
-**scheme**
+### *scheme*
+
 scheme is the naming scheme. It's composed of any character and/or APIs enclosed in <> like:
 - `S<season_num>E<episode_num>`
     - *output*: `S01E01`
