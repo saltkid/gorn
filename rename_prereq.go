@@ -1,24 +1,17 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 func series_rename_prereqs(path string, s_type string, keep_ep_nums Option[bool], starting_ep_num Option[int], has_season_0 Option[bool], naming_scheme Option[string]) (SeriesInfo, error) {
 	// get prerequsite info for renaming series
-	info := SeriesInfo{
-		path: 				path,
-		series_type: 		s_type,
-		seasons: 			make(map[int]string),
-		movies: 			make([]string, 0),
-		keep_ep_nums: 		keep_ep_nums,
-		starting_ep_num: 	starting_ep_num,
-	}
-
 	is_valid_type := map[string]bool{
 		"single_season_no_movies": true,
 		"single_season_with_movies": true,
@@ -29,11 +22,24 @@ func series_rename_prereqs(path string, s_type string, keep_ep_nums Option[bool]
 	if !is_valid_type[s_type] {
 		return SeriesInfo{}, fmt.Errorf("unknown series type: %s", s_type)
 	}
+
+	// if additional options are none aka user inputted var, ask for user input
+	prompt_additional_options(&keep_ep_nums, &starting_ep_num, &has_season_0, &naming_scheme, path)
+	info := SeriesInfo{
+		path: 				path,
+		series_type: 		s_type,
+		seasons: 			make(map[int]string),
+		movies: 			make([]string, 0),
+		keep_ep_nums: 		keep_ep_nums,
+		starting_ep_num: 	starting_ep_num,
+		naming_scheme: 		naming_scheme,
+	}
+
 	s0, err := has_season_0.get()
 	if err != nil {
 		return SeriesInfo{}, err
 	}
-	seasons, movies, err := get_series_content(path, s_type, s0)
+	seasons, movies, err := fetch_series_content(path, s_type, s0)
 	if err != nil {
 		return SeriesInfo{}, err
 	}
@@ -48,7 +54,96 @@ func series_rename_prereqs(path string, s_type string, keep_ep_nums Option[bool]
 	return info, nil
 }
 
-func get_series_content (path string, s_type string, has_season_0 bool) (map[int]string, []string, error) {
+func prompt_additional_options(keep_ep_nums *Option[bool], starting_ep_num *Option[int], has_season_0 *Option[bool], naming_scheme *Option[string], path string) {
+	// prompt user for additional options
+	if (*keep_ep_nums).is_none() {
+		fmt.Println("[INPUT]\nkeep episode numbers for", filepath.Base(path), "?", "\nfull path: ", path, "\ninputs: (y/n/var/default/exit)")
+		for {
+			scanner := bufio.NewScanner(os.Stdin)
+			if scanner.Scan() {
+				input := strings.ToLower(strings.TrimSpace(scanner.Text()))
+
+				switch input {
+				case "y", "yes":
+					(*keep_ep_nums) = some[bool](true)
+				case "n", "no":
+					(*keep_ep_nums) = some[bool](false)
+				case "var", "default":
+					break
+				default:
+					fmt.Println("[ERROR]\ninvalid input, please enter 'y', 'n', or 'default'")
+					continue
+				}
+			}
+		}
+	}
+	if (*starting_ep_num).is_none() {
+		fmt.Println("[INPUT]\nstarting episode number for", filepath.Base(path), "\nfull path: ", path, "\ninputs: (<int>/var/default/exit)")
+		for {
+			scanner := bufio.NewScanner(os.Stdin)
+			if scanner.Scan() {
+				input := strings.ToLower(strings.TrimSpace(scanner.Text()))
+
+				int_input, err := strconv.Atoi(input)
+				if err == nil {
+					(*starting_ep_num) = some[int](int_input)
+					break
+				}
+
+				switch input {
+				case "var", "default", "exit":
+					break
+				default:
+					fmt.Println("[ERROR]\ninvalid input, please enter 'y', 'n', or 'default'")
+					continue
+				}
+			}
+		}
+	}
+	if (*has_season_0).is_none() {
+		fmt.Println("[INPUT]\nis the specials/extras directory under", filepath.Base(path), "season 0?\nfull path: ", path, "\ninputs: (y/n/var/default/exit)")
+		for {
+			scanner := bufio.NewScanner(os.Stdin)
+			if scanner.Scan() {
+				input := strings.ToLower(strings.TrimSpace(scanner.Text()))
+
+				switch input {
+				case "y", "yes":
+					(*has_season_0) = some[bool](true)
+				case "n", "no":
+					(*has_season_0) = some[bool](false)
+				case "var", "default", "exit":
+					break
+				default:
+					fmt.Println("[ERROR]\ninvalid input, please enter 'y', 'n', or 'default'")
+					continue
+				}
+			}
+		}
+	}
+	if (*naming_scheme).is_none() {
+		fmt.Println("[INPUT]\nnaming scheme for", filepath.Base(path), "\nfull path: ", path, "\ninputs: (<naming scheme>/var/default)")
+		for {
+			scanner := bufio.NewScanner(os.Stdin)
+			if scanner.Scan() {
+				input := scanner.Text()
+				input = strings.TrimSpace(input)
+
+				if strings.ToLower(input) == "var" || strings.ToLower(input) == "default" || strings.ToLower(input) == "exit" {
+					break
+				} else if err := validate_naming_scheme(input); err == nil {
+					(*naming_scheme) = some[string](input)
+					break
+				} else {
+					fmt.Println("[ERROR]\ninvalid input, please enter 'y', 'n', 'default', 'exit', or a valid naming scheme\ninput:", input, "\nerror:", err)
+					continue
+				}
+			}
+		}
+	}
+}
+
+func fetch_series_content(path string, s_type string, has_season_0 bool) (map[int]string, []string, error) {
 	seasons := make(map[int]string)
 	movies := make([]string, 0)
 	
@@ -128,7 +223,7 @@ func get_series_content (path string, s_type string, has_season_0 bool) (map[int
 	return seasons, movies, nil
 }
 
-func movie_rename_prereqs (path string, m_type string) (MovieInfo, error) {
+func movie_rename_prereqs(path string, m_type string) (MovieInfo, error) {
 	info := MovieInfo{
 		path: 			path,
 		movie_type: 	m_type,
