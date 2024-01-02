@@ -119,7 +119,6 @@ func main() {
 		}
 	}
 	fmt.Println()
-	// panic("test")
 
 	fmt.Println("test for single season no movies")
 	ssnm_ken, ssnm_sen, ssnm_s0, ssnm_ns := args.keep_ep_nums, args.starting_ep_num, args.has_season_0, args.naming_scheme

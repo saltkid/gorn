@@ -67,18 +67,19 @@ func prompt_additional_options(keep_ep_nums *Option[bool], starting_ep_num *Opti
 			if scanner.Scan() {
 				input := strings.ToLower(strings.TrimSpace(scanner.Text()))
 
-				switch input {
-				case "y", "yes":
+				if input == "y" || input == "yes" {
 					(*keep_ep_nums) = some[bool](true)
-				case "n", "no":
-					(*keep_ep_nums) = some[bool](false)
-				case "var", "exit":
 					break
-				case "default":
+				} else if input == "n" || input == "no" {
+					(*keep_ep_nums) = some[bool](false)
+					break
+				} else if input == "var" || input == "exit" {
+					break
+				} else if input == "default" {
 					(*keep_ep_nums) = default_ken
-				default:
-					fmt.Println("[ERROR]\ninvalid input, please enter 'y', 'n', or 'default'")
-					continue
+					break
+				} else {
+					fmt.Println("[ERROR]\ninvalid input, please enter 'y', 'n', 'exit', or 'default'")
 				}
 			}
 		}
@@ -95,15 +96,13 @@ func prompt_additional_options(keep_ep_nums *Option[bool], starting_ep_num *Opti
 					(*starting_ep_num) = some[int](int_input)
 					break
 				}
-
-				switch input {
-				case "default":
+				if input == "default" {
 					(*starting_ep_num) = default_sen
-				case "var", "exit":
 					break
-				default:
-					fmt.Println("[ERROR]\ninvalid input, please enter 'y', 'n', or 'default'")
-					continue
+				} else if input == "var" || input == "exit" {
+					break
+				} else {
+					fmt.Println("[ERROR]\ninvalid input, please enter '<int>', 'var', 'exit', or 'default'")
 				}
 			}
 		}
@@ -115,18 +114,19 @@ func prompt_additional_options(keep_ep_nums *Option[bool], starting_ep_num *Opti
 			if scanner.Scan() {
 				input := strings.ToLower(strings.TrimSpace(scanner.Text()))
 
-				switch input {
-				case "y", "yes":
+				if input == "y" || input == "yes" {
 					(*has_season_0) = some[bool](true)
-				case "n", "no":
-					(*has_season_0) = some[bool](false)
-				case "var", "exit":
 					break
-				case "default":
+				} else if input == "n" || input == "no" {
+					(*has_season_0) = some[bool](false)
+					break
+				} else if input == "var" || input == "exit" {
+					break
+				} else if input == "default" {
 					(*has_season_0) = default_s0
-				default:
-					fmt.Println("[ERROR]\ninvalid input, please enter 'y', 'n', or 'default'")
-					continue
+					break
+				} else {
+					fmt.Println("[ERROR]\ninvalid input, please enter 'y', 'n', 'exit', or 'default'")
 				}
 			}
 		}
@@ -146,7 +146,6 @@ func prompt_additional_options(keep_ep_nums *Option[bool], starting_ep_num *Opti
 					break
 				} else {
 					fmt.Println("[ERROR]\ninvalid input, please enter 'y', 'n', 'default', 'exit', or a valid naming scheme\ninput:", input, "\nerror:", err)
-					continue
 				}
 			}
 		}
