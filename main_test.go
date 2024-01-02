@@ -443,12 +443,12 @@ func Test_generate_new_name(t *testing.T) {
 									2, 1, 3, 2,
 									"title", path)
 	if err != nil {
-		t.Error(err)
+		t.Error("expected no error; got", err)
 	} else {
-		if strings.ReplaceAll(name, "S001E02 - Series Season ies 6.mp4", "") != "" {
-			t.Errorf("expected 'S001E02 - Series Season ies 6.mp4' got '%s'", name)
+		if strings.ReplaceAll(name, `.test_files\Series\Series_seasonal\Season 1\S001E02 - Series Season ies 67.mp4`, "") != "" {
+			t.Errorf(`expected '.test_files\Series\Series_seasonal\Season 1\S001E02 - Series Season ies 67.mp4' got '%s'`, name)
 		} else {
-			t.Log("\n\told:\t\t", filepath.Base(path), "\n\tnaming scheme:\t", `S<season_num: 3>E<episode_num: 2> - <parent-parent: '([^_]+)_.*$'> <parent: '([^ ]+) \d+'> <p-3: '.*r(.*)$'> <self: 5,6>`, "\n\tnew:\t\t", name)
+			t.Log("\n\told:\t\t", filepath.Base(path), "\n\tnaming scheme:\t", `S<season_num: 3>E<episode_num: 2> - <parent-parent: '([^_]+)_.*$'> <parent: '([^ ]+) \d+'> <p-3: 'r(.*)$'> <self: 5,6>`, "\n\tnew:\t\t", name)
 		}
 	}
 }

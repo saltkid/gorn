@@ -221,7 +221,7 @@ func validate_naming_scheme(s string) error {
 
 	valid_api := regexp.MustCompile(`^season_num$|^episode_num$|^self$`)
 	valid_parent_api := regexp.MustCompile(`^parent(-parent)*$|^p(-\d+)?$`)
-	valid_range := regexp.MustCompile(`^\d+(,\s*\d+)?$`)
+	valid_range := regexp.MustCompile(`^\d+(\s*,\s*\d+)?$`)
 
 	for _,token := range tokens {
 		var api, val string
