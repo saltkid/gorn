@@ -55,6 +55,10 @@ func series_rename_prereqs(path string, s_type string, keep_ep_nums Option[bool]
 }
 
 func prompt_additional_options(keep_ep_nums *Option[bool], starting_ep_num *Option[int], has_season_0 *Option[bool], naming_scheme *Option[string], path string) {
+	default_ken := some[bool](false)
+	default_sen := some[int](1)
+	default_s0 := some[bool](false)
+
 	// prompt user for additional options
 	if (*keep_ep_nums).is_none() {
 		fmt.Println("[INPUT]\nkeep episode numbers for", filepath.Base(path), "?", "\ninputs: (y/n/var/default/exit)")
@@ -68,8 +72,10 @@ func prompt_additional_options(keep_ep_nums *Option[bool], starting_ep_num *Opti
 					(*keep_ep_nums) = some[bool](true)
 				case "n", "no":
 					(*keep_ep_nums) = some[bool](false)
-				case "var", "default":
+				case "var", "exit":
 					break
+				case "default":
+					(*keep_ep_nums) = default_ken
 				default:
 					fmt.Println("[ERROR]\ninvalid input, please enter 'y', 'n', or 'default'")
 					continue
@@ -91,7 +97,9 @@ func prompt_additional_options(keep_ep_nums *Option[bool], starting_ep_num *Opti
 				}
 
 				switch input {
-				case "var", "default", "exit":
+				case "default":
+					(*starting_ep_num) = default_sen
+				case "var", "exit":
 					break
 				default:
 					fmt.Println("[ERROR]\ninvalid input, please enter 'y', 'n', or 'default'")
@@ -112,8 +120,10 @@ func prompt_additional_options(keep_ep_nums *Option[bool], starting_ep_num *Opti
 					(*has_season_0) = some[bool](true)
 				case "n", "no":
 					(*has_season_0) = some[bool](false)
-				case "var", "default", "exit":
+				case "var", "exit":
 					break
+				case "default":
+					(*has_season_0) = default_s0
 				default:
 					fmt.Println("[ERROR]\ninvalid input, please enter 'y', 'n', or 'default'")
 					continue

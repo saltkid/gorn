@@ -73,8 +73,12 @@ func (info *SeriesInfo) rename() error {
 			max_ep_digits = 2
 		}
 		
+		// if additional options are none aka user inputted var, ask for user input
+		season_ken, season_sen, season_s0, season_ns := info.keep_ep_nums, info.starting_ep_num, some[bool](false), info.naming_scheme
+		prompt_additional_options(&season_ken, &season_sen, &season_s0, &season_ns, season_path)
+
 		var ep_num int
-		sen, err := info.starting_ep_num.get()
+		sen, err := season_sen.get()
 		if err != nil {
 			return err
 		}
@@ -86,7 +90,7 @@ func (info *SeriesInfo) rename() error {
 		}
 
 		ep_nums := make([]int, 0)
-		ken, err := info.keep_ep_nums.get()
+		ken, err := season_ken.get()
 		if err != nil {
 			return err
 		}
@@ -114,11 +118,11 @@ func (info *SeriesInfo) rename() error {
 		}
 
 		for i, file := range media_files {
-			title := default_title(info.series_type, info.naming_scheme, info.path, season_path)
-			new_name, err := generate_new_name(info.naming_scheme,
-										  max_season_digits, num, 	// season_pad, season_num
-										  max_ep_digits, ep_nums[i],// ep_pad, ep_num 
-										  title, file) 				// title, file path
+			title := default_title(info.series_type, season_ns, info.path, season_path)
+			new_name, err := generate_new_name(season_ns,				// naming_scheme
+										  max_season_digits, num, 		// season_pad, season_num
+										  max_ep_digits, ep_nums[i],	// ep_pad, ep_num 
+										  title, file) 					// title, file path
 			if err != nil {
 				return err
 			}

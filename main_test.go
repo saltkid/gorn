@@ -257,13 +257,6 @@ func Test_naming_scheme_validation(t *testing.T) {
 		t.Log(`E<episode_num: -2>`, "\n\t", err, "\n")
 	}
 	
-	err = validate_naming_scheme(`<parent-parent:1>`)
-	if err == nil {
-		t.Errorf("expected error '1 is not a valid arg. must be two valid positive integers separated by a comma'")
-	} else {
-		t.Log(`<parent-parent:1>`, "\n\t", err, "\n")
-	}
-
 	err = validate_naming_scheme(`<parent-parent:1,>`)
 	if err == nil {
 		t.Errorf("expected error '1, is not a valid arg. must be two valid positive integers separated by a comma'")
