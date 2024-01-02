@@ -221,7 +221,7 @@ func validate_naming_scheme(s string) error {
 
 	valid_api := regexp.MustCompile(`^season_num$|^episode_num$|^self$`)
 	valid_parent_api := regexp.MustCompile(`^parent(-parent)*$|^p(-\d+)?$`)
-	valid_range := regexp.MustCompile(`^\d+,\s*\d+$`)
+	valid_range := regexp.MustCompile(`^\d+(,\s*\d+)?$`)
 
 	for _,token := range tokens {
 		var api, val string
@@ -290,11 +290,17 @@ func validate_naming_scheme(s string) error {
 			} else if !valid_range.MatchString(val) {
 				return fmt.Errorf("%s's value must be in the format <start>,<end> where <start> and <end> are positive integers and 0. '%s' is not a valid range", api, val)
 			}
+
 			// valid range
-			res := strings.SplitN(val, ",", 2)
+			var res []string
+			if strings.Contains(val, ",") {
+				res = strings.SplitN(val, ",", 2)
+			} else {
+				res = []string{val, val}
+			}
 			begin, end := strings.TrimSpace(res[0]), strings.TrimSpace(res[1])
 			if begin > end {
-				return fmt.Errorf("%s is an invalid range. begin (%s) must be less than end (%s)", val, begin, end)
+				return fmt.Errorf("%s is an invalid range. begin (%s) must be less than or equal to end (%s)", val, begin, end)
 			}
 		}
 	}
