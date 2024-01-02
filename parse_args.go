@@ -293,7 +293,7 @@ func validate_naming_scheme(s string) error {
 			// valid range
 			res := strings.SplitN(val, ",", 2)
 			begin, end := strings.TrimSpace(res[0]), strings.TrimSpace(res[1])
-			if begin >= end {
+			if begin > end {
 				return fmt.Errorf("%s is an invalid range. begin (%s) must be less than end (%s)", val, begin, end)
 			}
 		}
