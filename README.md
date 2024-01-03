@@ -4,8 +4,8 @@ ___
 Renames your movies and series based on directory naming and structure. Note that you still have to rename directories, just not the individual media files themselves. This is for easier metadata scraping when using jellyfin, kodi, plex, etc.
 
 # Prerequisites
-You would need to have a directory to pass to the cli.
-have any of these (multiple of these of any combination will work too):
+A directory to pass to the cli.
+have any number of these (any combination of these will work too):
 - a root directory containing series directories and/or movie directories
 ```
 <root dir>
@@ -48,7 +48,7 @@ where ... may mean media files or subdirectories (like extras, specials, subs, e
 ```
 gorn --root path/to/root/dir
 ```
-This would rename all series and movies in the root directory based on directory naming and structure. The episode numbers per entry/season/part will be padded to 2 digits and will start at 01. movies will be named based on the directory they are in. naming scheme will vary depending on the type of media:
+Renames all series and movies in the root directory based on directory naming and structure. The episode numbers per entry/season/part will be padded to 2 digits and will start at 01. movies will be named based on the directory they are in. naming scheme will vary depending on the type of media which gorn will detect:
 - standalone movie, movie set
 - single season, multiple seasons, and named parts/seasons. all with or without movies
 
@@ -63,12 +63,26 @@ gorn --series path/to/series/root/dir --movies path/to/movies/root/dir -s path/t
 User can specify series and movie root dirs separately, can specify only one of either, and can specify any number of dirs. Other than that, it shares the same default renaming behavior as specifying a root dir
 ___
 ## Additional Options
+### 1. --help
+Shows the simple help message. If user inputted a flag right after `--help`, it will show the detailed help message for that specific flag.
+
+`-h` is the short form
+
+Example: `gorn -h --naming-scheme`, `gorn --help --help`
+### 2. --version
+Shows the welcome message along with the version.
+
+`-v` is the short form
+
+Example: `gorn -v`, `gorn --version`
 ### 1. --keep-ep-num
 By default, episode numbers are padded to 2 digits and will start at 01. These are automatically generated and renames the files based on natural sorting.
 
 `--keep-ep-nums all no` is the default behavior if the flag is not present.
 
-If `--keep-ep-nums` flag is present or user inputted `--keep-ep-nums all yes`, gorn will keep the original episode numbers in the filename based on common naming patterns. if none was found in the filename, it will not rename for that specific file. This can be useful if you only have episodes that are canon, aka you don't have filler episodes, so you want to keep the episode number already in the filename.
+If `--keep-ep-nums` flag is present or user inputted `--keep-ep-nums all yes`, gorn will keep the original episode numbers in the filename based on common naming patterns.
+
+if none was found in the filename, it will not rename for that specific file. This can be useful if you only have episodes that are canon, aka you don't have filler episodes, so you want to keep the episode number already in the filename.
 
 If user inputted `--keep-ep-nums var`, gorn will ask for user input whether or not to keep the episode numbers again for each series entry.
 
@@ -101,7 +115,7 @@ By default, gorn will rename the files differently based on the type of media. U
 
 ### *scheme*
 
-scheme is the naming scheme. It's composed of any character and/or APIs enclosed in <> like:
+scheme can be composed of any character (as long as its a valid filename) and/or APIs enclosed in <> like:
 - `S<season_num>E<episode_num>`
     - *output*: `S01E01`
 - `S<season_num>E<episode_num> - <parent-parent> <parent> static text` 
@@ -123,16 +137,20 @@ Current APIs are:
 3. `<parent>`
     - represents the parent directory of the media file. if no option was specified, it will copy the whole name of the parent directory
 
-    - additional option for parent is to select the range of characters from the parent directory name. it can be a range of two numbers like `<parent: 0,4>` or a regex expression enclosed in single quotes like `<parent: 'S(\d+)'>`
-        - `<parent: 0,3>` which will copy the first 4 characters of the parent directory name
+    - additional option for parent is to select the range of characters from the parent directory name
+    - it can be:
+        - a range of two numbers like `<parent: 0,3>`
+            - `<parent: 0,3>` which will copy the first 4 characters of the parent directory name
+        - a single number like `<parent: 4>`
+            - `<parent: 4>` which will copy the 5th character of the parent directory name
+        - a regex expression enclosed in single quotes like `<parent: 'S(\d+)'>`
+            - `<parent: 'S(\d+)'>` which will copy the capture group `(\d+)` that is prepended by `S` from the parent directory name. Notes:
+                1. it can only have one capture group per part
+                2. each part is separated by `|`
+                3. ie. `S(\d+)|E(\d+)` is valid. It has one capture group per part and has 2 parts
+                4. ie. `S(E|\d+)` has one capture group and one part. `|` inside parenthesis does not count as a part separator. only `|` outside parenthesis is part separator
+                5. ie. `'S(E)(\d+)|S(\d+)` is invalid since the first part has 2 capture groups, even if the second part has only 1
 
-        - `<parent: 'S(\d+)'>` which will copy the capture group `(\d+)` that is prepended by `S` from the parent directory name. Notes:
-            - it can only have one capture group per part
-
-            - each part is separated by `|`
-            - ie. `S(\d+)|E(\d+)` is valid. It has one capture group per part and has 2 parts
-            - ie. `S(E|\d+)` has one capture group and one part. `|` inside parenthesis does not count as a part separator. only `|` outside parenthesis is part separator
-            - ie. `'S(E)(\d+)|S(\d+)` is invalid since the first part has 2 capture groups, even if the second part has only 1
     - another additional option is going above just the parent of the current directory.
         - `<parent-parent>` which will copy the parent of the parent directory
 
