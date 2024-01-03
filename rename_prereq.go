@@ -173,7 +173,7 @@ func fetch_series_content(path string, s_type string, has_season_0 bool) (map[in
 		return nil, nil, err
 	}
 
-	extras_pattern := regexp.MustCompile(`^(?i)specials?|extras?|trailers?|ova`)
+	extras_pattern := regexp.MustCompile(`^(?i)(specials?|extras?|o(v|n)a)`)
 	for _, subdir := range subdirs {
 		if !subdir.IsDir() {
 			continue
