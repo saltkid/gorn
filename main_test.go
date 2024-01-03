@@ -342,6 +342,13 @@ func Test_naming_scheme_validation(t *testing.T) {
 	} else {
 		t.Log(`S<season_num: 3>E<episode_num: 2> - <parent-parent: 0,1> <parent: '\d+(.*)-.*'> <p-3: '(\d+)'> <self: 5,5>`)
 	}
+
+	err = validate_naming_scheme(`<p> <p-2>`)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(`<p>`)
+	}
 }
 
 func Test_split_regex_by_pipe(t *testing.T) {
@@ -444,4 +451,18 @@ func Test_generate_new_name(t *testing.T) {
 			t.Log("\n\told:\t\t", filepath.Base(path), "\n\tnaming scheme:\t", `S<season_num: 3>E<episode_num: 2> - <parent-parent: '([^_]+)_.*$'> <parent: '([^ ]+) \d+'> <p-3: 'r(.*)$'> <self: 5,6>`, "\n\tnew:\t\t", name)
 		}
 	}
+
+	name, err = generate_new_name(some[string](`<p>`), 
+									2, 1, 3, 2, 
+									"title", path)
+	if err != nil {
+		t.Error("expected no error; got", err)
+	} else {
+		if strings.ReplaceAll(name, `.test_files\Series\Series_seasonal\Season 1\Season 1.mp4`, "") != "" {
+			t.Errorf(`expected '.test_files\Series\Series_seasonal\Season 1\Season 1.mp4' got '%s'`, name)
+		} else {
+			t.Log("\n\told:\t\t", filepath.Base(path), "\n\tnaming scheme:\t", `<p> <p-2>`, "\n\tnew:\t\t", name)
+		}
+	}
+
 }

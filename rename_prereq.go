@@ -73,8 +73,10 @@ func prompt_additional_options(keep_ep_nums *Option[bool], starting_ep_num *Opti
 				} else if input == "n" || input == "no" {
 					(*keep_ep_nums) = some[bool](false)
 					break
-				} else if input == "var" || input == "exit" {
+				} else if input == "var" {
 					break
+				} else if input == "exit" {
+					return
 				} else if input == "default" {
 					(*keep_ep_nums) = default_ken
 					break
@@ -99,8 +101,10 @@ func prompt_additional_options(keep_ep_nums *Option[bool], starting_ep_num *Opti
 				if input == "default" {
 					(*starting_ep_num) = default_sen
 					break
-				} else if input == "var" || input == "exit" {
+				} else if input == "var" {
 					break
+				} else if input == "exit" {
+					return
 				} else {
 					fmt.Println("[ERROR]\ninvalid input, please enter '<int>', 'var', 'exit', or 'default'")
 				}
@@ -120,8 +124,10 @@ func prompt_additional_options(keep_ep_nums *Option[bool], starting_ep_num *Opti
 				} else if input == "n" || input == "no" {
 					(*has_season_0) = some[bool](false)
 					break
-				} else if input == "var" || input == "exit" {
+				} else if input == "var" {
 					break
+				} else if input == "exit" {
+					return					
 				} else if input == "default" {
 					(*has_season_0) = default_s0
 					break
@@ -139,8 +145,10 @@ func prompt_additional_options(keep_ep_nums *Option[bool], starting_ep_num *Opti
 				input := scanner.Text()
 				input = strings.TrimSpace(input)
 
-				if strings.ToLower(input) == "var" || strings.ToLower(input) == "default" || strings.ToLower(input) == "exit" {
+				if strings.ToLower(input) == "var" || strings.ToLower(input) == "default" {
 					break
+				} else if input == "exit" {
+					return
 				} else if err := validate_naming_scheme(input); err == nil {
 					(*naming_scheme) = some[string](input)
 					break

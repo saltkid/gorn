@@ -77,12 +77,12 @@ func (info *SeriesInfo) rename() error {
 		season_ken, season_sen, season_s0, season_ns := info.keep_ep_nums, info.starting_ep_num, some[bool](false), info.naming_scheme
 		prompt_additional_options(&season_ken, &season_sen, &season_s0, &season_ns, season_path)
 
-		var ep_num int
-		sen, err := season_sen.get()
-		if err != nil {
-			return err
+		var ep_num, sen int
+		if season_sen.is_some() {
+			sen, _ = season_sen.get()
+		} else {
+			sen = 1
 		}
-
 		if sen > 0 {
 			ep_num = sen
 		} else {
@@ -90,9 +90,11 @@ func (info *SeriesInfo) rename() error {
 		}
 
 		ep_nums := make([]int, 0)
-		ken, err := season_ken.get()
-		if err != nil {
-			return err
+		var ken bool
+		if season_ken.is_some() {
+			ken, _ = season_ken.get()
+		} else {
+			ken = false
 		}
 
 		if ken {
