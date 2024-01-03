@@ -7,10 +7,18 @@ import (
 	"strings"
 )
 
+var version string
 func main() {
+	if len(os.Args) < 2 {
+		welcome_msg(version)
+		return
+	}
+
 	args, err := parse_args(os.Args[1:])
-	if err != nil {
+	if err != nil && err.Error() != "safe exit" {
 		panic(err)
+	} else if err.Error() == "safe exit" {
+		return
 	}
 
 	if len(args.root) > 0 {
@@ -31,11 +39,11 @@ func main() {
 			fmt.Println("\t", movie)
 		}
 	}
-	ken, err := args.options.has_season_0.get()
+	ken, err := args.options.keep_ep_nums.get()
 	if err == nil {
 		fmt.Println("keep episode numbers: ", ken)
 	}
-	sen, err := args.options.has_season_0.get()
+	sen, err := args.options.starting_ep_num.get()
 	if err == nil {
 		fmt.Println("starting episode number: ", sen)
 	}

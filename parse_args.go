@@ -62,6 +62,18 @@ func parse_args(args []string) (Args, error) {
 		// catch invalid values acting as flags
 		} else if arg[0] != '-' {
 			return Args{}, fmt.Errorf("invalid flag: '%s'", arg)
+		
+		} else if arg == "--help" || arg == "-h" {
+			if len(args) <= i+1 {
+				help("")
+			} else if len(args) > i+1 {
+				help(args[i+1])
+			}
+			return Args{}, fmt.Errorf("safe exit")
+		
+		} else if arg == "--version" || arg == "-v" {
+			welcome_msg(version)
+			return Args{}, fmt.Errorf("safe exit")
 
 		} else if directory_args[arg] {
 			// no value after flag / flag after flag
