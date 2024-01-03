@@ -48,6 +48,9 @@ func parse_args(args []string) (Args, error) {
 		"--movies": true,
 		"-m":       true,
 	}
+	assigned := map[string]bool {
+		"--options": false,
+	}
 
 	parsed_args := new_Args()
 	skip_iter := 0
@@ -178,6 +181,31 @@ func parse_args(args []string) (Args, error) {
 				parsed_args.options.starting_ep_num = none[int]()
 			}
 
+		} else if arg == "--options" || arg == "-o" {
+			if assigned["--options"] {
+				return Args{}, fmt.Errorf("only one --options flag is allowed")
+			}
+			
+			// all options are assigned `var`
+			if len(args) <= i+1 || (len(args) > i+1 && (args[i+1][0] == '-' || args[i+1] == "var")) {
+				assigned["--options"] = true
+				parsed_args.options.keep_ep_nums = none[bool]()
+				parsed_args.options.starting_ep_num = none[int]()
+				parsed_args.options.has_season_0 = none[bool]()
+				parsed_args.options.naming_scheme = none[string]()
+
+			} else if args[i+1] != "default" && args[i+1] != "var" {
+				return Args{}, fmt.Errorf("invalid value '%s' for --options. Must be 'default' or 'var", args[i+1])
+
+			} else if args[i+1] == "default" {
+				// use default values
+				assigned["--options"] = true
+				parsed_args.options.keep_ep_nums = some[bool](false)
+				parsed_args.options.starting_ep_num = some[int](1)
+				parsed_args.options.has_season_0 = some[bool](false)
+				parsed_args.options.naming_scheme = some[string]("default")
+			}
+
 		} else if arg == "--naming-scheme" || arg == "-ns" {
 			if parsed_args.options.naming_scheme.is_some() {
 				return Args{}, fmt.Errorf("only one --naming-scheme flag is allowed")
@@ -215,18 +243,20 @@ func parse_args(args []string) (Args, error) {
 		return Args{}, err
 	}
 
-	// use default values for additional options
-	if parsed_args.options.has_season_0.is_none() {
-		parsed_args.options.has_season_0 = some[bool](false)
-	}
-	if parsed_args.options.keep_ep_nums.is_none() {
-		parsed_args.options.keep_ep_nums = some[bool](false)
-	}
-	if parsed_args.options.starting_ep_num.is_none() {
-		parsed_args.options.starting_ep_num = some[int](1)
-	}
-	if parsed_args.options.naming_scheme.is_none() {
-		parsed_args.options.naming_scheme = some[string]("default")
+	if !assigned["--options"] {
+		// use default values for additional options
+		if parsed_args.options.has_season_0.is_none() {
+			parsed_args.options.has_season_0 = some[bool](false)
+		}
+		if parsed_args.options.keep_ep_nums.is_none() {
+			parsed_args.options.keep_ep_nums = some[bool](false)
+		}
+		if parsed_args.options.starting_ep_num.is_none() {
+			parsed_args.options.starting_ep_num = some[int](1)
+		}
+		if parsed_args.options.naming_scheme.is_none() {
+			parsed_args.options.naming_scheme = some[string]("default")
+		}
 	}
 	return parsed_args, nil
 }
