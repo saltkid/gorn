@@ -7,10 +7,18 @@ import (
 	"strings"
 )
 
+var version string
 func main() {
+	if len(os.Args) < 2 {
+		welcome_msg(version)
+		return
+	}
+
 	args, err := parse_args(os.Args[1:])
-	if err != nil {
+	if err != nil && err.Error() != "safe exit" {
 		panic(err)
+	} else if err.Error() == "safe exit" {
+		return
 	}
 
 	if len(args.root) > 0 {
