@@ -326,6 +326,7 @@ func generate_new_name(naming_scheme Option[string], season_pad int, season_num 
 							season_pad, season_num, 
 							ep_pad, ep_num,
 							title, filepath.Ext(abs_path))
+		new_name = filepath.Join(filepath.Dir(abs_path), new_name)
 	}
 
 	return new_name, nil
