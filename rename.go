@@ -208,7 +208,7 @@ func default_title(series_type string, naming_scheme Option[string], path string
 	} else if series_type == "named_seasons" {
 		title = filepath.Base(path) + " " + filepath.Base(season_path)
 	}
-	return title
+	return clean_title(title)
 }
 
 func generate_new_name(naming_scheme Option[string], season_pad int, season_num int, ep_pad int, ep_num int, title string, abs_path string) (string, error) {
