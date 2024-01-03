@@ -116,7 +116,7 @@ func Test_parse_args(t *testing.T) {
 	command = []string{"-r", "./test_files", "--season-0", "-s0"}
 	_, err = parse_args(command)
 	if err == nil {
-		t.Errorf("expected error '-s0 is not a valid arg. must be all or var'")
+		t.Errorf("expected error 'only one of --season-0 and -s0 is allowed'")
 	} else {
 		t.Log("-r", "./test_files", "--season-0", "-s0", "\n\t", err, "\n")
 	}
@@ -186,13 +186,13 @@ func Test_parse_args(t *testing.T) {
 	}
 	
 	
-		command = []string{"-r", "./test_files", "--naming-scheme", "S01E01"}
-		_, err = parse_args(command)
-		if err == nil {
-			t.Errorf("expected error 'multiple starting-ep-num flags'")
-		} else {
-			t.Log("-r", "./test_files", "--starting-ep-num", "-sen", "\n\t", err, "\n")
-		}
+	command = []string{"-r", "./test_files", "--naming-scheme", "S01E01"}
+	_, err = parse_args(command)
+	if err == nil {
+		t.Errorf("expected error 'multiple starting-ep-num flags'")
+	} else {
+		t.Log("-r", "./test_files", "--naming-scheme", "S01E01", "\n\t", err, "\n")
+	}
 	t.Log("------------expects success------------")
 	
 	command = []string{"--root", "./test_files", "-s0", "all", "yes"}
