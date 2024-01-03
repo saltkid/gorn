@@ -89,9 +89,9 @@ func parse_args(args []string) (Args, error) {
 				return Args{}, fmt.Errorf("only one --season-0 flag is allowed")
 			}
 
-			// default value
+			// use default value
 			if len(args) <= i+1 || (len(args) > i+1 && args[i+1][0] == '-') {
-				parsed_args.options.has_season_0 = some[bool](false)
+				continue
 
 			} else if args[i+1] != "all" && args[i+1] != "var" {
 				return Args{}, fmt.Errorf("invalid value '%s' for flag '%s'. Must be 'all' or 'var", args[i+1], arg)
@@ -121,9 +121,9 @@ func parse_args(args []string) (Args, error) {
 				return Args{}, fmt.Errorf("only one --keep-ep-nums flag is allowed")
 			}
 
-			// default value
+			// use default value
 			if len(args) <= i+1 || (len(args) > i+1 && args[i+1][0] == '-') {
-				parsed_args.options.keep_ep_nums = some[bool](false)
+				continue
 
 			} else if args[i+1] != "all" && args[i+1] != "var" {
 				return Args{}, fmt.Errorf("invalid value '%s' for --keep-ep-nums. Must be 'all' or 'var", args[i+1])
@@ -154,9 +154,9 @@ func parse_args(args []string) (Args, error) {
 				return Args{}, fmt.Errorf("only one --starting-ep-num flag is allowed")
 			}
 
-			// default value
+			// use default value
 			if len(args) <= i+1 || (len(args) > i+1 && args[i+1][0] == '-') {
-				parsed_args.options.starting_ep_num = some[int](1)
+				continue
 
 			} else if args[i+1] != "all" && args[i+1] != "var" {
 				return Args{}, fmt.Errorf("invalid value '%s' for --starting-ep-num. Must be 'all' or 'var", args[i+1])
@@ -213,6 +213,20 @@ func parse_args(args []string) (Args, error) {
 	err := validate_roots(parsed_args.root, parsed_args.series, parsed_args.movies)
 	if err != nil {
 		return Args{}, err
+	}
+
+	// use default values for additional options
+	if parsed_args.options.has_season_0.is_none() {
+		parsed_args.options.has_season_0 = some[bool](false)
+	}
+	if parsed_args.options.keep_ep_nums.is_none() {
+		parsed_args.options.keep_ep_nums = some[bool](false)
+	}
+	if parsed_args.options.starting_ep_num.is_none() {
+		parsed_args.options.starting_ep_num = some[int](1)
+	}
+	if parsed_args.options.naming_scheme.is_none() {
+		parsed_args.options.naming_scheme = none[string]()
 	}
 
 	return parsed_args, nil
