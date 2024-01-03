@@ -220,7 +220,7 @@ func parent_token_to_int(s string) (int, error) {
 		
 	} else if short_form.MatchString(s) {
 		// only p
-		single_p := regexp.MustCompile(`p\s*:`)
+		single_p := regexp.MustCompile(`p\s*[^-]:?`)
 		if single_p.MatchString(s) {
 			return 1, nil
 		}
