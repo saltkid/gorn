@@ -226,9 +226,8 @@ func parse_args(args []string) (Args, error) {
 		parsed_args.options.starting_ep_num = some[int](1)
 	}
 	if parsed_args.options.naming_scheme.is_none() {
-		parsed_args.options.naming_scheme = none[string]()
+		parsed_args.options.naming_scheme = some[string]("default")
 	}
-
 	return parsed_args, nil
 }
 

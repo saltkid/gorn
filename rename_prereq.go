@@ -56,6 +56,7 @@ func prompt_additional_options(options AdditionalOptions, path string) (Addition
 	default_ken := some[bool](false)
 	default_sen := some[int](1)
 	default_s0 := some[bool](false)
+	default_ns := some[string]("default")
 
 	// prompt user for additional options
 	if options.keep_ep_nums.is_none() {
@@ -135,7 +136,8 @@ func prompt_additional_options(options AdditionalOptions, path string) (Addition
 			}
 		}
 	}
-	if options.naming_scheme.is_none() {
+	naming_scheme, _ := options.naming_scheme.get()
+	if options.naming_scheme.is_none() || naming_scheme != "default" {
 		fmt.Println("[INPUT]\nnaming scheme for", filepath.Base(path), "\ninputs: (<naming scheme>/var/default)")
 		for {
 			scanner := bufio.NewScanner(os.Stdin)
@@ -143,8 +145,10 @@ func prompt_additional_options(options AdditionalOptions, path string) (Addition
 				input := scanner.Text()
 				input = strings.TrimSpace(input)
 
-				if strings.ToLower(input) == "var" || strings.ToLower(input) == "default" {
+				if strings.ToLower(input) == "var" {
 					break
+				} else if input == "default" {
+					options.naming_scheme = default_ns
 				} else if input == "exit" {
 					return options
 				} else if err := validate_naming_scheme(input); err == nil {

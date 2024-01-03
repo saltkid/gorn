@@ -213,6 +213,7 @@ func default_title(series_type string, naming_scheme Option[string], path string
 
 func generate_new_name(naming_scheme Option[string], season_pad int, season_num int, ep_pad int, ep_num int, title string, abs_path string) (string, error) {
 	var new_name string
+	ns, _ := naming_scheme.get()
 	if naming_scheme.is_some() {
 		scheme, err := naming_scheme.get()
 		if err != nil {
@@ -320,7 +321,7 @@ func generate_new_name(naming_scheme Option[string], season_pad int, season_num 
 		// append ext
 		new_name = filepath.Join(filepath.Dir(abs_path), fmt.Sprintf("%s%s", new_name, filepath.Ext(abs_path)))
 
-	} else {
+	} else if naming_scheme.is_none() || ns == "default"{
 		new_name = fmt.Sprintf("S%0*dE%0*d %s%s",
 							season_pad, season_num, 
 							ep_pad, ep_num,
