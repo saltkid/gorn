@@ -10,12 +10,15 @@ import (
 )
 
 type Args struct {
-	root            []string
-	series          []string
-	movies          []string
-	has_season_0    Option[bool]
+	root            	[]string
+	series          	[]string
+	movies          	[]string
+	options 	AdditionalOptions
+}
+type AdditionalOptions struct {
 	keep_ep_nums    Option[bool]
 	starting_ep_num Option[int]
+	has_season_0    Option[bool]
 	naming_scheme   Option[string]
 }
 func new_Args() Args {
@@ -23,10 +26,12 @@ func new_Args() Args {
 		root:            make([]string, 0),
 		series:          make([]string, 0),
 		movies:          make([]string, 0),
-		has_season_0:    none[bool](),
-		keep_ep_nums:    none[bool](),
-		starting_ep_num: none[int](),
-		naming_scheme:   none[string](),
+		options: AdditionalOptions{
+			has_season_0:    none[bool](),
+			keep_ep_nums:    none[bool](),
+			starting_ep_num: none[int](),
+			naming_scheme:   none[string](),
+		},
 	}
 }
 
@@ -43,6 +48,9 @@ func parse_args(args []string) (Args, error) {
 		"--movies": true,
 		"-m":       true,
 	}
+	assigned := map[string]bool {
+		"--options": false,
+	}
 
 	parsed_args := new_Args()
 	skip_iter := 0
@@ -51,7 +59,7 @@ func parse_args(args []string) (Args, error) {
 		if skip_iter != 0 && i <= skip_iter {
 			continue
 
-			// catch invalid values acting as flags
+		// catch invalid values acting as flags
 		} else if arg[0] != '-' {
 			return Args{}, fmt.Errorf("invalid flag: '%s'", arg)
 
@@ -60,7 +68,7 @@ func parse_args(args []string) (Args, error) {
 			if len(args) <= i+1 || (len(args) > i+1 && args[i+1][0] == '-') {
 				return Args{}, fmt.Errorf("missing dir path value for flag '%s'", arg)
 
-				// not a valid directory
+			// not a valid directory
 			} else if _, err := filepath.Abs(args[i+1]); err != nil {
 				return Args{}, err
 			}
@@ -80,13 +88,13 @@ func parse_args(args []string) (Args, error) {
 			skip_iter = i + 1
 
 		} else if arg == "--season-0" || arg == "-s0" {
-			if parsed_args.has_season_0.is_some() {
+			if parsed_args.options.has_season_0.is_some() {
 				return Args{}, fmt.Errorf("only one --season-0 flag is allowed")
 			}
 
-			// default value
+			// use default value
 			if len(args) <= i+1 || (len(args) > i+1 && args[i+1][0] == '-') {
-				parsed_args.has_season_0 = some[bool](false)
+				parsed_args.options.has_season_0 = some[bool](false)
 
 			} else if args[i+1] != "all" && args[i+1] != "var" {
 				return Args{}, fmt.Errorf("invalid value '%s' for flag '%s'. Must be 'all' or 'var", args[i+1], arg)
@@ -104,21 +112,21 @@ func parse_args(args []string) (Args, error) {
 				} else {
 					value = false
 				}
-				parsed_args.has_season_0 = some[bool](value)
+				parsed_args.options.has_season_0 = some[bool](value)
 				skip_iter = i + 2
 
 			} else if args[i+1] == "var" {
-				parsed_args.has_season_0 = none[bool]()
+				parsed_args.options.has_season_0 = none[bool]()
 			}
 
 		} else if arg == "--keep-ep-nums" || arg == "-ken" {
-			if parsed_args.keep_ep_nums.is_some() {
+			if parsed_args.options.keep_ep_nums.is_some() {
 				return Args{}, fmt.Errorf("only one --keep-ep-nums flag is allowed")
 			}
 
-			// default value
+			// use default value
 			if len(args) <= i+1 || (len(args) > i+1 && args[i+1][0] == '-') {
-				parsed_args.keep_ep_nums = some[bool](false)
+				parsed_args.options.keep_ep_nums = some[bool](false)
 
 			} else if args[i+1] != "all" && args[i+1] != "var" {
 				return Args{}, fmt.Errorf("invalid value '%s' for --keep-ep-nums. Must be 'all' or 'var", args[i+1])
@@ -137,21 +145,21 @@ func parse_args(args []string) (Args, error) {
 				} else {
 					value = false
 				}
-				parsed_args.keep_ep_nums = some[bool](value)
+				parsed_args.options.keep_ep_nums = some[bool](value)
 				skip_iter = i + 2
 
 			} else if args[i+1] == "var" {
-				parsed_args.has_season_0 = none[bool]()
+				parsed_args.options.has_season_0 = none[bool]()
 			}
 
 		} else if arg == "--starting-ep-num" || arg == "-sen" {
-			if parsed_args.starting_ep_num.is_some() {
+			if parsed_args.options.starting_ep_num.is_some() {
 				return Args{}, fmt.Errorf("only one --starting-ep-num flag is allowed")
 			}
 
-			// default value
+			// use default value
 			if len(args) <= i+1 || (len(args) > i+1 && args[i+1][0] == '-') {
-				parsed_args.starting_ep_num = some[int](1)
+				parsed_args.options.starting_ep_num = some[int](1)
 
 			} else if args[i+1] != "all" && args[i+1] != "var" {
 				return Args{}, fmt.Errorf("invalid value '%s' for --starting-ep-num. Must be 'all' or 'var", args[i+1])
@@ -166,15 +174,40 @@ func parse_args(args []string) (Args, error) {
 					return Args{}, fmt.Errorf("all must be followed by a positive int for --starting-ep-num. %s is not a valid positive int", args[i+2])
 				}
 
-				parsed_args.starting_ep_num = some[int](value)
+				parsed_args.options.starting_ep_num = some[int](value)
 				skip_iter = i + 2
 
 			} else if args[i+1] == "var" {
-				parsed_args.starting_ep_num = none[int]()
+				parsed_args.options.starting_ep_num = none[int]()
+			}
+
+		} else if arg == "--options" || arg == "-o" {
+			if assigned["--options"] {
+				return Args{}, fmt.Errorf("only one --options flag is allowed")
+			}
+			
+			// all options are assigned `var`
+			if len(args) <= i+1 || (len(args) > i+1 && (args[i+1][0] == '-' || args[i+1] == "var")) {
+				assigned["--options"] = true
+				parsed_args.options.keep_ep_nums = none[bool]()
+				parsed_args.options.starting_ep_num = none[int]()
+				parsed_args.options.has_season_0 = none[bool]()
+				parsed_args.options.naming_scheme = none[string]()
+
+			} else if args[i+1] != "default" && args[i+1] != "var" {
+				return Args{}, fmt.Errorf("invalid value '%s' for --options. Must be 'default' or 'var", args[i+1])
+
+			} else if args[i+1] == "default" {
+				// use default values
+				assigned["--options"] = true
+				parsed_args.options.keep_ep_nums = some[bool](false)
+				parsed_args.options.starting_ep_num = some[int](1)
+				parsed_args.options.has_season_0 = some[bool](false)
+				parsed_args.options.naming_scheme = some[string]("default")
 			}
 
 		} else if arg == "--naming-scheme" || arg == "-ns" {
-			if parsed_args.naming_scheme.is_some() {
+			if parsed_args.options.naming_scheme.is_some() {
 				return Args{}, fmt.Errorf("only one --naming-scheme flag is allowed")
 			}
 
@@ -193,11 +226,11 @@ func parse_args(args []string) (Args, error) {
 					return Args{}, err
 				}
 
-				parsed_args.naming_scheme = some[string](args[i+2])
+				parsed_args.options.naming_scheme = some[string](args[i+2])
 				skip_iter = i + 2
 
 			} else if args[i+1] == "var" {
-				parsed_args.naming_scheme = none[string]()
+				parsed_args.options.naming_scheme = none[string]()
 			}
 
 		} else {
@@ -210,6 +243,21 @@ func parse_args(args []string) (Args, error) {
 		return Args{}, err
 	}
 
+	if !assigned["--options"] {
+		// use default values for additional options
+		if parsed_args.options.has_season_0.is_none() {
+			parsed_args.options.has_season_0 = some[bool](false)
+		}
+		if parsed_args.options.keep_ep_nums.is_none() {
+			parsed_args.options.keep_ep_nums = some[bool](false)
+		}
+		if parsed_args.options.starting_ep_num.is_none() {
+			parsed_args.options.starting_ep_num = some[int](1)
+		}
+		if parsed_args.options.naming_scheme.is_none() {
+			parsed_args.options.naming_scheme = some[string]("default")
+		}
+	}
 	return parsed_args, nil
 }
 
@@ -221,7 +269,7 @@ func validate_naming_scheme(s string) error {
 
 	valid_api := regexp.MustCompile(`^season_num$|^episode_num$|^self$`)
 	valid_parent_api := regexp.MustCompile(`^parent(-parent)*$|^p(-\d+)?$`)
-	valid_range := regexp.MustCompile(`^\d+,\s*\d+$`)
+	valid_range := regexp.MustCompile(`^\d+(\s*,\s*\d+)?$`)
 
 	for _,token := range tokens {
 		var api, val string
@@ -290,11 +338,17 @@ func validate_naming_scheme(s string) error {
 			} else if !valid_range.MatchString(val) {
 				return fmt.Errorf("%s's value must be in the format <start>,<end> where <start> and <end> are positive integers and 0. '%s' is not a valid range", api, val)
 			}
+
 			// valid range
-			res := strings.SplitN(val, ",", 2)
+			var res []string
+			if strings.Contains(val, ",") {
+				res = strings.SplitN(val, ",", 2)
+			} else {
+				res = []string{val, val}
+			}
 			begin, end := strings.TrimSpace(res[0]), strings.TrimSpace(res[1])
-			if begin >= end {
-				return fmt.Errorf("%s is an invalid range. begin (%s) must be less than end (%s)", val, begin, end)
+			if begin > end {
+				return fmt.Errorf("%s is an invalid range. begin (%s) must be less than or equal to end (%s)", val, begin, end)
 			}
 		}
 	}

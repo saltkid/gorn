@@ -169,7 +169,7 @@ func clean_title (title string) string {
 	return title
 }
 
-func split_regex_by_pipe (s string) []string {
+func split_regex_by_pipe(s string) []string {
 	var parts []string
 	depth := 0
 	part_start := 0
@@ -211,16 +211,16 @@ func has_only_one_match_group (s string) bool {
 
 func parent_token_to_int(s string) (int, error) {
 	// lmao https://regex-vis.com/?r=%3Cparent%28-parent%29*%28%5Cs*%3A%5Cs*%28%28%5Cd+%5Cs*%2C%5Cs*%5Cd+%29%7C%28%27%5B%5E%27%5D*%27%29%29%29%3F%5Cs*%3E&e=0
-	long_form := regexp.MustCompile(`<parent(-parent)*(\s*:\s*((\d \s*,\s*\d )|('[^']*')))?\s*>`)
+	long_form := regexp.MustCompile(`<parent(-parent)*(\s*:\s*((\d+(\s*,\s*\d+)?)|('[^']*')))?\s*>`)
 	// lul https://regex-vis.com/?r=%3Cp%28-%5Cd%2B%29%3F%28%5Cs*%3A%5Cs*%28%28%5Cd%5Cs*%2C%5Cs*%5Cd%29%7C%28%27%5B%5E%27%5D*%27%29%29%29%3F%5Cs*%3E&e=0
-	short_form := regexp.MustCompile(`<p(-\d+)?(\s*:\s*((\d\s*,\s*\d)|('[^']*')))?\s*>`)
+	short_form := regexp.MustCompile(`<p(-\d+)?(\s*:\s*((\d+(\s*,\s*\d+)?)|('[^']*')))?\s*>`)
 	
 	if long_form.MatchString(s) {
 		return strings.Count(s, "parent"), nil
 		
 	} else if short_form.MatchString(s) {
 		// only p
-		single_p := regexp.MustCompile(`p\s*:`)
+		single_p := regexp.MustCompile(`p\s*[^-]:?`)
 		if single_p.MatchString(s) {
 			return 1, nil
 		}
