@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func series_rename_prereqs(path string, s_type string, keep_ep_nums Option[bool], starting_ep_num Option[int], has_season_0 Option[bool], naming_scheme Option[string]) (SeriesInfo, error) {
+func series_rename_prereqs(path string, s_type string, options AdditionalOptions) (SeriesInfo, error) {
 	// get prerequsite info for renaming series
 	is_valid_type := map[string]bool{
 		"single_season_no_movies": true,
@@ -24,18 +24,16 @@ func series_rename_prereqs(path string, s_type string, keep_ep_nums Option[bool]
 	}
 
 	// if additional options are none aka user inputted var, ask for user input
-	prompt_additional_options(&keep_ep_nums, &starting_ep_num, &has_season_0, &naming_scheme, path)
+	options = prompt_additional_options(options, path)
 	info := SeriesInfo{
 		path: 				path,
 		series_type: 		s_type,
 		seasons: 			make(map[int]string),
 		movies: 			make([]string, 0),
-		keep_ep_nums: 		keep_ep_nums,
-		starting_ep_num: 	starting_ep_num,
-		naming_scheme: 		naming_scheme,
+		options: 			options,
 	}
 
-	s0, err := has_season_0.get()
+	s0, err := options.has_season_0.get()
 	if err != nil {
 		return SeriesInfo{}, err
 	}
@@ -54,13 +52,13 @@ func series_rename_prereqs(path string, s_type string, keep_ep_nums Option[bool]
 	return info, nil
 }
 
-func prompt_additional_options(keep_ep_nums *Option[bool], starting_ep_num *Option[int], has_season_0 *Option[bool], naming_scheme *Option[string], path string) {
+func prompt_additional_options(options AdditionalOptions, path string) (AdditionalOptions) {
 	default_ken := some[bool](false)
 	default_sen := some[int](1)
 	default_s0 := some[bool](false)
 
 	// prompt user for additional options
-	if (*keep_ep_nums).is_none() {
+	if options.keep_ep_nums.is_none() {
 		fmt.Println("[INPUT]\nkeep episode numbers for", filepath.Base(path), "?", "\ninputs: (y/n/var/default/exit)")
 		for {
 			scanner := bufio.NewScanner(os.Stdin)
@@ -68,17 +66,17 @@ func prompt_additional_options(keep_ep_nums *Option[bool], starting_ep_num *Opti
 				input := strings.ToLower(strings.TrimSpace(scanner.Text()))
 
 				if input == "y" || input == "yes" {
-					(*keep_ep_nums) = some[bool](true)
+					options.keep_ep_nums = some[bool](true)
 					break
 				} else if input == "n" || input == "no" {
-					(*keep_ep_nums) = some[bool](false)
+					options.keep_ep_nums = some[bool](false)
 					break
 				} else if input == "var" {
 					break
 				} else if input == "exit" {
-					return
+					return options
 				} else if input == "default" {
-					(*keep_ep_nums) = default_ken
+					options.keep_ep_nums = default_ken
 					break
 				} else {
 					fmt.Println("[ERROR]\ninvalid input, please enter 'y', 'n', 'exit', or 'default'")
@@ -86,7 +84,7 @@ func prompt_additional_options(keep_ep_nums *Option[bool], starting_ep_num *Opti
 			}
 		}
 	}
-	if (*starting_ep_num).is_none() {
+	if options.starting_ep_num.is_none() {
 		fmt.Println("[INPUT]\nstarting episode number for", filepath.Base(path), "?\ninputs: (<int>/var/default/exit)")
 		for {
 			scanner := bufio.NewScanner(os.Stdin)
@@ -95,23 +93,23 @@ func prompt_additional_options(keep_ep_nums *Option[bool], starting_ep_num *Opti
 
 				int_input, err := strconv.Atoi(input)
 				if err == nil {
-					(*starting_ep_num) = some[int](int_input)
+					options.starting_ep_num = some[int](int_input)
 					break
 				}
 				if input == "default" {
-					(*starting_ep_num) = default_sen
+					options.starting_ep_num = default_sen
 					break
 				} else if input == "var" {
 					break
 				} else if input == "exit" {
-					return
+					return options
 				} else {
 					fmt.Println("[ERROR]\ninvalid input, please enter '<int>', 'var', 'exit', or 'default'")
 				}
 			}
 		}
 	}
-	if (*has_season_0).is_none() {
+	if options.has_season_0.is_none() {
 		fmt.Println("[INPUT]\nspecials/extras directory under", filepath.Base(path), "as season 0?", "\ninputs: (y/n/var/default/exit)")
 		for {
 			scanner := bufio.NewScanner(os.Stdin)
@@ -119,17 +117,17 @@ func prompt_additional_options(keep_ep_nums *Option[bool], starting_ep_num *Opti
 				input := strings.ToLower(strings.TrimSpace(scanner.Text()))
 
 				if input == "y" || input == "yes" {
-					(*has_season_0) = some[bool](true)
+					options.has_season_0 = some[bool](true)
 					break
 				} else if input == "n" || input == "no" {
-					(*has_season_0) = some[bool](false)
+					options.has_season_0 = some[bool](false)
 					break
 				} else if input == "var" {
 					break
 				} else if input == "exit" {
-					return					
+					return options
 				} else if input == "default" {
-					(*has_season_0) = default_s0
+					options.has_season_0 = default_s0
 					break
 				} else {
 					fmt.Println("[ERROR]\ninvalid input, please enter 'y', 'n', 'exit', or 'default'")
@@ -137,7 +135,7 @@ func prompt_additional_options(keep_ep_nums *Option[bool], starting_ep_num *Opti
 			}
 		}
 	}
-	if (*naming_scheme).is_none() {
+	if options.naming_scheme.is_none() {
 		fmt.Println("[INPUT]\nnaming scheme for", filepath.Base(path), "\ninputs: (<naming scheme>/var/default)")
 		for {
 			scanner := bufio.NewScanner(os.Stdin)
@@ -148,9 +146,9 @@ func prompt_additional_options(keep_ep_nums *Option[bool], starting_ep_num *Opti
 				if strings.ToLower(input) == "var" || strings.ToLower(input) == "default" {
 					break
 				} else if input == "exit" {
-					return
+					return options
 				} else if err := validate_naming_scheme(input); err == nil {
-					(*naming_scheme) = some[string](input)
+					options.naming_scheme = some[string](input)
 					break
 				} else {
 					fmt.Println("[ERROR]\ninvalid input, please enter 'y', 'n', 'default', 'exit', or a valid naming scheme\ninput:", input, "\nerror:", err)
@@ -158,6 +156,8 @@ func prompt_additional_options(keep_ep_nums *Option[bool], starting_ep_num *Opti
 			}
 		}
 	}
+
+	return options
 }
 
 func fetch_series_content(path string, s_type string, has_season_0 bool) (map[int]string, []string, error) {

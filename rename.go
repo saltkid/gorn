@@ -19,9 +19,7 @@ type SeriesInfo struct {
 	series_type     string
 	seasons         map[int]string
 	movies          []string
-	keep_ep_nums    Option[bool]
-	starting_ep_num Option[int]
-	naming_scheme   Option[string]
+	options         AdditionalOptions
 }
 
 type MovieInfo struct {
@@ -74,12 +72,11 @@ func (info *SeriesInfo) rename() error {
 		}
 		
 		// if additional options are none aka user inputted var, ask for user input
-		season_ken, season_sen, season_s0, season_ns := info.keep_ep_nums, info.starting_ep_num, some[bool](false), info.naming_scheme
-		prompt_additional_options(&season_ken, &season_sen, &season_s0, &season_ns, season_path)
+		season_options := prompt_additional_options(info.options, season_path)
 
 		var ep_num, sen int
-		if season_sen.is_some() {
-			sen, _ = season_sen.get()
+		if season_options.starting_ep_num.is_some() {
+			sen, _ = season_options.starting_ep_num.get()
 		} else {
 			sen = 1
 		}
@@ -91,8 +88,8 @@ func (info *SeriesInfo) rename() error {
 
 		ep_nums := make([]int, 0)
 		var ken bool
-		if season_ken.is_some() {
-			ken, _ = season_ken.get()
+		if season_options.keep_ep_nums.is_some() {
+			ken, _ = season_options.keep_ep_nums.get()
 		} else {
 			ken = false
 		}
@@ -120,11 +117,11 @@ func (info *SeriesInfo) rename() error {
 		}
 
 		for i, file := range media_files {
-			title := default_title(info.series_type, season_ns, info.path, season_path)
-			new_name, err := generate_new_name(season_ns,				// naming_scheme
-										  max_season_digits, num, 		// season_pad, season_num
-										  max_ep_digits, ep_nums[i],	// ep_pad, ep_num 
-										  title, file) 					// title, file path
+			title := default_title(info.series_type, season_options.naming_scheme, info.path, season_path)
+			new_name, err := generate_new_name(season_options.naming_scheme,// naming_scheme
+											   max_season_digits, num, 		// season_pad, season_num
+										  	   max_ep_digits, ep_nums[i],	// ep_pad, ep_num 
+										  	   title, file)					// title, file path
 			if err != nil {
 				return err
 			}

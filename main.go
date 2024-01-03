@@ -31,15 +31,15 @@ func main() {
 			fmt.Println("\t", movie)
 		}
 	}
-	ken, err := args.keep_ep_nums.get()
+	ken, err := args.options.has_season_0.get()
 	if err == nil {
 		fmt.Println("keep episode numbers: ", ken)
 	}
-	sen, err := args.starting_ep_num.get()
+	sen, err := args.options.has_season_0.get()
 	if err == nil {
 		fmt.Println("starting episode number: ", sen)
 	}
-	ns, err := args.naming_scheme.get()
+	ns, err := args.options.has_season_0.get()
 	if err == nil {
 		fmt.Println("naming scheme: ", ns)
 	}
@@ -104,10 +104,9 @@ func main() {
 	}
 
 	fmt.Println("test for named seasons")
-	named_season_ken, named_season_sen, named_season_s0, named_season_ns := args.keep_ep_nums, args.starting_ep_num, args.has_season_0, args.naming_scheme
-	prompt_additional_options(&named_season_ken, &named_season_sen, &named_season_s0, &named_season_ns, "named seasons")
+	named_season_options := prompt_additional_options(args.options, "all named seasons")
 	for _, v := range series.named_seasons {
-		info, err := series_rename_prereqs(v, "named_seasons", named_season_ken, named_season_sen, named_season_s0, named_season_ns)
+		info, err := series_rename_prereqs(v, "named_seasons", named_season_options)
 		if err != nil {
 			panic(err)
 		}
@@ -121,10 +120,9 @@ func main() {
 	fmt.Println()
 
 	fmt.Println("test for single season no movies")
-	ssnm_ken, ssnm_sen, ssnm_s0, ssnm_ns := args.keep_ep_nums, args.starting_ep_num, args.has_season_0, args.naming_scheme
-	prompt_additional_options(&ssnm_ken, &ssnm_sen, &ssnm_s0, &ssnm_ns, "single season no movies")
+	ssnm_options := prompt_additional_options(args.options, "all single season with no movies")
 	for _, v := range series.single_season_no_movies {
-		info, err := series_rename_prereqs(v, "single_season_no_movies", ssnm_ken, ssnm_sen, ssnm_s0, ssnm_ns)
+		info, err := series_rename_prereqs(v, "single_season_no_movies", ssnm_options)
 		if err != nil {
 			panic(err)
 		}
@@ -138,10 +136,9 @@ func main() {
 	fmt.Println()
 
 	fmt.Println("test for single season with movies")
-	sswm_ken, sswm_sen, sswm_s0, sswm_ns := args.keep_ep_nums, args.starting_ep_num, args.has_season_0, args.naming_scheme
-	prompt_additional_options(&sswm_ken, &sswm_sen, &sswm_s0, &sswm_ns, "single season with movies")
+	sswm_options := prompt_additional_options(args.options, "all single season with movies")
 	for _, v := range series.single_season_with_movies {
-		info, err := series_rename_prereqs(v, "single_season_with_movies", sswm_ken, sswm_sen, sswm_s0, sswm_ns)
+		info, err := series_rename_prereqs(v, "single_season_with_movies", sswm_options)
 		if err != nil {
 			panic(err)
 		}
@@ -155,10 +152,9 @@ func main() {
 	fmt.Println()
 
 	fmt.Println("test for multiple season no movies")
-	msnm_ken, msnm_sen, msnm_s0, msnm_ns := args.keep_ep_nums, args.starting_ep_num, args.has_season_0, args.naming_scheme
-	prompt_additional_options(&msnm_ken, &msnm_sen, &msnm_s0, &msnm_ns, "multiple season no movies")
+	msnm_options := prompt_additional_options(args.options, "all multiple season with no movies")
 	for _, v := range series.multiple_season_no_movies {
-		info, err := series_rename_prereqs(v, "multiple_season_no_movies", msnm_ken, msnm_sen, msnm_s0, msnm_ns)
+		info, err := series_rename_prereqs(v, "multiple_season_no_movies", msnm_options)
 		if err != nil {
 			panic(err)
 		}
@@ -172,10 +168,9 @@ func main() {
 	fmt.Println()
 
 	fmt.Println("test for multiple season with movies")
-	mswm_ken, mswm_sen, mswm_s0, mswm_ns := args.keep_ep_nums, args.starting_ep_num, args.has_season_0, args.naming_scheme
-	prompt_additional_options(&mswm_ken, &mswm_sen, &mswm_s0, &mswm_ns, "multiple season with movies")
+	mswm_options := prompt_additional_options(args.options, "all multiple season with movies")
 	for _, v := range series.multiple_season_with_movies {
-		info, err := series_rename_prereqs(v, "multiple_season_with_movies", mswm_ken, mswm_sen, mswm_s0, mswm_ns)
+		info, err := series_rename_prereqs(v, "multiple_season_with_movies", mswm_options)
 		if err != nil {
 			panic(err)
 		}
