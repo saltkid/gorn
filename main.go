@@ -31,11 +31,11 @@ func main() {
 			fmt.Println("\t", movie)
 		}
 	}
-	ken, err := args.options.has_season_0.get()
+	ken, err := args.options.keep_ep_nums.get()
 	if err == nil {
 		fmt.Println("keep episode numbers: ", ken)
 	}
-	sen, err := args.options.has_season_0.get()
+	sen, err := args.options.starting_ep_num.get()
 	if err == nil {
 		fmt.Println("starting episode number: ", sen)
 	}
