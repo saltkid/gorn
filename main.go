@@ -8,13 +8,14 @@ import (
 )
 
 var version string
+
 func main() {
 	if len(os.Args) < 2 {
-		welcome_msg(version)
+		WelcomeMsg(version)
 		return
 	}
 
-	args, err := parse_args(os.Args[1:])
+	args, err := ParseArgs(os.Args[1:])
 	if err != nil {
 		if err.Error() != "safe exit" {
 			panic(err)
@@ -40,64 +41,64 @@ func main() {
 			fmt.Println("\t", movie)
 		}
 	}
-	ken, err := args.options.keep_ep_nums.get()
+	ken, err := args.options.keepEpNums.Get()
 	if err == nil {
 		fmt.Println("keep episode numbers: ", ken)
 	}
-	sen, err := args.options.starting_ep_num.get()
+	sen, err := args.options.startingEpNum.Get()
 	if err == nil {
 		fmt.Println("starting episode number: ", sen)
 	}
-	ns, err := args.options.has_season_0.get()
+	ns, err := args.options.hasSeason0.Get()
 	if err == nil {
 		fmt.Println("naming scheme: ", ns)
 	}
 
-	series_entries, movie_entries, err := fetch_entries(args.root, args.series, args.movies)
+	seriesEntries, movieEntries, err := FetchEntries(args.root, args.series, args.movies)
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println("series dirs (", len(series_entries), "): ")
-	for _, series := range series_entries {
+	fmt.Println("series dirs (", len(seriesEntries), "): ")
+	for _, series := range seriesEntries {
 		fmt.Println("\t", series)
 	}
-	fmt.Println("movie dirs (", len(movie_entries), "): ")
-	for _, movie := range movie_entries {
+	fmt.Println("movie dirs (", len(movieEntries), "): ")
+	for _, movie := range movieEntries {
 		fmt.Println("\t", movie)
 	}
 	fmt.Println()
 
 	var series = Series{}
-	err = series.split_by_type(series_entries)
+	err = series.SplitByType(seriesEntries)
 	if err != nil {
 		panic(err)
 	}
 
 	fmt.Println("categorized series: ")
-	fmt.Println("named_seasons: ")
-	for _, v := range series.named_seasons {
+	fmt.Println("namedSeasons: ")
+	for _, v := range series.namedSeasons {
 		fmt.Println("\t", v)
 	}
-	fmt.Println("single_season_no_movies: ")
-	for _, v := range series.single_season_no_movies {
+	fmt.Println("singleSeasonNoMovies: ")
+	for _, v := range series.singleSeasonNoMovies {
 		fmt.Println("\t", v)
 	}
-	fmt.Println("single_season_with_movies: ")
-	for _, v := range series.single_season_with_movies {
+	fmt.Println("singleSeasonWithMovies: ")
+	for _, v := range series.singleSeasonWithMovies {
 		fmt.Println("\t", v)
 	}
-	fmt.Println("multiple_season_no_movies: ")
-	for _, v := range series.multiple_season_no_movies {
+	fmt.Println("multipleSeasonNoMovies: ")
+	for _, v := range series.multipleSeasonNoMovies {
 		fmt.Println("\t", v)
 	}
-	fmt.Println("multiple_season_with_movies: ")
-	for _, v := range series.multiple_season_with_movies {
+	fmt.Println("multipleSeasonWithMovies: ")
+	for _, v := range series.multipleSeasonWithMovies {
 		fmt.Println("\t", v)
 	}
 
 	var movie = Movies{}
-	err = movie.split_by_type(movie_entries)
+	err = movie.SplitByType(movieEntries)
 	if err != nil {
 		panic(err)
 	}
@@ -107,21 +108,21 @@ func main() {
 	for _, v := range movie.standalone {
 		fmt.Println("\t", v)
 	}
-	fmt.Println("movie_set: ")
-	for _, v := range movie.movie_set {
+	fmt.Println("movieSet: ")
+	for _, v := range movie.movieSet {
 		fmt.Println("\t", v)
 	}
 
 	fmt.Println("test for named seasons")
-	named_season_options := prompt_additional_options(args.options, "all named seasons", 0)
-	for _, v := range series.named_seasons {
-		info, err := series_rename_prereqs(v, "named_seasons", named_season_options)
+	namedSeasonOptions := PromptOptionalFlags(args.options, "all named seasons", 0)
+	for _, v := range series.namedSeasons {
+		info, err := SeriesRenamePrereqs(v, "namedSeasons", namedSeasonOptions)
 		if err != nil {
 			panic(err)
 		}
 		fmt.Println(info)
 
-		err = info.rename()
+		err = info.Rename()
 		if err != nil {
 			panic(err)
 		}
@@ -129,15 +130,15 @@ func main() {
 	fmt.Println()
 
 	fmt.Println("test for single season no movies")
-	ssnm_options := prompt_additional_options(args.options, "all single season with no movies", 0)
-	for _, v := range series.single_season_no_movies {
-		info, err := series_rename_prereqs(v, "single_season_no_movies", ssnm_options)
+	ssnmOptions := PromptOptionalFlags(args.options, "all single season with no movies", 0)
+	for _, v := range series.singleSeasonNoMovies {
+		info, err := SeriesRenamePrereqs(v, "singleSeasonNoMovies", ssnmOptions)
 		if err != nil {
 			panic(err)
 		}
 		fmt.Println(info)
 
-		err = info.rename()
+		err = info.Rename()
 		if err != nil {
 			panic(err)
 		}
@@ -145,15 +146,15 @@ func main() {
 	fmt.Println()
 
 	fmt.Println("test for single season with movies")
-	sswm_options := prompt_additional_options(args.options, "all single season with movies", 0)
-	for _, v := range series.single_season_with_movies {
-		info, err := series_rename_prereqs(v, "single_season_with_movies", sswm_options)
+	sswmOptions := PromptOptionalFlags(args.options, "all single season with movies", 0)
+	for _, v := range series.singleSeasonWithMovies {
+		info, err := SeriesRenamePrereqs(v, "singleSeasonWithMovies", sswmOptions)
 		if err != nil {
 			panic(err)
 		}
 		fmt.Println(info)
 
-		err = info.rename()
+		err = info.Rename()
 		if err != nil {
 			panic(err)
 		}
@@ -161,15 +162,15 @@ func main() {
 	fmt.Println()
 
 	fmt.Println("test for multiple season no movies")
-	msnm_options := prompt_additional_options(args.options, "all multiple season with no movies", 0)
-	for _, v := range series.multiple_season_no_movies {
-		info, err := series_rename_prereqs(v, "multiple_season_no_movies", msnm_options)
+	msnmOptions := PromptOptionalFlags(args.options, "all multiple season with no movies", 0)
+	for _, v := range series.multipleSeasonNoMovies {
+		info, err := SeriesRenamePrereqs(v, "multipleSeasonNoMovies", msnmOptions)
 		if err != nil {
 			panic(err)
 		}
 		fmt.Println(info)
 
-		err = info.rename()
+		err = info.Rename()
 		if err != nil {
 			panic(err)
 		}
@@ -177,15 +178,15 @@ func main() {
 	fmt.Println()
 
 	fmt.Println("test for multiple season with movies")
-	mswm_options := prompt_additional_options(args.options, "all multiple season with movies", 0)
-	for _, v := range series.multiple_season_with_movies {
-		info, err := series_rename_prereqs(v, "multiple_season_with_movies", mswm_options)
+	mswmOptions := PromptOptionalFlags(args.options, "all multiple season with movies", 0)
+	for _, v := range series.multipleSeasonWithMovies {
+		info, err := SeriesRenamePrereqs(v, "multipleSeasonWithMovies", mswmOptions)
 		if err != nil {
 			panic(err)
 		}
 		fmt.Println(info)
 
-		err = info.rename()
+		err = info.Rename()
 		if err != nil {
 			panic(err)
 		}
@@ -194,13 +195,13 @@ func main() {
 
 	fmt.Println("test for standalone")
 	for _, v := range movie.standalone {
-		info, err := movie_rename_prereqs(v, "standalone")
+		info, err := MovieRenamePrereqs(v, "standalone")
 		if err != nil {
 			panic(err)
 		}
 		fmt.Println(info)
 
-		err = info.rename()
+		err = info.Rename()
 		if err != nil {
 			panic(err)
 		}
@@ -208,14 +209,14 @@ func main() {
 	fmt.Println()
 
 	fmt.Println("test for movie set")
-	for _, v := range movie.movie_set {
-		info, err := movie_rename_prereqs(v, "movie_set")
+	for _, v := range movie.movieSet {
+		info, err := MovieRenamePrereqs(v, "movieSet")
 		if err != nil {
 			panic(err)
 		}
 		fmt.Println(info)
 
-		err = info.rename()
+		err = info.Rename()
 		if err != nil {
 			panic(err)
 		}
@@ -223,31 +224,31 @@ func main() {
 	fmt.Println()
 }
 
-// fetch_entries retrieves the series and movie entries from the given root, series, and movie directories.
+// FetchEntries retrieves the series and movie entries from the given root, series, and movie directories.
 //
-// root_dirs: A slice of root directories to search for entries.
-// series_dirs: A slice of series directories to search for entries.
-// movie_dirs: A slice of movie directories to search for entries.
+// rootDirs: A slice of root directories to search for entries.
+// seriesDirs: A slice of series directories to search for entries.
+// movieDirs: A slice of movie directories to search for entries.
 //
 // Returns the series entries and movie entries as string slices.
-func fetch_entries(root_dirs []string, series_dirs []string, movie_dirs []string) ([]string, []string, error) {
-	if len(root_dirs) == 0 && len(series_dirs) == 0 && len(movie_dirs) == 0 {
+func FetchEntries(rootDirs []string, seriesDirs []string, movieDirs []string) ([]string, []string, error) {
+	if len(rootDirs) == 0 && len(seriesDirs) == 0 && len(movieDirs) == 0 {
 		return nil, nil, fmt.Errorf("passed no root, series, or movie directories")
 	}
 
 	entries := map[string][]string{
-		"movies":  make([]string, 0),
+		"movies": make([]string, 0),
 		"series": make([]string, 0),
 	}
-	for _, root := range root_dirs {
-		separated, err := separate_roots(root)
+	for _, root := range rootDirs {
+		separated, err := SeparateRoots(root)
 		if err != nil {
 			return nil, nil, err
 		}
 
 		for key, roots := range separated {
 			for _, dir := range roots {
-				subdirs, err := fetch_subdirs(dir)
+				subdirs, err := FetchSubdirs(dir)
 				if err != nil {
 					return nil, nil, err
 				}
@@ -256,15 +257,15 @@ func fetch_entries(root_dirs []string, series_dirs []string, movie_dirs []string
 		}
 	}
 
-	for _, v := range series_dirs {
-		subdirs, err := fetch_subdirs(v)
+	for _, v := range seriesDirs {
+		subdirs, err := FetchSubdirs(v)
 		if err != nil {
 			return nil, nil, err
 		}
 		entries["series"] = append(entries["series"], subdirs...)
 	}
-	for _, v := range movie_dirs {
-		subdirs, err := fetch_subdirs(v)
+	for _, v := range movieDirs {
+		subdirs, err := FetchSubdirs(v)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -274,16 +275,16 @@ func fetch_entries(root_dirs []string, series_dirs []string, movie_dirs []string
 	return entries["series"], entries["movies"], nil
 }
 
-func separate_roots(root string) (map[string][]string, error) {
-	root_dirs := map[string][]string{
+func SeparateRoots(root string) (map[string][]string, error) {
+	rootDirs := map[string][]string{
 		"movies": {},
 		"series": {},
 	}
-	valid_movie_path_names := map[string]bool{
+	validMoviePathNames := map[string]bool{
 		"movies": true,
 		"movie":  true,
 	}
-	valid_series_path_names := map[string]bool{
+	validSeriesPathNames := map[string]bool{
 		"series":  true,
 		"shows":   true,
 		"show":    true,
@@ -297,15 +298,15 @@ func separate_roots(root string) (map[string][]string, error) {
 		}
 
 		if d.IsDir() {
-			// get only directories of depth 1 (directly under root)
+			// Get only directories of depth 1 (directly under root)
 			if path != root && filepath.Dir(path) == root {
-				dir_name := strings.ToLower(filepath.Base(path))
-				if valid_movie_path_names[dir_name] {
-					root_dirs["movies"] = append(root_dirs["movies"], path)
+				dirName := strings.ToLower(filepath.Base(path))
+				if validMoviePathNames[dirName] {
+					rootDirs["movies"] = append(rootDirs["movies"], path)
 					return filepath.SkipDir
 
-				} else if valid_series_path_names[dir_name] {
-					root_dirs["series"] = append(root_dirs["series"], path)
+				} else if validSeriesPathNames[dirName] {
+					rootDirs["series"] = append(rootDirs["series"], path)
 					return filepath.SkipDir
 				}
 			}
@@ -317,21 +318,21 @@ func separate_roots(root string) (map[string][]string, error) {
 		return nil, err
 	}
 
-	if len(root_dirs["movies"]) == 0 && len(root_dirs["series"]) == 0 {
+	if len(rootDirs["movies"]) == 0 && len(rootDirs["series"]) == 0 {
 		return nil, fmt.Errorf("no movie and series directory found")
 	}
 
-	return root_dirs, nil
+	return rootDirs, nil
 }
 
-func fetch_subdirs(dir string) ([]string, error) {
+func FetchSubdirs(dir string) ([]string, error) {
 	entries := []string{}
 	err := filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 		if d.IsDir() {
-			// get only directories of depth 1 (directly under series dir) and does not start with a '.'
+			// Get only directories of depth 1 (directly under series dir) and does not start with a '.'
 			if path != dir && filepath.Dir(path) == dir && !strings.HasPrefix(filepath.Base(path), ".") {
 				entries = append(entries, path)
 				return filepath.SkipDir

@@ -2,7 +2,7 @@ package main
 
 import "fmt"
 
-func welcome_msg(version string) {
+func WelcomeMsg(version string) {
 	fmt.Println("gorn - go rename tool")
 	fmt.Println("version:", version)
 	fmt.Println("renames series/movies media files based on directory naming and structure")
@@ -10,47 +10,48 @@ func welcome_msg(version string) {
 	fmt.Println("https://github.com/saltkid/gorn")
 }
 
-func help(flag string) {
+func Help(flag string) {
 	switch flag {
 	case "":
 		fmt.Println("Basic usage: gorn -r path/to/root")
 		fmt.Println("at least one of the three should be present: --root, --series, --movies")
 		fmt.Println("\nOptions:")
-		help_help(false)
-		help_version(false)
-		help_root(false)
-		help_series(false)
-		help_movies(false)
-		help_ken(false)
-		help_sen(false)
-		help_ns(false)
+		HelpHelp(false)
+		HelpVersion(false)
+		HelpRoot(false)
+		HelpSeries(false)
+		HelpMovies(false)
+		HelpKEN(false)
+		HelpSEN(false)
+		HelpS0(false)
+		HelpNS(false)
 	case "-h", "--help":
-		help_help(true)
+		HelpHelp(true)
 	case "-v", "--version":
-		help_version(true)
+		HelpVersion(true)
 	case "-r", "--root":
-		help_root(true)
+		HelpRoot(true)
 	case "-s", "--series":
-		help_series(true)
+		HelpSeries(true)
 	case "-m", "--movies":
-		help_movies(true)
+		HelpMovies(true)
 	case "-ken", "--keep-ep-nums":
-		help_ken(true)
+		HelpKEN(true)
 	case "-sen", "--starting-ep-num":
-		help_sen(true)
+		HelpSEN(true)
 	case "-s0", "--has-season-0":
-		help_s0(true)
+		HelpS0(true)
 	case "-ns", "--naming-scheme":
-		help_ns(true)
+		HelpNS(true)
 	default:
 		fmt.Printf("invalid flag: %s\n\n", flag)
-		help("")
+		Help("")
 	}
 }
 
-func help_help(verbose bool) {
-	fmt.Printf("%-60s%s", "  [--help | -h] <flag>", 
-			"Show this help message if no flag is specified. Shows the specific help message if a flag is specified.\n")
+func HelpHelp(verbose bool) {
+	fmt.Printf("%-60s%s", "  [--help | -h] <flag>",
+		"Show this help message if no flag is specified. Shows the specific help message if a flag is specified.\n")
 	if verbose {
 		fmt.Println("  example: gorn -h")
 		fmt.Println("  example: gorn -h --naming-scheme (this will give more specific help on the naming scheme flag)")
@@ -58,7 +59,7 @@ func help_help(verbose bool) {
 	}
 }
 
-func help_version(verbose bool) {
+func HelpVersion(verbose bool) {
 	fmt.Printf("%-60s%s", "  [--version | -v]",
 		"Show version\n")
 	if verbose {
@@ -67,7 +68,7 @@ func help_version(verbose bool) {
 	}
 }
 
-func help_root(verbose bool) {
+func HelpRoot(verbose bool) {
 	fmt.Printf("%-60s%s", "  [--root | -r] path/to/root",
 		"Root directory containing series root and movie root\n\n")
 	if verbose {
@@ -85,9 +86,9 @@ func help_root(verbose bool) {
 	}
 }
 
-func help_series(verbose bool) {
+func HelpSeries(verbose bool) {
 	fmt.Printf("%-60s%s", "  [--series | -s] path/to/series/root",
-			"Series directory containing series entries\n\n")
+		"Series directory containing series entries\n\n")
 	if verbose {
 		fmt.Println("  example: gorn -s /path/to/series/root")
 		fmt.Println("\n  Series directory should contain series entries.")
@@ -104,9 +105,9 @@ func help_series(verbose bool) {
 	}
 }
 
-func help_movies(verbose bool) {
+func HelpMovies(verbose bool) {
 	fmt.Printf("%-60s%s", "  [--movies | -m] path/to/movies/root",
-			"Movies directory containing movie entries\n\n")
+		"Movies directory containing movie entries\n\n")
 	if verbose {
 		fmt.Println("  example: gorn -m /path/to/movies/root")
 		fmt.Println("\n  Movies directory should contain movie entries.")
@@ -123,9 +124,9 @@ func help_movies(verbose bool) {
 	}
 }
 
-func help_ken(verbose bool) {
+func HelpKEN(verbose bool) {
 	fmt.Printf("%-60s%s", "  [--keep-ep-num | -ken] <all yes/no/default | var>",
-			"Keep original episode numbers in filename based on common naming patterns\n\n")
+		"Keep original episode numbers in filename based on common naming patterns\n\n")
 	if verbose {
 		fmt.Println("  common naming patterns taken into account are:")
 		fmt.Println("    S01E02     |  S03.E04  | S05_E06 | S07-E08 | S09xE10 | S11 E12")
@@ -142,9 +143,9 @@ func help_ken(verbose bool) {
 	}
 }
 
-func help_sen(verbose bool) {
+func HelpSEN(verbose bool) {
 	fmt.Printf("%-60s%s", "  [--starting-ep-num | -sen] <all int/default | var>",
-			"Set the starting episode number in renaming.\n")
+		"Set the starting episode number in renaming.\n")
 	if verbose {
 		fmt.Println("\n  This can be useful if episodes are in absolute order but in different season directories for separation")
 		fmt.Println("  User can specify different starting episode number for each of those seasons")
@@ -155,9 +156,9 @@ func help_sen(verbose bool) {
 	}
 }
 
-func help_s0(verbose bool) {
+func HelpS0(verbose bool) {
 	fmt.Printf("%-60s%s", "  [--has-season-0 | -s0] <all yes/no/default | var>",
-			"Treat extras/specials/OVA/etc directory as season 0\n")
+		"Treat extras/specials/OVA/etc directory as season 0\n")
 	if verbose {
 		fmt.Println("\n  Note that if this is set, there must be only one specials/extras/OVA directory under a series entry")
 		fmt.Println("\n  This is more useful if specified at the series entry level by doing")
@@ -171,9 +172,9 @@ func help_s0(verbose bool) {
 	}
 }
 
-func help_ns(verbose bool) {
+func HelpNS(verbose bool) {
 	fmt.Printf("%-60s%s", "  [--naming-scheme | -ns] <naming-scheme>/default/var",
-			"Change the naming scheme\n")
+		"Change the naming scheme\n")
 	if verbose {
 		fmt.Println("\n  examples: gorn -ns default")
 		fmt.Println(`            gorn -ns "S<season_num>E<episode_num> <parent: 1,5> <parent-parent: '_(\d+)_'> <p-3: 2,5> [<self: '\.(\w+)$'>]"`)
