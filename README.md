@@ -5,10 +5,10 @@ ___
 3. [Usage](#usage)
     1. [Optional Flags](#optional-flags)
 ___ 
-# Overview
+# [Overview](https://github.com/saltkid/gorn/wiki)
 Renames your movies and series based on directory naming and structure. Note that you still have to rename directories, just not the individual media files themselves. This is for easier metadata scraping when using jellyfin, kodi, plex, etc.
 
-# Prerequisites
+# [Prerequisites](https://github.com/saltkid/gorn/wiki/Directory-Structure)
 Have at least one of any of these directories:
 1. **root directory containing series roots and/or movie roots (subroots)**
 ```
@@ -51,7 +51,7 @@ where ... may mean media files or subdirectories (like extras, specials, subs, e
 ```
 For a more detailed explanation of recommended directory structures, different series/movie types depending on structure, see [this wiki page](https://github.com/saltkid/gorn/wiki/Directory-Structure)
 ___
-# Usage
+# [Usage](https://github.com/saltkid/gorn/wiki/Usage)
 To renames all series and movies in the root directory based on directory naming and structure:
 ```
 gorn --root path/to/root/dir
@@ -73,7 +73,7 @@ gorn --movies path/to/movies/subroot/dir
 gorn -r path/to/root/dir -s path/to/another/series/subroot/dir -m path/to/another/movies/subroot/dir
 ```
 ___
-## Optional Flags
+## [Optional Flags](https://github.com/saltkid/gorn/wiki/Usage#optional-flags)
 These are the additional options that can be passed to the cli. For a more detailed explanation, see [this wiki page](https://github.com/saltkid/gorn/wiki/Usage#optional-flags)
 1. `--help | -h`
     - **values:** `<other flags>`
@@ -90,7 +90,7 @@ These are the additional options that can be passed to the cli. For a more detai
 7. `--naming-scheme | -ns`
     - **values:** `all "<scheme>"/default` or `var`
 
-### *scheme*
+### [*scheme*](https://github.com/saltkid/gorn/wiki/Usage#naming-scheme-apis)
 scheme can be composed of any character (as long as its a valid filename) and/or APIs enclosed in <> like:
 - `S<season_num>E<episode_num>`
     - *output*: `S01E01`
