@@ -7,10 +7,19 @@ import (
 	"strings"
 )
 
+var version string
 func main() {
+	if len(os.Args) < 2 {
+		welcome_msg(version)
+		return
+	}
+
 	args, err := parse_args(os.Args[1:])
 	if err != nil {
-		panic(err)
+		if err.Error() != "safe exit" {
+			panic(err)
+		}
+		return
 	}
 
 	if len(args.root) > 0 {
@@ -31,15 +40,15 @@ func main() {
 			fmt.Println("\t", movie)
 		}
 	}
-	ken, err := args.keep_ep_nums.get()
+	ken, err := args.options.keep_ep_nums.get()
 	if err == nil {
 		fmt.Println("keep episode numbers: ", ken)
 	}
-	sen, err := args.starting_ep_num.get()
+	sen, err := args.options.starting_ep_num.get()
 	if err == nil {
 		fmt.Println("starting episode number: ", sen)
 	}
-	ns, err := args.naming_scheme.get()
+	ns, err := args.options.has_season_0.get()
 	if err == nil {
 		fmt.Println("naming scheme: ", ns)
 	}
@@ -104,8 +113,9 @@ func main() {
 	}
 
 	fmt.Println("test for named seasons")
+	named_season_options := prompt_additional_options(args.options, "all named seasons", 0)
 	for _, v := range series.named_seasons {
-		info, err := series_rename_prereqs(v, "named_seasons", some[bool](false), some[int](1), some[bool](false))
+		info, err := series_rename_prereqs(v, "named_seasons", named_season_options)
 		if err != nil {
 			panic(err)
 		}
@@ -119,8 +129,9 @@ func main() {
 	fmt.Println()
 
 	fmt.Println("test for single season no movies")
+	ssnm_options := prompt_additional_options(args.options, "all single season with no movies", 0)
 	for _, v := range series.single_season_no_movies {
-		info, err := series_rename_prereqs(v, "single_season_no_movies", some[bool](false), some[int](1), some[bool](true))
+		info, err := series_rename_prereqs(v, "single_season_no_movies", ssnm_options)
 		if err != nil {
 			panic(err)
 		}
@@ -134,8 +145,9 @@ func main() {
 	fmt.Println()
 
 	fmt.Println("test for single season with movies")
+	sswm_options := prompt_additional_options(args.options, "all single season with movies", 0)
 	for _, v := range series.single_season_with_movies {
-		info, err := series_rename_prereqs(v, "single_season_with_movies", some[bool](true), some[int](1), some[bool](false))
+		info, err := series_rename_prereqs(v, "single_season_with_movies", sswm_options)
 		if err != nil {
 			panic(err)
 		}
@@ -149,8 +161,9 @@ func main() {
 	fmt.Println()
 
 	fmt.Println("test for multiple season no movies")
+	msnm_options := prompt_additional_options(args.options, "all multiple season with no movies", 0)
 	for _, v := range series.multiple_season_no_movies {
-		info, err := series_rename_prereqs(v, "multiple_season_no_movies", some[bool](false), some[int](1), some[bool](false))
+		info, err := series_rename_prereqs(v, "multiple_season_no_movies", msnm_options)
 		if err != nil {
 			panic(err)
 		}
@@ -164,8 +177,9 @@ func main() {
 	fmt.Println()
 
 	fmt.Println("test for multiple season with movies")
+	mswm_options := prompt_additional_options(args.options, "all multiple season with movies", 0)
 	for _, v := range series.multiple_season_with_movies {
-		info, err := series_rename_prereqs(v, "multiple_season_with_movies", some[bool](false), some[int](1), some[bool](false))
+		info, err := series_rename_prereqs(v, "multiple_season_with_movies", mswm_options)
 		if err != nil {
 			panic(err)
 		}
