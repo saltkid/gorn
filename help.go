@@ -172,7 +172,7 @@ func help_s0(verbose bool) {
 }
 
 func help_ns(verbose bool) {
-	fmt.Printf("%-60s%s", "  [--naming-scheme | -ns] <naming-scheme>/default",
+	fmt.Printf("%-60s%s", "  [--naming-scheme | -ns] <naming-scheme>/default/var",
 			"Change the naming scheme\n")
 	if verbose {
 		fmt.Println("\n  examples: gorn -ns default")
