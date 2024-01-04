@@ -72,7 +72,7 @@ func (info *SeriesInfo) rename() error {
 		}
 		
 		// if additional options are none aka user inputted var, ask for user input
-		season_options := prompt_additional_options(info.options, season_path)
+		season_options := prompt_additional_options(info.options, season_path, 2)
 
 		var ep_num, sen int
 		if season_options.starting_ep_num.is_some() {
@@ -214,7 +214,7 @@ func default_title(series_type string, naming_scheme Option[string], path string
 func generate_new_name(naming_scheme Option[string], season_pad int, season_num int, ep_pad int, ep_num int, title string, abs_path string) (string, error) {
 	var new_name string
 	ns, _ := naming_scheme.get()
-	if naming_scheme.is_some() {
+	if naming_scheme.is_some() && ns != "default" {
 		scheme, err := naming_scheme.get()
 		if err != nil {
 			return "", err
