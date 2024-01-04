@@ -63,55 +63,105 @@ gorn --series path/to/series/root/dir --movies path/to/movies/root/dir -s path/t
 User can specify series and movie root dirs separately, can specify only one of either, and can specify any number of dirs. Other than that, it shares the same default renaming behavior as specifying a root dir
 ___
 ## Additional Options
+Some of these flags have default values if they are not specified.
+This is different from the default value if a flag is specified but without a value.
+
+- if `--keep-ep-nums` is not specified, it still has a default value (`all default`).
+- if `--naming-scheme` is specified without a value, it will have a default value (`all yes`).
+
 ### 1. --help
+- **short form:** `-h`
+- **values:** `<other flags>`
+- **default:** none
+
 Shows the simple help message. If user inputted a flag right after `--help`, it will show the detailed help message for that specific flag.
 
 `-h` is the short form
 
 Example: `gorn -h --naming-scheme`, `gorn --help --help`
 ### 2. --version
+- **short form:** `-v`
+- **values:** none
+- **default:** none
+
 Shows the welcome message along with the version.
 
 `-v` is the short form
 
 Example: `gorn -v`, `gorn --version`
-### 1. --keep-ep-num
+
+### 3. --options
+- **short form:** `-o`
+- **values:** none
+- **default:** none
+
+By default, **gorn** will populate flags 4-7 below with default values. This is on an *all media level*.
+
+`--options` flag will ensure the flags are not populated. Since there will be no values, the user will be prompted to input them either during:
+- *per series type level*
+- *per series entry level* (if no input on per series type level)
+
+`-o` is the short form
+
+### 4. --keep-ep-num
+- **short form:** `-ken`
+- **values:** `all yes/no/default | var`
+- **default if ommitted:** `all default`
+- **default if no value:** `all yes`
+
 By default, episode numbers are padded to 2 digits and will start at 01. These are automatically generated and renames the files based on natural sorting.
 
-`--keep-ep-nums all no` is the default behavior if the flag is not present.
+If this flag is set to `all yes`, **gorn** will keep the original episode numbers in the filename based on common naming patterns. If none was found in the filename, it will not rename for that specific file.
 
-If `--keep-ep-nums` flag is present or user inputted `--keep-ep-nums all yes`, gorn will keep the original episode numbers in the filename based on common naming patterns.
+This can be useful if you only have episodes that are canon, aka you don't have filler episodes, so you want to keep the episode number already in the filename.
 
-if none was found in the filename, it will not rename for that specific file. This can be useful if you only have episodes that are canon, aka you don't have filler episodes, so you want to keep the episode number already in the filename.
+If this flag is set to `var`, **gorn** will ask for user input whether or not to keep the episode numbers again:
+- *per series type level*
+- *per series entry level*
 
-If user inputted `--keep-ep-nums var`, gorn will ask for user input whether or not to keep the episode numbers again for each series entry.
+### 5. --starting-ep-num
+- **short form:** `-sen`
+- **values:** `all <num>/default | var`
+- **default if ommitted:** `all default`
+- **default if no value:** `all 1`
 
-`-ken` is the short form
-
-### 2. --starting-ep-num
 By default, episode numbers are padded to 2 digits and will start at 01. You can specify a different starting number to start at by `--starting-ep-num all <num>`.
 
-If user inputted `--starting-ep-num var`, gorn will ask for user input again on what starting episode number to start at for each series entry.
+If this flag is set to `var`, **gorn** will ask for user input again on what starting episode number to start at:
+- *per series type level*
+- *per series entry level*
 
-`-sen` is the short form
+### 6. --has-season-0
+- **short form:** `-s0`
+- **values:** `all yes/no/default | var`
+- **default if ommitted:** `all default`
+- **default if no value:** `all yes`
 
-### 3. --has-season-0
-By default, the media files in specials/extras directory under a series entry are not renamed. `--has-season-0 all no` is the default behavior if the flag is not present. This will ignore the specials/extras directory.
+By default, the media files in specials/extras directory under a series entry will be ignored and are not renamed.
 
-If the flag `--has-season-0` or user inputted `--has-season-0 all yes`, gorn will rename the files in the specials/extras directory under a series entry, treating it as the *season 0* of the series entry.
+If the flag is set to `all yes`, **gorn** will rename the files in the specials/extras directory under a series entry, treating it as the *season 0* of the series entry.
 
-*Note that there must be ***ONE*** special/extras directory under the series entry. If there are multiple, it won't rename the files and inform the user.*
+*Note that if the flag is set to `all yes`, there must be ***ONE*** special/extras directory under the series entry. If there are multiple, it won't rename the files and inform the user.*
 
-If user inputted `--has-season-0 var`, gorn will ask for user input again on whether or not to rename the files in the specials/extras directory as season 0 under a series entry.
+*if the flag is set to `all no`, there can be any number of specials/extras directories*
 
-`-s0` is the short form
+If this flag is set to `var`, **gorn** will ask for user input again on whether or not to rename the files in the specials/extras directory as season 0 under a series entry:
+- *per series type level*
+- *per series entry level*
 
-### 4. --naming-scheme
-By default, gorn will rename the files differently based on the type of media. User can override this by `--naming-scheme all "<scheme>"` or `--naming-scheme var`.
+### 7. --naming-scheme
+- **short form:** `-ns`
+- **values:** `all "<scheme>"/default | var`
+- **default if ommitted:** `all default`
+- **default if no value:** none
+
+By default, **gorn** will rename the files differently based on the type of media. User can override this by `--naming-scheme all "<scheme>"` or `--naming-scheme var`.
 
 `all "<scheme>"` overrides the naming scheme for all media files regardless of type (series only; movies will ignore these additional options)
 
-`-ns` is the short form
+If the flag is set to `var`, **gorn** will ask for user input again on the naming scheme:
+- *per series type level*
+- *per series entry level*
 
 ### *scheme*
 
