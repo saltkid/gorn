@@ -24,7 +24,7 @@ func series_rename_prereqs(path string, s_type string, options AdditionalOptions
 	}
 
 	// if additional options are none aka user inputted var, ask for user input
-	options = prompt_additional_options(options, path)
+	options = prompt_additional_options(options, path, 1)
 	info := SeriesInfo{
 		path: 				path,
 		series_type: 		s_type,
@@ -52,15 +52,41 @@ func series_rename_prereqs(path string, s_type string, options AdditionalOptions
 	return info, nil
 }
 
-func prompt_additional_options(options AdditionalOptions, path string) (AdditionalOptions) {
+// prompt_additional_options prompts the user for additional options.
+//
+// params:
+// 	- options AdditionalOptions: Additional options for the prompt.
+// 	- path string: The path of the file.
+// 	- level int8: The level of the prompt.
+// levels:
+// 	- level 0: per series type level
+// 	- level 1: per series entry level
+// 	- level 2: per series season level
+//
+// return:
+// 	- AdditionalOptions: The additional options for the prompt.
+func prompt_additional_options(options AdditionalOptions, path string, level int8) (AdditionalOptions) {
 	default_ken := some[bool](false)
 	default_sen := some[int](1)
 	default_s0 := some[bool](false)
 	default_ns := some[string]("default")
 
+	var var_opt []string
+	var s0_opt []string
+	if level == 0 {
+		var_opt = []string{"var/", ", 'var'"}
+		s0_opt = var_opt
+	} else if level == 1 {
+		var_opt = []string{"var/", ", 'var'"}
+		s0_opt = []string{"", ""}
+	} else if level == 2 {
+		var_opt = []string{"", ""}
+		s0_opt = var_opt
+	}
+
 	// prompt user for additional options
 	if options.keep_ep_nums.is_none() {
-		fmt.Println("[INPUT]\nkeep episode numbers for", filepath.Base(path), "?", "\ninputs: (y/n/var/default/exit)")
+		fmt.Printf("[INPUT]\nkeep episode numbers for '%s'?\ninputs: (y/n/%sdefault/exit)\n", filepath.Base(path), var_opt[0])
 		for {
 			scanner := bufio.NewScanner(os.Stdin)
 			if scanner.Scan() {
@@ -72,7 +98,7 @@ func prompt_additional_options(options AdditionalOptions, path string) (Addition
 				} else if input == "n" || input == "no" {
 					options.keep_ep_nums = some[bool](false)
 					break
-				} else if input == "var" {
+				} else if input == "var" && level < 2 {
 					break
 				} else if input == "exit" {
 					return options
@@ -80,13 +106,13 @@ func prompt_additional_options(options AdditionalOptions, path string) (Addition
 					options.keep_ep_nums = default_ken
 					break
 				} else {
-					fmt.Println("[ERROR]\ninvalid input, please enter 'y', 'n', 'exit', or 'default'")
+					fmt.Printf("[ERROR]\ninvalid input, please enter 'y', 'n'%s, 'exit', or 'default'\n", var_opt[1])
 				}
 			}
 		}
 	}
 	if options.starting_ep_num.is_none() {
-		fmt.Println("[INPUT]\nstarting episode number for", filepath.Base(path), "?\ninputs: (<int>/var/default/exit)")
+		fmt.Printf("[INPUT]\nstarting episode number for '%s'?\ninputs: (<int>/%sdefault/exit)\n", filepath.Base(path), var_opt[0])
 		for {
 			scanner := bufio.NewScanner(os.Stdin)
 			if scanner.Scan() {
@@ -100,18 +126,18 @@ func prompt_additional_options(options AdditionalOptions, path string) (Addition
 				if input == "default" {
 					options.starting_ep_num = default_sen
 					break
-				} else if input == "var" {
+				} else if input == "var" && level < 2 {
 					break
 				} else if input == "exit" {
 					return options
 				} else {
-					fmt.Println("[ERROR]\ninvalid input, please enter '<int>', 'var', 'exit', or 'default'")
+					fmt.Printf("[ERROR]\ninvalid input, please enter '<int>'%s, 'exit', or 'default'\n", var_opt[1])
 				}
 			}
 		}
 	}
 	if options.has_season_0.is_none() {
-		fmt.Println("[INPUT]\nspecials/extras directory under", filepath.Base(path), "as season 0?", "\ninputs: (y/n/var/default/exit)")
+		fmt.Printf("[INPUT]\nspecials/extras directory under '%s' as season 0?\ninputs: (y/n/%sdefault/exit)\n", filepath.Base(path), s0_opt[0])
 		for {
 			scanner := bufio.NewScanner(os.Stdin)
 			if scanner.Scan() {
@@ -123,7 +149,7 @@ func prompt_additional_options(options AdditionalOptions, path string) (Addition
 				} else if input == "n" || input == "no" {
 					options.has_season_0 = some[bool](false)
 					break
-				} else if input == "var" {
+				} else if input == "var" && level == 0 {
 					break
 				} else if input == "exit" {
 					return options
@@ -131,31 +157,37 @@ func prompt_additional_options(options AdditionalOptions, path string) (Addition
 					options.has_season_0 = default_s0
 					break
 				} else {
-					fmt.Println("[ERROR]\ninvalid input, please enter 'y', 'n', 'exit', or 'default'")
+					fmt.Printf("[ERROR]\ninvalid input, please enter 'y', 'n'%s, 'exit', or 'default'\n", s0_opt[1])
 				}
 			}
 		}
 	}
 	naming_scheme, _ := options.naming_scheme.get()
 	if options.naming_scheme.is_none() || naming_scheme != "default" {
-		fmt.Println("[INPUT]\nnaming scheme for", filepath.Base(path), "\ninputs: (<naming scheme>/var/default)")
+		fmt.Printf("[INPUT]\nnaming scheme for '%s'?\ninputs: (<naming scheme>/%sdefault)\n", filepath.Base(path), var_opt[0])
 		for {
 			scanner := bufio.NewScanner(os.Stdin)
 			if scanner.Scan() {
 				input := scanner.Text()
 				input = strings.TrimSpace(input)
 
-				if strings.ToLower(input) == "var" {
+				if strings.ToLower(input) == "var" && level < 2 {
 					break
-				} else if input == "default" {
+				} else if strings.ToLower(input) == "default" {
 					options.naming_scheme = default_ns
-				} else if input == "exit" {
+					break
+				} else if strings.ToLower(input) == "exit" {
 					return options
-				} else if err := validate_naming_scheme(input); err == nil {
+				} else if err := validate_naming_scheme(input); err == nil && input != "var" {
 					options.naming_scheme = some[string](input)
 					break
 				} else {
-					fmt.Println("[ERROR]\ninvalid input, please enter 'y', 'n', 'default', 'exit', or a valid naming scheme\ninput:", input, "\nerror:", err)
+					fmt.Printf("[ERROR]\ninvalid input, please enter 'y', 'n'%s, 'default', 'exit', or a valid naming scheme\n", var_opt[1])
+					fmt.Println("input:", input)
+					if err != nil { 
+						fmt.Println("naming scheme error:", err)
+					} else { 
+						fmt.Println("error: invalid input") }
 				}
 			}
 		}
