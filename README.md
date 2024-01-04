@@ -219,274 +219,31 @@ Current APIs are:
     - additional options are the same as well except for `<p-number>`. self has no short form
 
 ___
-below are guides on how to structure directories based on media type. provided also are the default naming schemes with a sample output. 
+# Root Directory Structure Overview
 
-# Series / TV Shows
-Series contain episodes which may be under a season. The filename of an episode number can be the ff:
-1. `S01E01`, `S01 E01`, `S1E1`, `S100 E100`, `S01.E01`, `S01_E04`,  - *default for episodes*
-2. `[0x1]`, `[00x11]` - *default for movies/specials in a series*
-3. `Season 1 Episode 1`, `Season 1 Ep 1`
-4. `EP08`, `E09`
-5. your own custom naming scheme
-    - `S<season_num>E<episode_num> - <parent-parent> <parent> something static`
-    - output:
-    - `S01E01 - Fruits Basket Season 1 something static`
-    - `S01E02 - Fruits Basket Season 1 something static`
+Root directories should contain series roots and/or movie roots (let's call these subroots). Each subroot should contain series and movie entries respectively.`
 
-## current valid directory structures
-### 1. single season no movie/s
-directory input
+sample root directory
 ```
-<series root dir>
-|__ <series name>
-    |__ filename.mkv
-    |__ filename2.mkv
-    |__ ...
-    |__ some other filename.mkv
-```
-sample output
-```
-Series
-|__ Nichijou
-    |__ S01E01 Nichijou.mkv
-    |__ S01E02 Nichijou.mkv
-    |__ ...
-    |__ S01EXX Nichijou.mkv
-```
-default formatting
-```
-S<season_num>E<episode_num> <parent>
-```
-
-### 2. single season with movie/s
-directory input
-```
-<series root dir>
-|__ <series name>
-    |__ <series name>
-    |   |__ filename.mkv
-    |   |__ filename2.mkv
-    |   |__ ...
-    |   |__ some other filename.mkv
-    |
-    |__ <movie name>
-        |__ some filename.mkv
-```
-sample output
-```
-Series
-|__ Neon Genesis Evangelion
-    |__ Neon Genesis Evangelion
-    |   |__ S01E01 Neon Genesis Evangelion.mkv
-    |   |__ S01E02 Neon Genesis Evangelion.mkv
-    |   |__ ...
-    |   |__ S01EXX Neon Genesis Evangelion.mkv
-    |
-    |__ The End of Evangelion
-        |__ Neon Genesis Evangelion The End of Evangelion [1x27].mkv
-```
-default formatting
-```
-episodes: S<season_num>E<episode_num> <parent>
-movies: <parent-parent> <parent>
-```
-* note: `[1x27]` needs to be added manually since this **gorn** does not scrape data off tmdb/tvdb. 
-
-### 3. multiple season no movie/s
-directory input
-```
-<series root dir>
-|__ <series name>
-    |__ <season name>
-    |   |__ filename.mkv
-    |   |__ filename2.mkv
-    |   |__ ...
-    |   |__ some other filename.mkv
-    |
-    |__ <season name>
-        |__ filename.mkv
-        |__ filename2.mkv
+<root dir>
+|__ <series subroot>
+|   |__ <series entry>
+|   |   |__ ...
+|   |
+|   |__ <series entry>
+|       |__ ...
+|
+|__ <movie subroot>
+|   |__ <movie entry>
+|   |   |__ ...
+|   |
+|   |__ <movie entry>
+|       |__ ...
+|
+|__ <movie subroot>
+    |__ <movie entry>
         |__ ...
-        |__ some other filename.mkv
+```
+*where `...` may mean media files or subdirectories like extras, specials, subs, etc*
 
-```
-sample output
-```
-Series
-|__ Mob Psycho 100
-    |__ Season 1
-    |   |__ S01E01 Mob Psycho 100.mkv
-    |   |__ S01E02 Mob Psycho 100.mkv
-    |   |__ ...
-    |   |__ S01EXX Mob Psycho 100.mkv
-    |
-    |__ Season 2
-        |__ S02E01 Mob Psycho 100.mkv
-        |__ S02E02 Mob Psycho 100.mkv
-        |__ ...
-        |__ S02EXX Mob Psycho 100.mkv
-```
-default formatting
-```
-episodes: S<season_num>E<episode_num> <parent-parent>
-movies: <parent-parent> <parent>
-```
-### 4. multiple season with movie/s
-directory input
-```
-<series root dir>
-|__ <series name>
-    |__ <special name>
-    |   |__ filename.mkv
-    |
-    |__ <season name>
-    |   |__ filename.mkv
-    |   |__ filename2.mkv
-    |   |__ ...
-    |   |__ some other filename.mkv
-    |
-    |__ <season name>
-        |__ filename.mkv
-        |__ filename2.mkv
-        |__ ...
-        |__ some other filename.mkv
-
-```
-sample output
-```
-Series
-|__ Fruits Basket
-    |__ Prelude
-    |   |__ Fruits Basket Prelude [0x1]
-    |
-    |__ Season 1
-    |   |__ S01E01 Fruits Basket.mkv
-    |   |__ S01E02 Fruits Basket.mkv
-    |   |__ ...
-    |   |__ S01EXX Fruits Basket.mkv
-    |
-    |__ Season 2
-        |__ S02E01 Fruits Basket.mkv
-        |__ S02E02 Fruits Basket.mkv
-        |__ ...
-        |__ S02EXX Fruits Basket.mkv
-```
-default formatting
-```
-episodes: S<season_num>E<episode_num> <parent-parent>
-movies: <parent-parent> <parent>
-```
-* note: `[0x1]` needs to be added manually since this **gorn** does not scrape data off tmdb/tvdb.
-### 5. named seasons with or without movies
-* note: the `01. title` before the season name is important to determine order
-    * `.` after digits can be `-` or `_`, and can be separated by spaces: `02 - title` `03__title`
-
-directory input
-```
-<series root dir>
-|__ <series name>
-    |__ 01. <season name>
-    |   |__ filename.mkv
-    |   |__ filename2.mkv
-    |   |__ ...
-    |   |__ some other filename.mkv
-    |
-    |__ 02. <season name>
-        |__ filename.mkv
-        |__ filename2.mkv
-        |__ ...
-        |__ some other filename.mkv
-
-```
-sample output
-```
-Series
-|__ JoJos Bizzare Adventure
-    |__ 01. Phantom Blood
-    |   |__ S01E01 JoJos Bizzare Adventure Phantom Blood.mkv
-    |   |__ S01E02 JoJos Bizzare Adventure Phantom Blood.mkv
-    |   |__ ...
-    |   |__ S01EXX JoJos Bizzare Adventure Phantom Blood.mkv
-    |
-    |__ 01. Battle Tendency
-    |   |__ S02E01 JoJos Bizzare Adventure Battle Tendency.mkv
-    |   |__ S02E02 JoJos Bizzare Adventure Battle Tendency.mkv
-    |   |__ ...
-    |   |__ S02EXX JoJos Bizzare Adventure Battle Tendency.mkv
-    |
-    |__ 02. Stardust Crusaders
-        |__ S03E01 JoJos Bizzare Adventure Stardust Crusaders.mkv
-        |__ S03E02 JoJos Bizzare Adventure Stardust Crusaders.mkv
-        |__ ...
-        |__ S03EXX JoJos Bizzare Adventure Stardust Crusaders.mkv
-```
-default formatting
-```
-episodes: S<season_num>E<episode_num> <parent-parent> <parent>
-movies: <parent-parent> <parent>
-```
-
-# Movies
-Movies contain a movie file which may be under a movie set. The filename of a movie can be the ff
-
-1. name of `parent_dir` which is most likely the title of the movie - *default for both standalone and movie sets*
-2. your own custom naming scheme *(which may or may not be based on your parent directories)*
-    - `<parent-parent> - <parent> something static`
-    - `Rebuild of Evangelion - Evangelion 1.0 You are (Not) Alone something static`
-    - `Rebuild of Evangelion - Evangelion 2.0 You can (Not) Advance something static`
-
-## current valid directory structures
-### 1. standalone movies
-directory input
-```
-<movies root dir>
-|__ <movie name>
-    |__ filename.mkv
-```
-sample output
-```
-Movies
-|__ Akira
-    |__ Akira.mkv
-```
-default formatting
-```
-<parent>
-```
-
-### 2. movie sets
-directory input
-```
-<movies root dir>
-|__ <movie set name>
-    |__ <movie name>
-    |   |__ filename.mkv
-    |
-    |__ <movie name>
-    |   |__ filename.mkv
-    |
-    |__ ...
-    |
-    |__ <movie name>
-        |__ filename.mkv
-```
-sample output
-```
-Movies
-|__ Rebuild of Evangelion
-    |__ Evangelion 1.0 - You Are (Not) Alone
-    |   |__ Evangelion 1.0 - You Are (Not) Alone.mkv
-    |
-    |__ Evangelion 2.0 - You Can (Not) Advance
-    |   |__ Evangelion 2.0 - You Can (Not) Advance.mkv
-    |
-    |__ Evangelion 3.0 You Can (Not) Redo
-    |   |__ Evangelion 3.0 You Can (Not) Redo.mkv
-    |
-    |__ Evangelion 3.0+1.0 Thrice Upon a Time
-        |__ Evangelion 3.0+1.0 Thrice Upon a Time.mkv
-```
-default formatting
-```
-<parent>
-```
+For more information about Subroot (series/movies) Directory Structures, see [this wiki page](https://github.com/saltkid/gorn/wiki/Directory-Structure)
