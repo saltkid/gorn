@@ -221,7 +221,7 @@ Current APIs are:
 ___
 # Root Directory Structure Overview
 
-Root directories should contain series roots and/or movie roots (let's call these subroots). Each subroot should contain series and movie entries respectively.`
+Root directories should contain series roots and/or movie roots (let's call these subroots). Each subroot should contain series and movie entries respectively.
 
 sample root directory
 ```
@@ -245,5 +245,7 @@ sample root directory
         |__ ...
 ```
 *where `...` may mean media files or subdirectories like extras, specials, subs, etc*
+
+Note that there can be multiple series/movie subroots in the same root directory.
 
 For more information about Subroot (series/movies) Directory Structures, see [this wiki page](https://github.com/saltkid/gorn/wiki/Directory-Structure)
