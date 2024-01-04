@@ -1,4 +1,9 @@
 ### current progress (to v1.0): see [this issue](https://github.com/saltkid/gorn/issues/1)
+___
+1. [Overview](#overview)
+2. [Prerequisites](#prerequisites)
+3. [Usage](#usage)
+    1. [Optional Flags](#optional-flags)
 ___ 
 # Overview
 Renames your movies and series based on directory naming and structure. Note that you still have to rename directories, just not the individual media files themselves. This is for easier metadata scraping when using jellyfin, kodi, plex, etc.
@@ -96,3 +101,5 @@ For more information, see [this wiki page](https://github.com/saltkid/gorn/wiki/
 ___
 
 Credits: [@saltkid](https://github.com/saltkid)
+
+License: MIT License
