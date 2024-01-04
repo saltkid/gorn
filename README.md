@@ -9,7 +9,7 @@ ___
 Renames your movies and series based on directory naming and structure. Note that you still have to rename directories, just not the individual media files themselves. This is for easier metadata scraping when using jellyfin, kodi, plex, etc.
 
 # Prerequisites
-Have any number of these directories:
+Have at least one of any of these directories:
 1. **root directory containing series roots and/or movie roots (subroots)**
 ```
 <root dir>
