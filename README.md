@@ -4,9 +4,8 @@ ___
 Renames your movies and series based on directory naming and structure. Note that you still have to rename directories, just not the individual media files themselves. This is for easier metadata scraping when using jellyfin, kodi, plex, etc.
 
 # Prerequisites
-A directory to pass to the cli.
-have any number of these (any combination of these will work too):
-- a root directory containing series directories and/or movie directories
+Have any number of these directories:
+1. **root directory containing series roots and/or movie roots (subroots)**
 ```
 <root dir>
 |__ <series root dir 1>
@@ -25,7 +24,9 @@ have any number of these (any combination of these will work too):
 
 where ... may mean media files or subdirectories (like extras, specials, subs, etc)
 ```
-- a series root directory containing series entries
+*Note that there can be multiple series/movie subroots in the same root directory.*
+
+2. **series subroot directory containing series entries**
 ```
 <series root dir 1>
 |__ <series entry 1>
@@ -34,7 +35,7 @@ where ... may mean media files or subdirectories (like extras, specials, subs, e
 |__ <series entry 2>
     |__ ...
 ```
-- or a movie root directory containing movie entries
+3. **movie subroot directory containing movie entries**
 ```
 <movie root dir 1>
     |__ <movie entry 1>
@@ -43,6 +44,7 @@ where ... may mean media files or subdirectories (like extras, specials, subs, e
     |__ <movie entry 2>
         |__ ...
 ```
+For a more detailed explanation of recommended directory structures, different series/movie types depending on structure, see [this wiki page](https://github.com/saltkid/gorn/wiki/Directory-Structure)
 ___
 # Usage
 To renames all series and movies in the root directory based on directory naming and structure:
@@ -92,33 +94,5 @@ scheme can be composed of any character (as long as its a valid filename) and/or
 
 For more information, see [this wiki page](https://github.com/saltkid/gorn/wiki/Usage#naming-scheme-apis)
 ___
-# Root Directory Structure Overview
 
-Root directories should contain series roots and/or movie roots (let's call these subroots). Each subroot should contain series and movie entries respectively.
-
-sample root directory
-```
-<root dir>
-|__ <series subroot>
-|   |__ <series entry>
-|   |   |__ ...
-|   |
-|   |__ <series entry>
-|       |__ ...
-|
-|__ <movie subroot>
-|   |__ <movie entry>
-|   |   |__ ...
-|   |
-|   |__ <movie entry>
-|       |__ ...
-|
-|__ <movie subroot>
-    |__ <movie entry>
-        |__ ...
-```
-*where `...` may mean media files or subdirectories like extras, specials, subs, etc*
-
-Note that there can be multiple series/movie subroots in the same root directory.
-
-For more information about Subroot (series/movies) Directory Structures, see [this wiki page](https://github.com/saltkid/gorn/wiki/Directory-Structure)
+Credits: [@saltkid](https://github.com/saltkid)
