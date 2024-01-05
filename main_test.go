@@ -11,741 +11,1187 @@ func Test_ParseArgs(t *testing.T) {
 
 	cmd := "root -s0 yes"
 	command := strings.Split(cmd, " ")
-	_, err := ParseArgs(command)
-	if err == nil {
-		t.Errorf("expected error 'missing root dir'; got -s0 -s0")
+	rawArgs, err := TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd, "\n\t", err)
+		_, err = ParseArgs(rawArgs)
+		if err == nil {
+			t.Errorf("expected error 'missing root dir'; got -s0 -s0")
+		} else {
+			t.Log(cmd, "\n\t", err)
+		}
 	}
-
 	cmd = "series -s0 yes"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err == nil {
-		t.Errorf("expected error 'missing series dir'; got -s0")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd, "\n\t", err)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err == nil {
+			t.Errorf("expected error 'missing series dir'; got -s0")
+		} else {
+			t.Log(cmd, "\n\t", err)
+		}
+
+	}
 	cmd = "movies -s0 yes"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err == nil {
-		t.Errorf("expected error 'missing movies dir'; got -s0")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd, "\n\t", err)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err == nil {
+			t.Errorf("expected error 'missing movies dir'; got -s0")
+		} else {
+			t.Log(cmd, "\n\t", err)
+		}
+
+	}
 	cmd = "-s0 yes"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err == nil {
-		t.Errorf("expected error 'missing dir'")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd, "\n\t", err)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err == nil {
+			t.Errorf("expected error 'missing dir'")
+		} else {
+			t.Log(cmd, "\n\t", err)
+		}
+
+	}
 	cmd = "root ./test_files series ./test_files"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err == nil {
-		t.Errorf("expected error 'same dir: root test_files series test_files'")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd, "\n\t", err)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err == nil {
+			t.Errorf("expected error 'same dir: root test_files series test_files'")
+		} else {
+			t.Log(cmd, "\n\t", err)
+		}
+
+	}
 	cmd = "root ./test_files series ./test_files/series"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err == nil {
-		t.Errorf("expected error 'series is a subdir of root: root test_files series test_files/series'")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd, "\n\t", err)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err == nil {
+			t.Errorf("expected error 'series is a subdir of root: root test_files series test_files/series'")
+		} else {
+			t.Log(cmd, "\n\t", err)
+		}
+
+	}
 	cmd = "series ./test_files root ./test_files/series"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err == nil {
-		t.Errorf("expected error 'root is a subdir of series: series test_files root test_files/series'")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd, "\n\t", err)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err == nil {
+			t.Errorf("expected error 'root is a subdir of series: series test_files root test_files/series'")
+		} else {
+			t.Log(cmd, "\n\t", err)
+		}
+
+	}
 	cmd = "root ./test_files movies ./test_files"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err == nil {
-		t.Errorf("expected error 'same dir: root test_files movies test_files'")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd, "\n\t", err)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err == nil {
+			t.Errorf("expected error 'same dir: root test_files movies test_files'")
+		} else {
+			t.Log(cmd, "\n\t", err)
+		}
+
+	}
 	cmd = "root ./test_files movies ./test_files/movies"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err == nil {
-		t.Errorf("expected error 'movies is a subdir of root: root test_files movies test_files/movies'")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd, "\n\t", err)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err == nil {
+			t.Errorf("expected error 'movies is a subdir of root: root test_files movies test_files/movies'")
+		} else {
+			t.Log(cmd, "\n\t", err)
+		}
+
+	}
 	cmd = "movies ./test_files root ./test_files/movies"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err == nil {
-		t.Errorf("expected error 'root is a subdir of movies: movies test_files root test_files/movies'")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd, "\n\t", err)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err == nil {
+			t.Errorf("expected error 'root is a subdir of movies: movies test_files root test_files/movies'")
+		} else {
+			t.Log(cmd, "\n\t", err)
+		}
+
+	}
 	cmd = "root ./test_files -ken ye"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err == nil {
-		t.Errorf("expected error 'invalid value for -ken: ye'")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd, "\n\t", err)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err == nil {
+			t.Errorf("expected error 'invalid value for -ken: ye'")
+		} else {
+			t.Log(cmd, "\n\t", err)
+		}
+
+	}
 	cmd = "root ./test_files -sen ye"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err == nil {
-		t.Errorf("expected error 'invalid value for -sen: ye'")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd, "\n\t", err)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err == nil {
+			t.Errorf("expected error 'invalid value for -sen: ye'")
+		} else {
+			t.Log(cmd, "\n\t", err)
+		}
+
+	}
 	cmd = "root ./test_files -s0 ye"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err == nil {
-		t.Errorf("expected error 'invalid value for -s0: ye'")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd, "\n\t", err)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err == nil {
+			t.Errorf("expected error 'invalid value for -s0: ye'")
+		} else {
+			t.Log(cmd, "\n\t", err)
+		}
+
+	}
 	cmd = "root ./test_files -ns yee"
 	command = strings.Split(cmd, " ")
-	args, err := ParseArgs(command)
-	if err == nil {
-		t.Errorf("expected error 'invalid value for -ns: ye, not enclosed in double quotes'\n%s", args)
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd, "\n\t", err)
-	}
 
-	t.Log("------------expects success------------")
+		args, err := ParseArgs(rawArgs)
+		if err == nil {
+			t.Errorf("expected error 'invalid value for -ns: ye, not enclosed in double quotes'\n%s", args)
+		} else {
+			t.Log(cmd, "\n\t", err)
+		}
+
+		t.Log("------------expects success------------")
+	}
 	cmd = "root ./test_files -s0 yes"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
+	rawArgs, err = TokenizeArgs(command)
 	if err != nil {
-		t.Errorf("unexpected error: %s", err)
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+
+	}
 	cmd = "root ./test_files -s0 no"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
+	rawArgs, err = TokenizeArgs(command)
 	if err != nil {
-		t.Errorf("unexpected error: %s", err)
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+
+	}
 	cmd = "root ./test_files -s0 default"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
+	rawArgs, err = TokenizeArgs(command)
 	if err != nil {
-		t.Errorf("unexpected error: %s", err)
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+
+	}
 	cmd = "root ./test_files -s0 var"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
+	rawArgs, err = TokenizeArgs(command)
 	if err != nil {
-		t.Errorf("unexpected error: %s", err)
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+
+	}
 	cmd = `root ./test_files -ns "test<season_num>"`
 	command = strings.Split(cmd, " ")
-	args, err = ParseArgs(command)
+	rawArgs, err = TokenizeArgs(command)
 	if err != nil {
-		t.Errorf("unexpected error: %s", err)
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		if args.options.namingScheme.IsNone() {
-			t.Errorf("unexpected error: 'naming scheme not set'")
+
+		args, err := ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
 		} else {
-			val, _ := args.options.namingScheme.Get()
-			if val != "test<season_num>" {
-				t.Errorf("unexpected error: '%s != test<season_num>'", val)
+			if args.options.namingScheme.IsNone() {
+				t.Errorf("unexpected error: 'naming scheme not set'")
 			} else {
-				t.Log(cmd)
+				val, _ := args.options.namingScheme.Get()
+				if val != "test<season_num>" {
+					t.Errorf("unexpected error: '%s != test<season_num>'", val)
+				} else {
+					t.Log(cmd)
+				}
 			}
 		}
-	}
 
+	}
 	cmd = "root ./test_files -ns default"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
+	rawArgs, err = TokenizeArgs(command)
 	if err != nil {
-		t.Errorf("unexpected error: %s", err)
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+
+	}
 	cmd = "root ./test_files -ns var"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
+	rawArgs, err = TokenizeArgs(command)
 	if err != nil {
-		t.Errorf("unexpected error: %s", err)
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+
+	}
 	cmd = "root ./test_files -ken yes"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
+	rawArgs, err = TokenizeArgs(command)
 	if err != nil {
-		t.Errorf("unexpected error: %s", err)
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+
+	}
 	cmd = "root ./test_files -ken no"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
+	rawArgs, err = TokenizeArgs(command)
 	if err != nil {
-		t.Errorf("unexpected error: %s", err)
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+
+	}
 	cmd = "root ./test_files -ken default"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
+	rawArgs, err = TokenizeArgs(command)
 	if err != nil {
-		t.Errorf("unexpected error: %s", err)
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+
+	}
 	cmd = "root ./test_files -ken var"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
+	rawArgs, err = TokenizeArgs(command)
 	if err != nil {
-		t.Errorf("unexpected error: %s", err)
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+
+	}
 	cmd = "root ./test_files -sen 1"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
+	rawArgs, err = TokenizeArgs(command)
 	if err != nil {
-		t.Errorf("unexpected error: %s", err)
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+
+	}
 	cmd = "root ./test_files -sen 2"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
+	rawArgs, err = TokenizeArgs(command)
 	if err != nil {
-		t.Errorf("unexpected error: %s", err)
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+
+	}
 	cmd = "root ./test_files -sen default"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
+	rawArgs, err = TokenizeArgs(command)
 	if err != nil {
-		t.Errorf("unexpected error: %s", err)
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+
+	}
 	cmd = "root ./test_files -sen var"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
+	rawArgs, err = TokenizeArgs(command)
 	if err != nil {
-		t.Errorf("unexpected error: %s", err)
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+
+	}
 	cmd = `root ./test_files -ken -sen -s0 -ns "test"`
 	command = strings.Split(cmd, " ")
-	args, err = ParseArgs(command)
+	rawArgs, err = TokenizeArgs(command)
 	if err != nil {
-		t.Errorf("unexpected error: %s", err)
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		if args.options.namingScheme.IsNone() {
+
+		args, err := ParseArgs(rawArgs)
+		if err != nil {
 			t.Errorf("unexpected error: %s", err)
 		} else {
-			val, _ := args.options.namingScheme.Get()
-			if val != "test" {
-				t.Errorf("unexpected error: '%s' != test", val)
+			if args.options.namingScheme.IsNone() {
+				t.Errorf("unexpected error: %s", err)
+			} else {
+				val, _ := args.options.namingScheme.Get()
+				if val != "test" {
+					t.Errorf("unexpected error: '%s' != test", val)
+				}
+				t.Log(cmd)
 			}
-			t.Log(cmd)
 		}
-	}
 
+	}
 	cmd = "root ./test_files -o"
 	command = strings.Split(cmd, " ")
-	args, err = ParseArgs(command)
+	rawArgs, err = TokenizeArgs(command)
 	if err != nil {
-		t.Errorf("unexpected error: %s", err)
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		if args.options.keepEpNums.IsSome() || args.options.hasSeason0.IsSome() || args.options.startingEpNum.IsSome() || args.options.namingScheme.IsSome() {
+
+		args, err := ParseArgs(rawArgs)
+		if err != nil {
 			t.Errorf("unexpected error: %s", err)
 		} else {
-			t.Log(cmd)
-		}
-	}
-
-	cmd = "-h"
-	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err == nil {
-		t.Errorf("supposed to exit safely")
-	} else {
-		t.Log(cmd, err)
-	}
-
-	cmd = "-v"
-	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err == nil {
-		t.Errorf("supposed to exit safely")
-	} else {
-		t.Log(cmd, err)
-	}
-
-	cmd = "-h -v"
-	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err == nil {
-		t.Errorf("supposed to exit safely")
-	} else {
-		t.Log(cmd, err)
-	}
-
-	cmd = "-h -o"
-	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err == nil {
-		t.Errorf("supposed to exit safely")
-	} else {
-		t.Log(cmd, err)
-	}
-
-	cmd = "-h -s0"
-	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err == nil {
-		t.Errorf("supposed to exit safely")
-	} else {
-		t.Log(cmd, err)
-	}
-
-	cmd = "-h -ken"
-	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err == nil {
-		t.Errorf("supposed to exit safely")
-	} else {
-		t.Log(cmd, err)
-	}
-
-	cmd = "-h -sen"
-	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err == nil {
-		t.Errorf("supposed to exit safely")
-	} else {
-		t.Log(cmd, err)
-	}
-
-	cmd = "-h -ns"
-	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err == nil {
-		t.Errorf("supposed to exit safely")
-	} else {
-		t.Log(cmd, err)
-	}
-
-	cmd = "series ./test_files/series -s0 yes"
-	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err != nil {
-		t.Errorf("unexpected error: %s", err)
-	} else {
-		t.Log(cmd)
-	}
-
-	cmd = "series ./test_files/series -s0 no"
-	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err != nil {
-		t.Errorf("unexpected error: %s", err)
-	} else {
-		t.Log(cmd)
-	}
-
-	cmd = "series ./test_files/series -s0 default"
-	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err != nil {
-		t.Errorf("unexpected error: %s", err)
-	} else {
-		t.Log(cmd)
-	}
-
-	cmd = "series ./test_files/series -s0 var"
-	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err != nil {
-		t.Errorf("unexpected error: %s", err)
-	} else {
-		t.Log(cmd)
-	}
-
-	cmd = `series ./test_files/series -ns "test<episode_num>"`
-	command = strings.Split(cmd, " ")
-	args, err = ParseArgs(command)
-	if err != nil {
-		t.Errorf("unexpected error: %s", err)
-	} else {
-		if args.options.namingScheme.IsNone() {
-			t.Errorf("unexpected error: %s", err)
-		} else {
-			val, _ := args.options.namingScheme.Get()
-			if val != "test<episode_num>" {
-				t.Errorf("unexpected error: '%s != test<episode_num>'", val)
+			if args.options.keepEpNums.IsSome() || args.options.hasSeason0.IsSome() || args.options.startingEpNum.IsSome() || args.options.namingScheme.IsSome() {
+				t.Errorf("none of the options should have been set")
 			} else {
 				t.Log(cmd)
 			}
 		}
-	}
 
+	}
+	cmd = "-h"
+	command = strings.Split(cmd, " ")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
+	} else {
+
+		_, err = ParseArgs(rawArgs)
+		if err == nil {
+			t.Errorf("supposed to exit safely")
+		} else {
+			t.Log(cmd, err)
+		}
+
+	}
+	cmd = "-v"
+	command = strings.Split(cmd, " ")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
+	} else {
+
+		_, err = ParseArgs(rawArgs)
+		if err == nil {
+			t.Errorf("supposed to exit safely")
+		} else {
+			t.Log(cmd, err)
+		}
+
+	}
+	cmd = "-h -v"
+	command = strings.Split(cmd, " ")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
+	} else {
+
+		_, err = ParseArgs(rawArgs)
+		if err == nil {
+			t.Errorf("supposed to exit safely")
+		} else {
+			t.Log(cmd, err)
+		}
+
+	}
+	cmd = "-h -o"
+	command = strings.Split(cmd, " ")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
+	} else {
+
+		_, err = ParseArgs(rawArgs)
+		if err == nil {
+			t.Errorf("supposed to exit safely")
+		} else {
+			t.Log(cmd, err)
+		}
+
+	}
+	cmd = "-h -s0"
+	command = strings.Split(cmd, " ")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
+	} else {
+
+		_, err = ParseArgs(rawArgs)
+		if err == nil {
+			t.Errorf("supposed to exit safely")
+		} else {
+			t.Log(cmd, err)
+		}
+
+	}
+	cmd = "-h -ken"
+	command = strings.Split(cmd, " ")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
+	} else {
+
+		_, err = ParseArgs(rawArgs)
+		if err == nil {
+			t.Errorf("supposed to exit safely")
+		} else {
+			t.Log(cmd, err)
+		}
+
+	}
+	cmd = "-h -sen"
+	command = strings.Split(cmd, " ")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
+	} else {
+
+		_, err = ParseArgs(rawArgs)
+		if err == nil {
+			t.Errorf("supposed to exit safely")
+		} else {
+			t.Log(cmd, err)
+		}
+
+	}
+	cmd = "-h -ns"
+	command = strings.Split(cmd, " ")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
+	} else {
+
+		_, err = ParseArgs(rawArgs)
+		if err == nil {
+			t.Errorf("supposed to exit safely")
+		} else {
+			t.Log(cmd, err)
+		}
+
+	}
+	cmd = "series ./test_files/series -s0 yes"
+	command = strings.Split(cmd, " ")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
+	} else {
+
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+
+	}
+	cmd = "series ./test_files/series -s0 no"
+	command = strings.Split(cmd, " ")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
+	} else {
+
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+
+	}
+	cmd = "series ./test_files/series -s0 default"
+	command = strings.Split(cmd, " ")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
+	} else {
+
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+
+	}
+	cmd = "series ./test_files/series -s0 var"
+	command = strings.Split(cmd, " ")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
+	} else {
+
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+
+	}
+	cmd = `series ./test_files/series -ns "test<episode_num>"`
+	command = strings.Split(cmd, " ")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
+	} else {
+
+		args, err := ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			if args.options.namingScheme.IsNone() {
+				t.Errorf("unexpected error: %s", err)
+			} else {
+				val, _ := args.options.namingScheme.Get()
+				if val != "test<episode_num>" {
+					t.Errorf("unexpected error: '%s != test<episode_num>'", val)
+				} else {
+					t.Log(cmd)
+				}
+			}
+		}
+
+	}
 	cmd = "series ./test_files/series -ns default"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
+	rawArgs, err = TokenizeArgs(command)
 	if err != nil {
-		t.Errorf("unexpected error: %s", err)
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+
+	}
 	cmd = "series ./test_files/series -ns var"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
+	rawArgs, err = TokenizeArgs(command)
 	if err != nil {
-		t.Errorf("unexpected error: %s", err)
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+
+	}
 	cmd = "series ./test_files/series -ken yes"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
+	rawArgs, err = TokenizeArgs(command)
 	if err != nil {
-		t.Errorf("unexpected error: %s", err)
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+
+	}
 	cmd = "series ./test_files/series -ken no"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
+	rawArgs, err = TokenizeArgs(command)
 	if err != nil {
-		t.Errorf("unexpected error: %s", err)
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+
+	}
 	cmd = "series ./test_files/series -ken default"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
+	rawArgs, err = TokenizeArgs(command)
 	if err != nil {
-		t.Errorf("unexpected error: %s", err)
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+
+	}
 	cmd = "series ./test_files/series -ken var"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
+	rawArgs, err = TokenizeArgs(command)
 	if err != nil {
-		t.Errorf("unexpected error: %s", err)
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+
+	}
 	cmd = "series ./test_files/series -sen 1"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
+	rawArgs, err = TokenizeArgs(command)
 	if err != nil {
-		t.Errorf("unexpected error: %s", err)
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+
+	}
 	cmd = "series ./test_files/series -sen 2"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
+	rawArgs, err = TokenizeArgs(command)
 	if err != nil {
-		t.Errorf("unexpected error: %s", err)
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+
+	}
 	cmd = "series ./test_files/series -sen default"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
+	rawArgs, err = TokenizeArgs(command)
 	if err != nil {
-		t.Errorf("unexpected error: %s", err)
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+
+	}
 	cmd = "series ./test_files/series -sen var"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
+	rawArgs, err = TokenizeArgs(command)
 	if err != nil {
-		t.Errorf("unexpected error: %s", err)
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd)
-	}
 
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+
+	}
 	cmd = `series ./test_files/series -ken -sen -s0 -ns "test"`
 	command = strings.Split(cmd, " ")
-	args, err = ParseArgs(command)
+	rawArgs, err = TokenizeArgs(command)
 	if err != nil {
-		t.Errorf("unexpected error: %s", err)
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		if args.options.namingScheme.IsNone() {
+
+		args, err := ParseArgs(rawArgs)
+		if err != nil {
 			t.Errorf("unexpected error: %s", err)
 		} else {
-			val, _ := args.options.namingScheme.Get()
-			if val != "test" {
+			if args.options.namingScheme.IsNone() {
 				t.Errorf("unexpected error: %s", err)
+			} else {
+				val, _ := args.options.namingScheme.Get()
+				if val != "test" {
+					t.Errorf("unexpected error: %s", err)
+				}
+				t.Log(cmd)
 			}
-			t.Log(cmd)
 		}
-	}
 
+	}
 	cmd = "series ./test_files/series -o"
 	command = strings.Split(cmd, " ")
-	args, err = ParseArgs(command)
+	rawArgs, err = TokenizeArgs(command)
 	if err != nil {
-		t.Errorf("unexpected error: %s", err)
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		if args.options.keepEpNums.IsSome() || args.options.hasSeason0.IsSome() || args.options.startingEpNum.IsSome() || args.options.namingScheme.IsSome() {
+
+		args, err := ParseArgs(rawArgs)
+		if err != nil {
 			t.Errorf("unexpected error: %s", err)
 		} else {
-			t.Log(cmd)
+			if args.options.keepEpNums.IsSome() || args.options.hasSeason0.IsSome() || args.options.startingEpNum.IsSome() || args.options.namingScheme.IsSome() {
+				t.Errorf("none of the options should be present")
+			} else {
+				t.Log(cmd)
+			}
 		}
-	}
 
+	}
 	cmd = "movies ./test_files/movies -s0 yes"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
+	rawArgs, err = TokenizeArgs(command)
 	if err != nil {
-		t.Errorf("unexpected error: %s", err)
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd)
-	}
 
-	cmd = "movies ./test_files/movies -s0 no"
-	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err != nil {
-		t.Errorf("unexpected error: %s", err)
-	} else {
-		t.Log(cmd)
-	}
-
-	cmd = "movies ./test_files/movies -s0 default"
-	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err != nil {
-		t.Errorf("unexpected error: %s", err)
-	} else {
-		t.Log(cmd)
-	}
-
-	cmd = "movies ./test_files/movies -s0 var"
-	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err != nil {
-		t.Errorf("unexpected error: %s", err)
-	} else {
-		t.Log(cmd)
-	}
-
-	cmd = `movies ./test_files/movies -ns "test"`
-	command = strings.Split(cmd, " ")
-	args, err = ParseArgs(command)
-	if err != nil {
-		t.Errorf("unexpected error: %s", err)
-	} else {
-		if args.options.namingScheme.IsNone() {
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
 			t.Errorf("unexpected error: %s", err)
 		} else {
-			val, _ := args.options.namingScheme.Get()
-			if val != "test" {
+			t.Log(cmd)
+		}
+
+	}
+	cmd = "movies ./test_files/movies -s0 no"
+	command = strings.Split(cmd, " ")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
+	} else {
+
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+
+	}
+	cmd = "movies ./test_files/movies -s0 default"
+	command = strings.Split(cmd, " ")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
+	} else {
+
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+
+	}
+	cmd = "movies ./test_files/movies -s0 var"
+	command = strings.Split(cmd, " ")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
+	} else {
+
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+
+	}
+	cmd = `movies ./test_files/movies -ns "test"`
+	command = strings.Split(cmd, " ")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
+	} else {
+
+		args, err := ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			if args.options.namingScheme.IsNone() {
 				t.Errorf("unexpected error: %s", err)
+			} else {
+				val, _ := args.options.namingScheme.Get()
+				if val != "test" {
+					t.Errorf("unexpected error: %s", err)
+				}
+				t.Log(cmd)
 			}
+		}
+
+	}
+	cmd = "movies ./test_files/movies -ns default"
+	command = strings.Split(cmd, " ")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
+	} else {
+
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+
+	}
+	cmd = "movies ./test_files/movies -ns var"
+	command = strings.Split(cmd, " ")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
+	} else {
+
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+
+	}
+	cmd = "movies ./test_files/movies -ken yes"
+	command = strings.Split(cmd, " ")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
+	} else {
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
 			t.Log(cmd)
 		}
 	}
-
-	cmd = "movies ./test_files/movies -ns default"
-	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err != nil {
-		t.Errorf("unexpected error: %s", err)
-	} else {
-		t.Log(cmd)
-	}
-
-	cmd = "movies ./test_files/movies -ns var"
-	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err != nil {
-		t.Errorf("unexpected error: %s", err)
-	} else {
-		t.Log(cmd)
-	}
-
-	cmd = "movies ./test_files/movies -ken yes"
-	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err != nil {
-		t.Errorf("unexpected error: %s", err)
-	} else {
-		t.Log(cmd)
-	}
-
 	cmd = "movies ./test_files/movies -ken no"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
+	rawArgs, err = TokenizeArgs(command)
 	if err != nil {
-		t.Errorf("unexpected error: %s", err)
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		t.Log(cmd)
-	}
-
-	cmd = "movies ./test_files/movies -ken default"
-	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err != nil {
-		t.Errorf("unexpected error: %s", err)
-	} else {
-		t.Log(cmd)
-	}
-
-	cmd = "movies ./test_files/movies -ken var"
-	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err != nil {
-		t.Errorf("unexpected error: %s", err)
-	} else {
-		t.Log(cmd)
-	}
-
-	cmd = "movies ./test_files/movies -sen 3"
-	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err != nil {
-		t.Errorf("unexpected error: %s", err)
-	} else {
-		t.Log(cmd)
-	}
-
-	cmd = "movies ./test_files/movies -sen 4"
-	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err != nil {
-		t.Errorf("unexpected error: %s", err)
-	} else {
-		t.Log(cmd)
-	}
-
-	cmd = "movies ./test_files/movies -sen default"
-	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err != nil {
-		t.Errorf("unexpected error: %s", err)
-	} else {
-		t.Log(cmd)
-	}
-
-	cmd = "movies ./test_files/movies -sen var"
-	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err != nil {
-		t.Errorf("unexpected error: %s", err)
-	} else {
-		t.Log(cmd)
-	}
-
-	cmd = `movies ./test_files/movies -ken -sen -s0 -ns "test"`
-	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
-	if err != nil {
-		t.Errorf("unexpected error: %s", err)
-	} else {
-		if args.options.namingScheme.IsNone() {
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
 			t.Errorf("unexpected error: %s", err)
 		} else {
-			val, _ := args.options.namingScheme.Get()
-			if val != "test" {
-				t.Errorf("unexpected error: %s", err)
-			}
 			t.Log(cmd)
+		}
+	}
+	cmd = "movies ./test_files/movies -ken default"
+	command = strings.Split(cmd, " ")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
+	} else {
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+	}
+	cmd = "movies ./test_files/movies -ken var"
+	command = strings.Split(cmd, " ")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
+	} else {
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+	}
+	cmd = "movies ./test_files/movies -sen 3"
+	command = strings.Split(cmd, " ")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
+	} else {
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+	}
+	cmd = "movies ./test_files/movies -sen 4"
+	command = strings.Split(cmd, " ")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
+	} else {
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+	}
+	cmd = "movies ./test_files/movies -sen default"
+	command = strings.Split(cmd, " ")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
+	} else {
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+
+	}
+	cmd = "movies ./test_files/movies -sen var"
+	command = strings.Split(cmd, " ")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
+	} else {
+
+		_, err = ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+
+	}
+	cmd = `movies ./test_files/movies -ken -sen -s0 -ns "test"`
+	command = strings.Split(cmd, " ")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
+	} else {
+		args, err := ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			if args.options.namingScheme.IsNone() {
+				t.Errorf("unexpected error: %s", err)
+			} else {
+				val, _ := args.options.namingScheme.Get()
+				if val != "test" {
+					t.Errorf("unexpected error: %s", err)
+				}
+				t.Log(cmd)
+			}
 		}
 	}
 
 	cmd = "movies ./test_files/movies -o"
 	command = strings.Split(cmd, " ")
-	args, err = ParseArgs(command)
+	rawArgs, err = TokenizeArgs(command)
 	if err != nil {
-		t.Errorf("unexpected error: %s", err)
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		if args.options.keepEpNums.IsSome() || args.options.hasSeason0.IsSome() || args.options.startingEpNum.IsSome() || args.options.namingScheme.IsSome() {
+		args, err := ParseArgs(rawArgs)
+		if err != nil {
 			t.Errorf("unexpected error: %s", err)
 		} else {
-			t.Log(cmd)
+			if args.options.keepEpNums.IsSome() || args.options.hasSeason0.IsSome() || args.options.startingEpNum.IsSome() || args.options.namingScheme.IsSome() {
+				t.Errorf(`unexpected error: keep ep nums, has season 0, starting episode num, or naming scheme should not be set when: only -o is present
+				keep ep nums: %s
+				has season 0: %s
+				starting episode num: %s
+				naming scheme: %s
+				args: %s`, args.options.keepEpNums, args.options.hasSeason0, args.options.startingEpNum, args.options.namingScheme, rawArgs)
+			} else {
+				t.Log(cmd)
+			}
 		}
 	}
 
 	cmd = "movies ./test_files/movies -ken -o"
 	command = strings.Split(cmd, " ")
-	args, err = ParseArgs(command)
+	rawArgs, err = TokenizeArgs(command)
 	if err != nil {
-		t.Errorf("unexpected error: %s", err)
+		t.Errorf("unexpected error: '%s'", err)
 	} else {
-		if args.options.hasSeason0.IsSome() || args.options.startingEpNum.IsSome() || args.options.namingScheme.IsSome() {
-			t.Errorf("unexpected error: has season 0, starting episode num, or naming scheme should not be set when: only -ken is set and -o is present")
+		args, err := ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
 		} else {
-			if args.options.keepEpNums.IsNone() {
-				t.Errorf("unexpected error: keep ep nums should be set to yes")
-			} else if val, _ := args.options.keepEpNums.Get(); val != true {
-				t.Errorf("unexpected error: keep ep nums should be set to yes")
+			if args.options.hasSeason0.IsSome() || args.options.startingEpNum.IsSome() || args.options.namingScheme.IsSome() {
+				t.Errorf("unexpected error: has season 0, starting episode num, or naming scheme should not be set when: only -ken is set and -o is present")
 			} else {
+				if args.options.keepEpNums.IsNone() {
+					t.Errorf("unexpected error: keep ep nums should be set to yes")
+				} else if val, _ := args.options.keepEpNums.Get(); val != true {
+					t.Errorf("unexpected error: keep ep nums should be set to yes")
+				} else {
 					t.Log(cmd, "\n\t", args)
+				}
 			}
 		}
+	}
+}
+
+func Test_TokenizeArgs(t *testing.T) {
+	t.Log("------------expects errors------------")
+	t.Log("------------expects success------------")
+	strArg := "-v -h root a series e   movies i -ken m  -sen qt -s0 ux -ns yz"
+	rawArgs := strings.Split(strArg, " ")
+	args, err := TokenizeArgs(rawArgs)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else if len(args) != 9 {
+		t.Errorf("unexpected error: not enough args: %s", args)
+	} else {
+		t.Log(strArg, "\n\t", args)
 	}
 }
 
