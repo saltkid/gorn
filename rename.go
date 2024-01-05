@@ -116,6 +116,21 @@ func (info *SeriesInfo) Rename() error {
 			}
 		}
 
+		// adjust episode read episode numbers if starting episode number was specified by user
+		if seasonOptions.startingEpNum.IsSome() {
+			adjustVal := 0
+			minEpNum := epNums[0]
+			for _, val := range epNums[1:] {
+				if val < minEpNum {
+					minEpNum = val
+				}
+			}
+			adjustVal = sen - minEpNum
+			for i, val := range epNums {
+				epNums[i] = val + adjustVal
+			}
+		}
+
 		for i, file := range mediaFiles {
 			title := DefaultTitle(info.seriesType, seasonOptions.namingScheme, info.path, seasonPath)
 			newName, err := GenerateNewName(seasonOptions.namingScheme, // namingScheme

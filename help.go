@@ -125,7 +125,7 @@ func HelpMovies(verbose bool) {
 }
 
 func HelpKEN(verbose bool) {
-	fmt.Printf("%-60s%s", "  [--keep-ep-num | -ken] <all yes/no/default | var>",
+	fmt.Printf("%-60s%s", "  [--keep-ep-num | -ken] yes | no | default | var>",
 		"Keep original episode numbers in filename based on common naming patterns\n\n")
 	if verbose {
 		fmt.Println("  common naming patterns taken into account are:")
@@ -136,28 +136,28 @@ func HelpKEN(verbose bool) {
 		fmt.Println("  NOTE: This is not how the default naming scheme looks like in gorn. These common naming cases are just here to read the episode number from the filename.")
 		fmt.Println("        second number is episode")
 		fmt.Println("        if no common naming pattern is found, the file will not be renamed.")
-		fmt.Println("\n  examples: gorn -ken all yes")
-		fmt.Println("            gorn -ken all no")
-		fmt.Println("            gorn -ken all default")
+		fmt.Println("\n  examples: gorn -ken yes")
+		fmt.Println("            gorn -ken no")
+		fmt.Println("            gorn -ken default")
 		fmt.Println("            gorn -ken var")
 	}
 }
 
 func HelpSEN(verbose bool) {
-	fmt.Printf("%-60s%s", "  [--starting-ep-num | -sen] <all int/default | var>",
+	fmt.Printf("%-60s%s", "  [--starting-ep-num | -sen] <int> | default | var>",
 		"Set the starting episode number in renaming.\n")
 	if verbose {
 		fmt.Println("\n  This can be useful if episodes are in absolute order but in different season directories for separation")
 		fmt.Println("  User can specify different starting episode number for each of those seasons")
-		fmt.Println("\n  examples: gorn -sen all 1")
-		fmt.Println("            gorn -sen all 25")
-		fmt.Println("            gorn -sen all default")
+		fmt.Println("\n  examples: gorn -sen 1")
+		fmt.Println("            gorn -sen 25")
+		fmt.Println("            gorn -sen default")
 		fmt.Println("            gorn -sen var")
 	}
 }
 
 func HelpS0(verbose bool) {
-	fmt.Printf("%-60s%s", "  [--has-season-0 | -s0] <all yes/no/default | var>",
+	fmt.Printf("%-60s%s", "  [--has-season-0 | -s0] yes | no | default | var>",
 		"Treat extras/specials/OVA/etc directory as season 0\n")
 	if verbose {
 		fmt.Println("\n  Note that if this is set, there must be only one specials/extras/OVA directory under a series entry")
@@ -165,15 +165,15 @@ func HelpS0(verbose bool) {
 		fmt.Println("  'gorn -r path/to/root -s0 var'")
 		fmt.Println("  This will let gorn prompt the user at: per series type level and per series entry level")
 		fmt.Println("  if var is inputted at the per series type level, it will prompt the user at per series entry level which is where this flag will be most useful")
-		fmt.Println("\n  examples: gorn -s0 all yes")
-		fmt.Println("            gorn -s0 all no")
-		fmt.Println("            gorn -s0 all default")
+		fmt.Println("\n  examples: gorn -s0 yes")
+		fmt.Println("            gorn -s0 no")
+		fmt.Println("            gorn -s0 default")
 		fmt.Println("            gorn -s0 var")
 	}
 }
 
 func HelpNS(verbose bool) {
-	fmt.Printf("%-60s%s", "  [--naming-scheme | -ns] <naming-scheme>/default/var",
+	fmt.Printf("%-60s%s", "  [--naming-scheme | -ns] <naming-scheme> | default | var",
 		"Change the naming scheme\n")
 	if verbose {
 		fmt.Println("\n  examples: gorn -ns default")

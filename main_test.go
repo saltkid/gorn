@@ -121,10 +121,10 @@ func Test_ParseArgs(t *testing.T) {
 		t.Log("-r", "./test_files", "--season-0", "-s0", "\n\t", err, "\n")
 	}
 
-	command = []string{"-r", "./test_files", "-ken", "yes"}
+	command = []string{"-r", "./test_files", "-ken", "all", "yes"}
 	_, err = ParseArgs(command)
 	if err == nil {
-		t.Errorf("expected error 'yes is not a valid arg. must be all or var'")
+		t.Errorf("expected error 'all is not a valid arg. must be yes no default or var'")
 	} else {
 		t.Log("-r", "./test_files", "-ken", "yes", "\n\t", err, "\n")
 	}
@@ -153,10 +153,10 @@ func Test_ParseArgs(t *testing.T) {
 		t.Log("-r", "./test_files", "-sen", "all", "yes", "\n\t", err, "\n")
 	}
 
-	command = []string{"-r", "./test_files", "-sen", "1"}
+	command = []string{"-r", "./test_files", "-sen", "all", "1"}
 	_, err = ParseArgs(command)
 	if err == nil {
-		t.Errorf("expected error '1 is not a valid arg. must be all or var'")
+		t.Errorf("expected error 'all is not a valid arg. must be int default or var'")
 	} else {
 		t.Log("-r", "./test_files", "-sen", "yes", "\n\t", err, "\n")
 	}
@@ -185,7 +185,7 @@ func Test_ParseArgs(t *testing.T) {
 		t.Log("--root", "./test_files", "-s", "./test_files/Series", "-m", "./test_files/Movies", "\n\t", err, "\n")
 	}
 
-	command = []string{"-r", "./test_files", "--naming-scheme", "S01E01"}
+	command = []string{"-r", "./test_files", "-sen", "1", "--starting-ep-num", "2"}
 	_, err = ParseArgs(command)
 	if err == nil {
 		t.Errorf("expected error 'multiple starting-ep-num flags'")
@@ -194,12 +194,12 @@ func Test_ParseArgs(t *testing.T) {
 	}
 	t.Log("------------expects success------------")
 
-	command = []string{"--root", "./test_files", "-s0", "all", "yes"}
+	command = []string{"--root", "./test_files", "-s0", "yes"}
 	_, err = ParseArgs(command)
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
 	} else {
-		t.Log("--root", "./test_files", "-s0", "all", "yes")
+		t.Log("--root", "./test_files", "-s0", "yes")
 	}
 
 	command = []string{"--root", "./test_files"}
