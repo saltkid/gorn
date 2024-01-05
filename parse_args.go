@@ -9,6 +9,71 @@ import (
 	"strings"
 )
 
+type Arg struct {
+	name  string
+	value string
+}
+
+func TokenizeArgs(args []string) ([]Arg, error) {
+	var tokenizedArgs []Arg
+	isValidName := map[string]bool{
+		// commands
+		"root":              true,
+		"series":            true,
+		"movies":            true,
+		// switches
+		"--help":            true,
+		"-h":                true,
+		"--version":         true,
+		"-v":                true,
+		// flags
+		"--options":         true,
+		"-o":                true,
+		"--keep-ep-nums":    true,
+		"-ken":              true,
+		"--starting-ep-num": true,
+		"-sen":              true,
+		"--has-season-0":    true,
+		"-s0":               true,
+		"--naming-scheme":   true,
+		"-ns":               true,
+	}
+	var newArg Arg
+	var value string
+	readValues := false
+	for i, arg := range args {
+		if arg == "" {
+			continue
+		}
+		if !readValues {
+			if isValidName[arg] {
+				newArg.name = arg
+				readValues = true
+			} else {
+				return nil, fmt.Errorf("start with invalid flag: '%s'", arg)
+			}
+		} else {
+			if isValidName[arg] {
+				newArg.value = value
+				tokenizedArgs = append(tokenizedArgs, newArg)
+				newArg = Arg{name: arg}
+				value = ""
+			} else {
+				if value == "" {
+					value = arg
+				} else {
+					return nil, fmt.Errorf("multiple values for flag: '%s' {%s, %s}", newArg.name, value, arg)
+				}
+			}
+			if i == len(args)-1 {
+				newArg.value = value
+				tokenizedArgs = append(tokenizedArgs, newArg)
+			}
+		}
+	}
+	return tokenizedArgs, nil
+}
+
 type Args struct {
 	root    []string
 	series  []string
@@ -36,200 +101,168 @@ func newArgs() Args {
 	}
 }
 
-func ParseArgs(args []string) (Args, error) {
+func ParseArgs(args []Arg) (Args, error) {
 	if len(args) < 1 {
 		return Args{}, fmt.Errorf("not enough arguments")
 	}
 
 	directoryArgs := map[string]bool{
-		"--root":   true,
-		"-r":       true,
-		"--series": true,
-		"-s":       true,
-		"--movies": true,
-		"-m":       true,
+		"root":   true,
+		"series": true,
+		"movies": true,
 	}
-	assignedVar := map[string]bool{
-		"--options": false,
+	isAssigned := map[string]bool{
+		"--options":         false,
 		"--keep-ep-nums":    false,
 		"--starting-ep-num": false,
 		"--has-season-0":    false,
-		"--naming-scheme":  false,
+		"--naming-scheme":   false,
 	}
 
 	parsedArgs := newArgs()
-	skipValue := 0
 	for i, arg := range args {
-		// valid values will be skipped
-		if skipValue != 0 && i <= skipValue {
-			continue
-
-		} else if arg[0] != '-' {
-			// catch invalid values acting as flags
-			return Args{}, fmt.Errorf("invalid flag: '%s'", arg)
-
-		} else if arg == "--help" || arg == "-h" {
+		if arg.name == "--help" || arg.name == "-h" {
 			if len(args) <= i+1 {
 				Help("")
 			} else if len(args) > i+1 {
-				Help(args[i+1])
+				Help(args[i+1].name)
 			}
 			return Args{}, fmt.Errorf("safe exit")
 
-		} else if arg == "--version" || arg == "-v" {
-			WelcomeMsg(version)
+		} else if arg.name == "--version" || arg.name == "-v" {
+			Version(version)
 			return Args{}, fmt.Errorf("safe exit")
 
-		} else if directoryArgs[arg] {
+		} else if directoryArgs[arg.name] {
 			// no value after flag / flag after flag
-			if len(args) <= i+1 || (len(args) > i+1 && args[i+1][0] == '-') {
+			if arg.value == "" {
 				return Args{}, fmt.Errorf("missing dir path value for flag '%s'", arg)
 			}
 
-			dir, err := filepath.Abs(args[i+1])
+			dir, err := filepath.Abs(arg.value)
 			if err != nil {
 				return Args{}, err
 			}
-			_, err = os.Stat(args[i+1])
+			_, err = os.Stat(dir)
 			if os.IsNotExist(err) {
-				return Args{}, fmt.Errorf("'%s' is not a valid directory", args[i+1])
+				return Args{}, fmt.Errorf("'%s' is not a valid directory", dir)
 			}
 
-			switch arg {
-			case "--root", "-r":
+			switch arg.name {
+			case "root":
 				parsedArgs.root = append(parsedArgs.root, dir)
-			case "--series", "-s":
+			case "series":
 				parsedArgs.series = append(parsedArgs.series, dir)
-			case "--movies", "-m":
+			case "movies":
 				parsedArgs.movies = append(parsedArgs.movies, dir)
 			}
-			skipValue = i + 1
 
-		} else if arg == "--has-season-0" || arg == "-s0" {
+		} else if arg.name == "--has-season-0" || arg.name == "-s0" {
 			if parsedArgs.options.hasSeason0.IsSome() {
 				return Args{}, fmt.Errorf("only one --has-season-0 flag is allowed")
 			}
 			// use default value
-			if len(args) <= i+1 || (len(args) > i+1 && args[i+1][0] == '-') {
-				parsedArgs.options.hasSeason0 = some[bool](false)
+			if arg.value == "" {
+				parsedArgs.options.hasSeason0 = some[bool](true)
+				isAssigned["--has-season-0"] = true
 
-			} else if args[i+1] != "yes" && args[i+1] != "var" && args[i+1] != "no"  && args[i+1] != "default" {
-				return Args{}, fmt.Errorf("invalid value '%s' for flag '%s'. Must be 'yes', 'no', 'var, or 'default", args[i+1], arg)
+			} else if arg.value != "yes" && arg.value != "var" && arg.value != "no" && arg.value != "default" {
+				return Args{}, fmt.Errorf("invalid value '%s' for flag --has-season-0. Must be 'yes', 'no', 'var, or 'default", arg.value)
 
 			} else {
-				switch args[i+1] {
+				switch arg.value {
 				case "yes":
 					parsedArgs.options.hasSeason0 = some[bool](true)
 				case "no", "default":
 					parsedArgs.options.hasSeason0 = some[bool](false)
 				case "var":
 					parsedArgs.options.hasSeason0 = none[bool]()
-					assignedVar["--has-season-0"] = true
 				}
-				skipValue = i + 1
+				isAssigned["--has-season-0"] = true
 			}
 
-		} else if arg == "--keep-ep-nums" || arg == "-ken" {
+		} else if arg.name == "--keep-ep-nums" || arg.name == "-ken" {
 			if parsedArgs.options.keepEpNums.IsSome() {
 				return Args{}, fmt.Errorf("only one --keep-ep-nums flag is allowed")
 			}
 
 			// use default value
-			if len(args) <= i+1 || (len(args) > i+1 && args[i+1][0] == '-') {
-				parsedArgs.options.keepEpNums = some[bool](false)
+			if arg.value == "" {
+				parsedArgs.options.keepEpNums = some[bool](true)
+				isAssigned["--keep-ep-nums"] = true
 
-			} else if args[i+1] != "yes" && args[i+1] != "var" && args[i+1] != "no" && args[i+1] != "default" {
-				return Args{}, fmt.Errorf("invalid value '%s' for --keep-ep-nums. Must be 'yes', 'no', 'var', or 'default", args[i+1])
+			} else if arg.value != "yes" && arg.value != "var" && arg.value != "no" && arg.value != "default" {
+				return Args{}, fmt.Errorf("invalid value '%s' for --keep-ep-nums. Must be 'yes', 'no', 'var', or 'default", arg.value)
 
 			} else {
-				switch args[i+1] {
+				switch arg.value {
 				case "yes":
 					parsedArgs.options.keepEpNums = some[bool](true)
 				case "no", "default":
 					parsedArgs.options.keepEpNums = some[bool](false)
 				case "var":
 					parsedArgs.options.keepEpNums = none[bool]()
-					assignedVar["--keep-ep-nums"] = true
 				}
-				skipValue = i + 1
+				isAssigned["--keep-ep-nums"] = true
 			}
 
-		} else if arg == "--starting-ep-num" || arg == "-sen" {
+		} else if arg.name == "--starting-ep-num" || arg.name == "-sen" {
 			if parsedArgs.options.startingEpNum.IsSome() {
 				return Args{}, fmt.Errorf("only one --starting-ep-num flag is allowed")
 			}
 
 			// use default value
-			if len(args) <= i+1 || (len(args) > i+1 && args[i+1][0] == '-') {
+			if arg.value == "" {
 				parsedArgs.options.startingEpNum = some[int](1)
-			}
+				isAssigned["--starting-ep-num"] = true
 
-			value, err := strconv.Atoi(args[i+1])
-			if args[i+1] != "var" && err != nil && value < 1 {
-				return Args{}, fmt.Errorf("invalid value '%s' for --starting-ep-num. Must be a valid positive int or 'var", args[i+1])
+			} else if value, err := strconv.Atoi(arg.value); err != nil && value < 1 && arg.value != "var" && arg.value != "default" {
+				return Args{}, fmt.Errorf("invalid value '%s' for --starting-ep-num. Must be a valid positive int or 'var", arg.value)
 
 			} else {
-				switch args[i+1] {
+				switch arg.value {
 				case "var":
 					parsedArgs.options.startingEpNum = none[int]()
-					assignedVar["--starting-ep-num"] = true
+				case "default":
+					parsedArgs.options.startingEpNum = some[int](1)
 				default:
 					parsedArgs.options.startingEpNum = some[int](value)
 				}
-				skipValue = i + 1
+				isAssigned["--starting-ep-num"] = true
 			}
 
-		} else if arg == "--options" || arg == "-o" {
-			if assignedVar["--options"] {
+		} else if arg.name == "--options" || arg.name == "-o" {
+			if isAssigned["--options"] {
 				return Args{}, fmt.Errorf("only one --options flag is allowed")
 			}
+			isAssigned["--options"] = true
 
-			// all options are assigned `var` if no value is provided
-			if len(args) <= i+1 || (len(args) > i+1 && (args[i+1][0] == '-' || args[i+1] == "var")) {
-				assignedVar["--options"] = true
-				parsedArgs.options.keepEpNums = none[bool]()
-				parsedArgs.options.startingEpNum = none[int]()
-				parsedArgs.options.hasSeason0 = none[bool]()
-				parsedArgs.options.namingScheme = none[string]()
-
-			} else if args[i+1] != "default" && args[i+1] != "var" {
-				return Args{}, fmt.Errorf("invalid value '%s' for --options. Must be 'default' or 'var", args[i+1])
-
-			} else if args[i+1] == "default" {
-				// use default values
-				assignedVar["--options"] = true
-				parsedArgs.options.keepEpNums = some[bool](false)
-				parsedArgs.options.startingEpNum = some[int](1)
-				parsedArgs.options.hasSeason0 = some[bool](false)
-				parsedArgs.options.namingScheme = some[string]("default")
-			}
-
-		} else if arg == "--naming-scheme" || arg == "-ns" {
+		} else if arg.name == "--naming-scheme" || arg.name == "-ns" {
 			if parsedArgs.options.namingScheme.IsSome() {
 				return Args{}, fmt.Errorf("only one --naming-scheme flag is allowed")
 			}
-			if len(args) <= i+1 || (len(args) > i+1 && args[i+1][0] == '-') {
+			if arg.value == "" {
 				return Args{}, fmt.Errorf("missing value for --naming-scheme")
 			}
 
-			err := ValidateNamingScheme(args[i+1])
-			if args[i+1] != "default" && args[i+1] != "var" && err != nil {
-				return Args{}, fmt.Errorf("invalid value '%s' for --naming-scheme. Must be 'default', 'var', or a naming scheme enclosed in double quotes", args[i+1])
+			err := ValidateNamingScheme(arg.value)
+			if err != nil && arg.value != "default" && arg.value != "var" {
+				return Args{}, fmt.Errorf("invalid value '%s' for --naming-scheme. Must be 'default', 'var', or a naming scheme enclosed in double quotes", arg.value)
 
 			} else {
-				switch args[i+1] {
+				switch arg.value {
 				case "default":
 					parsedArgs.options.namingScheme = some[string]("default")
 				case "var":
 					parsedArgs.options.namingScheme = none[string]()
 				default:
-					parsedArgs.options.namingScheme = some[string](args[i+1])
+					namingScheme := strings.Trim(arg.value, `"`)
+					parsedArgs.options.namingScheme = some[string](namingScheme)
 				}
-				skipValue = i + 1
 			}
 
 		} else {
-			return Args{}, fmt.Errorf("unknown flag: %s", arg)
+			return Args{}, fmt.Errorf("unknown flag: %s", arg.name)
 		}
 	}
 
@@ -238,18 +271,18 @@ func ParseArgs(args []string) (Args, error) {
 		return Args{}, err
 	}
 
-	if !assignedVar["--options"] {
+	if !isAssigned["--options"] {
 		// use default values for optional flags if not assigned var
-		if parsedArgs.options.hasSeason0.IsNone() && !assignedVar["--has-season-0"] {
+		if parsedArgs.options.hasSeason0.IsNone() && !isAssigned["--has-season-0"] {
 			parsedArgs.options.hasSeason0 = some[bool](false)
 		}
-		if parsedArgs.options.keepEpNums.IsNone() && !assignedVar["--keep-ep-nums"] {
+		if parsedArgs.options.keepEpNums.IsNone() && !isAssigned["--keep-ep-nums"] {
 			parsedArgs.options.keepEpNums = some[bool](false)
 		}
-		if parsedArgs.options.startingEpNum.IsNone() && !assignedVar["--starting-ep-num"] {
+		if parsedArgs.options.startingEpNum.IsNone() && !isAssigned["--starting-ep-num"] {
 			parsedArgs.options.startingEpNum = some[int](1)
 		}
-		if parsedArgs.options.namingScheme.IsNone() && !assignedVar["--naming-scheme"] {
+		if parsedArgs.options.namingScheme.IsNone() && !isAssigned["--naming-scheme"] {
 			parsedArgs.options.namingScheme = some[string]("default")
 		}
 	}
@@ -257,6 +290,10 @@ func ParseArgs(args []string) (Args, error) {
 }
 
 func ValidateNamingScheme(s string) error {
+	if s[0] != '"' || s[len(s)-1] != '"' {
+		return fmt.Errorf("naming scheme must be enclosed in double quotes: %s", s)
+	}
+
 	tokens, err := TokenizeNamingScheme(s)
 	if err != nil {
 		return err

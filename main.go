@@ -15,7 +15,12 @@ func main() {
 		return
 	}
 
-	args, err := ParseArgs(os.Args[1:])
+	rawArgs, err := TokenizeArgs(os.Args[1:])
+	if err != nil {
+		panic(err)
+	}
+
+	args, err := ParseArgs(rawArgs)
 	if err != nil {
 		if err.Error() != "safe exit" {
 			panic(err)

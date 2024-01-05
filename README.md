@@ -3,7 +3,8 @@ ___
 1. [Overview](#overview)
 2. [Prerequisites](#prerequisites)
 3. [Usage](#usage)
-    1. [Optional Flags](#optional-flags)
+    1. [Switches](#switches)
+    2. [Flags](#flags)
 ___ 
 # [Overview](https://github.com/saltkid/gorn/wiki)
 Renames your movies and series based on directory naming and structure. Note that you still have to rename directories, just not the individual media files themselves. This is for easier metadata scraping when using jellyfin, kodi, plex, etc.
@@ -72,22 +73,24 @@ gorn --movies path/to/movies/subroot/dir
 ```
 gorn -r path/to/root/dir -s path/to/another/series/subroot/dir -m path/to/another/movies/subroot/dir
 ```
-___
-## [Optional Flags](https://github.com/saltkid/gorn/wiki/Usage#optional-flags)
-These are the additional options that can be passed to the cli. For a more detailed explanation, see [this wiki page](https://github.com/saltkid/gorn/wiki/Usage#optional-flags)
+## [Switches](https://github.com/saltkid/gorn/wiki/Usage#switches)
+Switches are flags that switch the behavior of **gorn** from its default behavior of renaming media files. For a more detailed explanation, see [this wiki page](https://github.com/saltkid/gorn/wiki/Usage#switches)
 1. `--help | -h`
-    - **values:** `<other flags>`
+    - **values:** `<commands> | <switches> | <flags>`
 2. `--version | -v`
     - **values:** none
-3. `--options | -o`
-    - **values:** none
-4. `--keep-ep-num | -ken`
+## [Flags](https://github.com/saltkid/gorn/wiki/Usage#optional-flags)
+These are the additional options that can be passed to the cli. For a more detailed explanation, see [this wiki page](https://github.com/saltkid/gorn/wiki/Usage#optional-flags)
+
+1. `--keep-ep-num | -ken`
     - **values:** `yes | no | default | var`
-5. `--starting-ep-num | -sen`
+2. `--starting-ep-num | -sen`
     - **values:** `<num> | default | var`
-6. `--has-season-0 | -s0`
+3. `--has-season-0 | -s0`
     - **values:** `yes | no | default | var`
-7. `--naming-scheme | -ns`
+4. `--options | -o`
+    - **values:** none
+5. `--naming-scheme | -ns`
     - **values:** `"<scheme>"| default | var`
 
 ### [*scheme*](https://github.com/saltkid/gorn/wiki/Usage#naming-scheme-apis)

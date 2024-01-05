@@ -180,7 +180,8 @@ func PromptOptionalFlags(options AdditionalOptions, path string, level int8) Add
 				} else if strings.ToLower(input) == "exit" {
 					return options
 				} else if err := ValidateNamingScheme(input); err == nil && input != "var" {
-					options.namingScheme = some[string](input)
+					namingScheme := strings.Trim(input, `"`)
+					options.namingScheme = some[string](namingScheme)
 					break
 				} else {
 					fmt.Printf("[ERROR]\ninvalid input, please enter 'y', 'n'%s, 'default', 'exit', or a valid naming scheme\n", varOpt[1])
