@@ -46,7 +46,7 @@ func ParseArgs(args []string) (Args, error) {
 		"series": true,
 		"movies": true,
 	}
-	assignedVar := map[string]bool{
+	isAssigned := map[string]bool{
 		"--options":         false,
 		"--keep-ep-nums":    false,
 		"--starting-ep-num": false,
@@ -108,7 +108,7 @@ func ParseArgs(args []string) (Args, error) {
 			}
 			// use default value
 			if len(args) <= i+1 || (len(args) > i+1 && args[i+1][0] == '-') {
-				parsedArgs.options.hasSeason0 = some[bool](false)
+				parsedArgs.options.hasSeason0 = some[bool](true)
 
 			} else if args[i+1] != "yes" && args[i+1] != "var" && args[i+1] != "no" && args[i+1] != "default" {
 				return Args{}, fmt.Errorf("invalid value '%s' for flag '%s'. Must be 'yes', 'no', 'var, or 'default", args[i+1], arg)
@@ -121,7 +121,7 @@ func ParseArgs(args []string) (Args, error) {
 					parsedArgs.options.hasSeason0 = some[bool](false)
 				case "var":
 					parsedArgs.options.hasSeason0 = none[bool]()
-					assignedVar["--has-season-0"] = true
+					isAssigned["--has-season-0"] = true
 				}
 				skipValue = i + 1
 			}
@@ -133,7 +133,8 @@ func ParseArgs(args []string) (Args, error) {
 
 			// use default value
 			if len(args) <= i+1 || (len(args) > i+1 && args[i+1][0] == '-') {
-				parsedArgs.options.keepEpNums = some[bool](false)
+				parsedArgs.options.keepEpNums = some[bool](true)
+				isAssigned["--keep-ep-nums"] = true
 
 			} else if args[i+1] != "yes" && args[i+1] != "var" && args[i+1] != "no" && args[i+1] != "default" {
 				return Args{}, fmt.Errorf("invalid value '%s' for --keep-ep-nums. Must be 'yes', 'no', 'var', or 'default", args[i+1])
@@ -146,7 +147,7 @@ func ParseArgs(args []string) (Args, error) {
 					parsedArgs.options.keepEpNums = some[bool](false)
 				case "var":
 					parsedArgs.options.keepEpNums = none[bool]()
-					assignedVar["--keep-ep-nums"] = true
+					isAssigned["--keep-ep-nums"] = true
 				}
 				skipValue = i + 1
 			}
@@ -159,7 +160,7 @@ func ParseArgs(args []string) (Args, error) {
 			// use default value
 			if len(args) <= i+1 || (len(args) > i+1 && args[i+1][0] == '-') {
 				parsedArgs.options.startingEpNum = some[int](1)
-				assignedVar["--starting-ep-num"] = true
+				isAssigned["--starting-ep-num"] = true
 
 			} else if value, err := strconv.Atoi(args[i+1]); err != nil && value < 1 && args[i+1] != "var" && args[i+1] != "default" {
 				return Args{}, fmt.Errorf("invalid value '%s' for --starting-ep-num. Must be a valid positive int or 'var", args[i+1])
@@ -173,34 +174,15 @@ func ParseArgs(args []string) (Args, error) {
 				default:
 					parsedArgs.options.startingEpNum = some[int](value)
 				}
-				assignedVar["--starting-ep-num"] = true
+				isAssigned["--starting-ep-num"] = true
 				skipValue = i + 1
 			}
 
 		} else if arg == "--options" || arg == "-o" {
-			if assignedVar["--options"] {
+			if isAssigned["--options"] {
 				return Args{}, fmt.Errorf("only one --options flag is allowed")
 			}
-
-			// all options are assigned `var` if no value is provided
-			if len(args) <= i+1 || (len(args) > i+1 && (args[i+1][0] == '-' || args[i+1] == "var")) {
-				assignedVar["--options"] = true
-				parsedArgs.options.keepEpNums = none[bool]()
-				parsedArgs.options.startingEpNum = none[int]()
-				parsedArgs.options.hasSeason0 = none[bool]()
-				parsedArgs.options.namingScheme = none[string]()
-
-			} else if args[i+1] != "default" && args[i+1] != "var" {
-				return Args{}, fmt.Errorf("invalid value '%s' for --options. Must be 'default' or 'var", args[i+1])
-
-			} else if args[i+1] == "default" {
-				// use default values
-				assignedVar["--options"] = true
-				parsedArgs.options.keepEpNums = some[bool](false)
-				parsedArgs.options.startingEpNum = some[int](1)
-				parsedArgs.options.hasSeason0 = some[bool](false)
-				parsedArgs.options.namingScheme = some[string]("default")
-			}
+			isAssigned["--options"] = true
 
 		} else if arg == "--naming-scheme" || arg == "-ns" {
 			if parsedArgs.options.namingScheme.IsSome() {
@@ -237,18 +219,18 @@ func ParseArgs(args []string) (Args, error) {
 		return Args{}, err
 	}
 
-	if !assignedVar["--options"] {
+	if !isAssigned["--options"] {
 		// use default values for optional flags if not assigned var
-		if parsedArgs.options.hasSeason0.IsNone() && !assignedVar["--has-season-0"] {
+		if parsedArgs.options.hasSeason0.IsNone() && !isAssigned["--has-season-0"] {
 			parsedArgs.options.hasSeason0 = some[bool](false)
 		}
-		if parsedArgs.options.keepEpNums.IsNone() && !assignedVar["--keep-ep-nums"] {
+		if parsedArgs.options.keepEpNums.IsNone() && !isAssigned["--keep-ep-nums"] {
 			parsedArgs.options.keepEpNums = some[bool](false)
 		}
-		if parsedArgs.options.startingEpNum.IsNone() && !assignedVar["--starting-ep-num"] {
+		if parsedArgs.options.startingEpNum.IsNone() && !isAssigned["--starting-ep-num"] {
 			parsedArgs.options.startingEpNum = some[int](1)
 		}
-		if parsedArgs.options.namingScheme.IsNone() && !assignedVar["--naming-scheme"] {
+		if parsedArgs.options.namingScheme.IsNone() && !isAssigned["--naming-scheme"] {
 			parsedArgs.options.namingScheme = some[string]("default")
 		}
 	}

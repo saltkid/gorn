@@ -728,6 +728,25 @@ func Test_ParseArgs(t *testing.T) {
 			t.Log(cmd)
 		}
 	}
+
+	cmd = "movies ./test_files/movies -ken -o"
+	command = strings.Split(cmd, " ")
+	args, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		if args.options.hasSeason0.IsSome() || args.options.startingEpNum.IsSome() || args.options.namingScheme.IsSome() {
+			t.Errorf("unexpected error: has season 0, starting episode num, or naming scheme should not be set when: only -ken is set and -o is present")
+		} else {
+			if args.options.keepEpNums.IsNone() {
+				t.Errorf("unexpected error: keep ep nums should be set to yes")
+			} else if val, _ := args.options.keepEpNums.Get(); val != true {
+				t.Errorf("unexpected error: keep ep nums should be set to yes")
+			} else {
+					t.Log(cmd, "\n\t", args)
+			}
+		}
+	}
 }
 
 func Test_namingScheme_validation(t *testing.T) {
