@@ -82,13 +82,13 @@ These are the additional options that can be passed to the cli. For a more detai
 3. `--options | -o`
     - **values:** none
 4. `--keep-ep-num | -ken`
-    - **values:** `all yes/no/default` or `var`
+    - **values:** `yes | no | default | var`
 5. `--starting-ep-num | -sen`
-    - **values:** `all <num>/default` or `var`
+    - **values:** `<num> | default | var`
 6. `--has-season-0 | -s0`
-    - **values:** `all yes/no/default` or `var`
+    - **values:** `yes | no | default | var`
 7. `--naming-scheme | -ns`
-    - **values:** `all "<scheme>"/default` or `var`
+    - **values:** `"<scheme>"| default | var`
 
 ### [*scheme*](https://github.com/saltkid/gorn/wiki/Usage#naming-scheme-apis)
 scheme can be composed of any character (as long as its a valid filename) and/or APIs enclosed in <> like:
