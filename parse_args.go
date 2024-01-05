@@ -109,6 +109,7 @@ func ParseArgs(args []string) (Args, error) {
 			// use default value
 			if len(args) <= i+1 || (len(args) > i+1 && args[i+1][0] == '-') {
 				parsedArgs.options.hasSeason0 = some[bool](true)
+				isAssigned["--has-season-0"] = true
 
 			} else if args[i+1] != "yes" && args[i+1] != "var" && args[i+1] != "no" && args[i+1] != "default" {
 				return Args{}, fmt.Errorf("invalid value '%s' for flag '%s'. Must be 'yes', 'no', 'var, or 'default", args[i+1], arg)
@@ -121,8 +122,8 @@ func ParseArgs(args []string) (Args, error) {
 					parsedArgs.options.hasSeason0 = some[bool](false)
 				case "var":
 					parsedArgs.options.hasSeason0 = none[bool]()
-					isAssigned["--has-season-0"] = true
 				}
+				isAssigned["--has-season-0"] = true
 				skipValue = i + 1
 			}
 
@@ -147,8 +148,8 @@ func ParseArgs(args []string) (Args, error) {
 					parsedArgs.options.keepEpNums = some[bool](false)
 				case "var":
 					parsedArgs.options.keepEpNums = none[bool]()
-					isAssigned["--keep-ep-nums"] = true
 				}
+				isAssigned["--keep-ep-nums"] = true
 				skipValue = i + 1
 			}
 
