@@ -8,214 +8,723 @@ import (
 
 func Test_ParseArgs(t *testing.T) {
 	t.Log("------------expects errors------------")
-
-	command := []string{"--root", "--series", "--movies"}
+	
+	cmd := "root -s0 yes"
+	command := strings.Split(cmd, " ")
 	_, err := ParseArgs(command)
 	if err == nil {
-		t.Errorf("expected error 'missing root dir path'")
+		t.Errorf("expected error 'missing root dir'; got -s0 -s0")
 	} else {
-		t.Log("--root", "--series", "--movies", "\n\t", err, "\n")
+		t.Log(cmd, "\n\t", err)
 	}
 
-	command = []string{"-s", "--series", "-r", "--root", "-m", "--movies"}
+	cmd = "series -s0 yes"
+	command = strings.Split(cmd, " ")
 	_, err = ParseArgs(command)
 	if err == nil {
-		t.Errorf("expected error 'missing series dir path'")
+		t.Errorf("expected error 'missing series dir'; got -s0")
 	} else {
-		t.Log("-s", "--series", "-r", "--root", "-m", "--movies", "\n\t", err, "\n")
+		t.Log(cmd, "\n\t", err)
 	}
 
-	command = []string{"-r", "-s", "-m"}
+	cmd = "movies -s0 yes"
+	command = strings.Split(cmd, " ")
 	_, err = ParseArgs(command)
 	if err == nil {
-		t.Errorf("expected error 'missing root dir path'")
+		t.Errorf("expected error 'missing movies dir'; got -s0")
 	} else {
-		t.Log("-r", "-s", "-m", "\n\t", err, "\n")
+		t.Log(cmd, "\n\t", err)
 	}
 
-	command = []string{"-m", "--movies", "-r", "--root", "-s", "--series"}
+	cmd = "-s0 yes"
+	command = strings.Split(cmd, " ")
 	_, err = ParseArgs(command)
 	if err == nil {
-		t.Errorf("expected error 'missing movies dir path'")
+		t.Errorf("expected error 'missing dir'")
 	} else {
-		t.Log("-m", "--movies", "-r", "--root", "-s", "--series", "\n\t", err, "\n")
+		t.Log(cmd, "\n\t", err)
 	}
 
-	command = []string{"--root", "./test_files", "./test_files"}
+	cmd = "root ./test_files series ./test_files"
+	command = strings.Split(cmd, " ")
 	_, err = ParseArgs(command)
 	if err == nil {
-		t.Errorf("expected error 'multiple values for one flag is not allowed'")
+		t.Errorf("expected error 'same dir: root test_files series test_files'")
 	} else {
-		t.Log("--root", "./test_files", "./test_files", "\n\t", err, "\n")
+		t.Log(cmd, "\n\t", err)
 	}
 
-	command = []string{"-m", "./test_files", "./test_files"}
+	cmd = "root ./test_files series ./test_files/series"
+	command = strings.Split(cmd, " ")
 	_, err = ParseArgs(command)
 	if err == nil {
-		t.Errorf("expected error 'multiple values for one flag is not allowed'")
+		t.Errorf("expected error 'series is a subdir of root: root test_files series test_files/series'")
 	} else {
-		t.Log("-m", "./test_files", "./test_files", "\n\t", err, "\n")
+		t.Log(cmd, "\n\t", err)
+	}
+	
+	cmd = "series ./test_files root ./test_files/series"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err == nil {
+		t.Errorf("expected error 'root is a subdir of series: series test_files root test_files/series'")
+	} else {
+		t.Log(cmd, "\n\t", err)
 	}
 
-	command = []string{"-s", "./test_files", "./test_files"}
+	cmd = "root ./test_files movies ./test_files"
+	command = strings.Split(cmd, " ")
 	_, err = ParseArgs(command)
 	if err == nil {
-		t.Errorf("expected error 'multiple values for one flag is not allowed'")
+		t.Errorf("expected error 'same dir: root test_files movies test_files'")
 	} else {
-		t.Log("-s", "./test_files", "./test_files", "\n\t", err, "\n")
+		t.Log(cmd, "\n\t", err)
 	}
 
-	command = []string{"./test_files"}
+	cmd = "root ./test_files movies ./test_files/movies"
+	command = strings.Split(cmd, " ")
 	_, err = ParseArgs(command)
 	if err == nil {
-		t.Errorf("expected error 'not valid flag'")
+		t.Errorf("expected error 'movies is a subdir of root: root test_files movies test_files/movies'")
 	} else {
-		t.Log("./test_files", "\n\t", err, "\n")
+		t.Log(cmd, "\n\t", err)
+	}
+	
+	cmd = "movies ./test_files root ./test_files/movies"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err == nil {
+		t.Errorf("expected error 'root is a subdir of movies: movies test_files root test_files/movies'")
+	} else {
+		t.Log(cmd, "\n\t", err)
+	}
+	
+	cmd = "root ./test_files -ken ye"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err == nil {
+		t.Errorf("expected error 'invalid value for -ken: ye'")
+	} else {
+		t.Log(cmd, "\n\t", err)
+	}
+	
+	cmd = "root ./test_files -sen ye"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err == nil {
+		t.Errorf("expected error 'invalid value for -sen: ye'")
+	} else {
+		t.Log(cmd, "\n\t", err)
+	}
+		
+	cmd = "root ./test_files -s0 ye"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err == nil {
+		t.Errorf("expected error 'invalid value for -s0: ye'")
+	} else {
+		t.Log(cmd, "\n\t", err)
+	}
+	
+	cmd = "root ./test_files -ns ye"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err == nil {
+		t.Errorf("expected error 'invalid value for -ns: ye'")
+	} else {
+		t.Log(cmd, "\n\t", err)
 	}
 
-	command = []string{"-r", "./test_files", "--season-0", "all", "1"}
-	_, err = ParseArgs(command)
-	if err == nil {
-		t.Errorf("expected error '1 is not a valid arg. must be yes or no'")
-	} else {
-		t.Log("-r", "./test_files", "--season-0", "all", "1", "\n\t", err, "\n")
-	}
-
-	command = []string{"-s0", "all", "yes"}
-	_, err = ParseArgs(command)
-	if err == nil {
-		t.Errorf("expected error 'missing root/series/movies dir path'")
-	} else {
-		t.Log("-s0", "all", "yes", "\n\t", err, "\n")
-	}
-
-	command = []string{"-r", "./test_files", "--season-0", "yes"}
-	_, err = ParseArgs(command)
-	if err == nil {
-		t.Errorf("expected error 'yes is not a valid arg. must be all or var'")
-	} else {
-		t.Log("-r", "./test_files", "--season-0", "yes", "\n\t", err, "\n")
-	}
-
-	command = []string{"-ken", "all", "yes"}
-	_, err = ParseArgs(command)
-	if err == nil {
-		t.Errorf("expected error 'missing root/series/movies dir path'")
-	} else {
-		t.Log("-ken", "all", "yes", "\n\t", err, "\n")
-	}
-
-	command = []string{"-r", "./test_files", "-ken", "all", "1"}
-	_, err = ParseArgs(command)
-	if err == nil {
-		t.Errorf("expected error '1 is not a valid arg. must be yes or no'")
-	} else {
-		t.Log("-r", "./test_files", "-ken", "all", "1", "\n\t", err, "\n")
-	}
-
-	command = []string{"-r", "./test_files", "--season-0", "-s0"}
-	_, err = ParseArgs(command)
-	if err == nil {
-		t.Errorf("expected error 'only one of --season-0 and -s0 is allowed'")
-	} else {
-		t.Log("-r", "./test_files", "--season-0", "-s0", "\n\t", err, "\n")
-	}
-
-	command = []string{"-r", "./test_files", "-ken", "all", "yes"}
-	_, err = ParseArgs(command)
-	if err == nil {
-		t.Errorf("expected error 'all is not a valid arg. must be yes no default or var'")
-	} else {
-		t.Log("-r", "./test_files", "-ken", "yes", "\n\t", err, "\n")
-	}
-
-	command = []string{"-r", "./test_files", "--keep-ep-nums", "-ken"}
-	_, err = ParseArgs(command)
-	if err == nil {
-		t.Errorf("expected error 'multiple keep-ep-nums flags'")
-	} else {
-		t.Log("-r", "./test_files", "--keep-ep-nums", "-ken", "\n\t", err, "\n")
-	}
-
-	command = []string{"-sen", "all", "yes"}
-	_, err = ParseArgs(command)
-	if err == nil {
-		t.Errorf("expected error 'missing root/series/movies dir path'")
-	} else {
-		t.Log("-sen", "all", "yes", "\n\t", err, "\n")
-	}
-
-	command = []string{"-r", "./test_files", "-sen", "all", "yes"}
-	_, err = ParseArgs(command)
-	if err == nil {
-		t.Errorf("expected error '1 is not a valid arg. must be a valid positive integer'")
-	} else {
-		t.Log("-r", "./test_files", "-sen", "all", "yes", "\n\t", err, "\n")
-	}
-
-	command = []string{"-r", "./test_files", "-sen", "all", "1"}
-	_, err = ParseArgs(command)
-	if err == nil {
-		t.Errorf("expected error 'all is not a valid arg. must be int default or var'")
-	} else {
-		t.Log("-r", "./test_files", "-sen", "yes", "\n\t", err, "\n")
-	}
-
-	command = []string{"-r", "./test_files", "--starting-ep-num", "-sen"}
-	_, err = ParseArgs(command)
-	if err == nil {
-		t.Errorf("expected error 'multiple starting-ep-num flags'")
-	} else {
-		t.Log("-r", "./test_files", "--starting-ep-num", "-sen", "\n\t", err, "\n")
-	}
-
-	command = []string{"--root", "./test_files", "-r", "./test_files"}
-	_, err = ParseArgs(command)
-	if err == nil {
-		t.Errorf("expected error 'root directory ./test_files is a duplicate'")
-	} else {
-		t.Log("--root", "./test_files", "-r", "./test_files", "\n\t", err, "\n")
-	}
-
-	command = []string{"--root", `.\test_files`, "-s", `.\test_files\Series`, "-m", "./test_files/Movies"}
-	_, err = ParseArgs(command)
-	if err == nil {
-		t.Errorf("expected error 'series directory ./test_files/Series is a subdirectory of root directory ./test_files'")
-	} else {
-		t.Log("--root", "./test_files", "-s", "./test_files/Series", "-m", "./test_files/Movies", "\n\t", err, "\n")
-	}
-
-	command = []string{"-r", "./test_files", "-sen", "1", "--starting-ep-num", "2"}
-	_, err = ParseArgs(command)
-	if err == nil {
-		t.Errorf("expected error 'multiple starting-ep-num flags'")
-	} else {
-		t.Log("-r", "./test_files", "--naming-scheme", "S01E01", "\n\t", err, "\n")
-	}
 	t.Log("------------expects success------------")
-
-	command = []string{"--root", "./test_files", "-s0", "yes"}
+	cmd = "root ./test_files -s0 yes"
+	command = strings.Split(cmd, " ")
 	_, err = ParseArgs(command)
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
 	} else {
-		t.Log("--root", "./test_files", "-s0", "yes")
+		t.Log(cmd)
 	}
-
-	command = []string{"--root", "./test_files"}
+	
+	cmd = "root ./test_files -s0 no"
+	command = strings.Split(cmd, " ")
 	_, err = ParseArgs(command)
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
 	} else {
-		t.Log("--root", "./test_files")
+		t.Log(cmd)
 	}
 
-	command = []string{"--root", "./test_files", "-s0"}
+	cmd = "root ./test_files -s0 default"
+	command = strings.Split(cmd, " ")
 	_, err = ParseArgs(command)
 	if err != nil {
-		t.Errorf("--season-0 can have no value: %s", err)
+		t.Errorf("unexpected error: %s", err)
 	} else {
-		t.Log("--root", "./test_files", "-s0")
+		t.Log(cmd)
+	}
+
+	cmd = "root ./test_files -s0 var"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+
+	cmd = `root ./test_files -ns "test"`
+	command = strings.Split(cmd, " ")
+	args, err := ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		if args.options.namingScheme.IsNone() {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			val, _ := args.options.namingScheme.Get()
+			if val != "test" {
+				t.Errorf("unexpected error: %s", err)
+			}
+			t.Log(cmd)
+		}
+	}
+
+	cmd = "root ./test_files -ns default"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+
+	cmd = "root ./test_files -ns var"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+
+	cmd = "root ./test_files -ken yes"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+	
+	cmd = "root ./test_files -ken no"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+
+	cmd = "root ./test_files -ken default"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+
+	cmd = "root ./test_files -ken var"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+
+	cmd = "root ./test_files -sen yes"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+	
+	cmd = "root ./test_files -sen no"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+
+	cmd = "root ./test_files -sen default"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+
+	cmd = "root ./test_files -sen var"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+
+	cmd = `root ./test_files -ken -sen -s0 -ns "test"`
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		if args.options.namingScheme.IsNone() {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			val, _ := args.options.namingScheme.Get()
+			if val != "test" {
+				t.Errorf("unexpected error: %s", err)
+			}
+			t.Log(cmd)
+		}
+	}
+	
+	cmd = "root ./test_files -o"
+	command = strings.Split(cmd, " ")
+	args, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		if args.options.keepEpNums.IsSome() || args.options.hasSeason0.IsSome() || args.options.startingEpNum.IsSome() || args.options.namingScheme.IsSome() {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+	}
+
+	cmd = "-h"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err == nil {
+		t.Errorf("supposed to exit safely")
+	} else {
+		t.Log(cmd, err)
+	}
+
+	cmd = "-v"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err == nil {
+		t.Errorf("supposed to exit safely")
+	} else {
+		t.Log(cmd, err)
+	}
+
+	cmd = "-h -v"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err == nil {
+		t.Errorf("supposed to exit safely")
+	} else {
+		t.Log(cmd, err)
+	}
+
+	cmd = "-h -o"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err == nil {
+		t.Errorf("supposed to exit safely")
+	} else {
+		t.Log(cmd, err)
+	}
+
+	cmd = "-h -s0"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err == nil {
+		t.Errorf("supposed to exit safely")
+	} else {
+		t.Log(cmd, err)
+	}
+
+	cmd = "-h -ken"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err == nil {
+		t.Errorf("supposed to exit safely")
+	} else {
+		t.Log(cmd, err)
+	}
+
+	cmd = "-h -sen"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err == nil {
+		t.Errorf("supposed to exit safely")
+	} else {
+		t.Log(cmd, err)
+	}
+
+	cmd = "-h -ns"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err == nil {
+		t.Errorf("supposed to exit safely")
+	} else {
+		t.Log(cmd, err)
+	}
+
+	cmd = "series ./test_files/series -s0 yes"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+	
+	cmd = "series ./test_files/series -s0 no"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+
+	cmd = "series ./test_files/series -s0 default"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+
+	cmd = "series ./test_files/series -s0 var"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+
+	cmd = `series ./test_files/series -ns "test"`
+	command = strings.Split(cmd, " ")
+	args, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		if args.options.namingScheme.IsNone() {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			val, _ := args.options.namingScheme.Get()
+			if val != "test" {
+				t.Errorf("unexpected error: %s", err)
+			}
+			t.Log(cmd)
+		}
+	}
+
+	cmd = "series ./test_files/series -ns default"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+
+	cmd = "series ./test_files/series -ns var"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+
+	cmd = "series ./test_files/series -ken yes"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+	
+	cmd = "series ./test_files/series -ken no"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+
+	cmd = "series ./test_files/series -ken default"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+
+	cmd = "series ./test_files/series -ken var"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+
+	cmd = "series ./test_files/series -sen yes"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+	
+	cmd = "series ./test_files/series -sen no"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+
+	cmd = "series ./test_files/series -sen default"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+
+	cmd = "series ./test_files/series -sen var"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+
+	cmd = `series ./test_files/series -ken -sen -s0 -ns "test"`
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		if args.options.namingScheme.IsNone() {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			val, _ := args.options.namingScheme.Get()
+			if val != "test" {
+				t.Errorf("unexpected error: %s", err)
+			}
+			t.Log(cmd)
+		}
+	}
+	
+	cmd = "series ./test_files/series -o"
+	command = strings.Split(cmd, " ")
+	args, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		if args.options.keepEpNums.IsSome() || args.options.hasSeason0.IsSome() || args.options.startingEpNum.IsSome() || args.options.namingScheme.IsSome() {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
+	}
+
+	cmd = "movies ./test_files/movies -s0 yes"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+	
+	cmd = "movies ./test_files/movies -s0 no"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+
+	cmd = "movies ./test_files/movies -s0 default"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+
+	cmd = "movies ./test_files/movies -s0 var"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+
+	cmd = `movies ./test_files/movies -ns "test"`
+	command = strings.Split(cmd, " ")
+	args, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		if args.options.namingScheme.IsNone() {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			val, _ := args.options.namingScheme.Get()
+			if val != "test" {
+				t.Errorf("unexpected error: %s", err)
+			}
+			t.Log(cmd)
+		}
+	}
+
+	cmd = "movies ./test_files/movies -ns default"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+
+	cmd = "movies ./test_files/movies -ns var"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+
+	cmd = "movies ./test_files/movies -ken yes"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+	
+	cmd = "movies ./test_files/movies -ken no"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+
+	cmd = "movies ./test_files/movies -ken default"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+
+	cmd = "movies ./test_files/movies -ken var"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+
+	cmd = "movies ./test_files/movies -sen yes"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+	
+	cmd = "movies ./test_files/movies -sen no"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+
+	cmd = "movies ./test_files/movies -sen default"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+
+	cmd = "movies ./test_files/movies -sen var"
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		t.Log(cmd)
+	}
+
+	cmd = `movies ./test_files/movies -ken -sen -s0 -ns "test"`
+	command = strings.Split(cmd, " ")
+	_, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		if args.options.namingScheme.IsNone() {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			val, _ := args.options.namingScheme.Get()
+			if val != "test" {
+				t.Errorf("unexpected error: %s", err)
+			}
+			t.Log(cmd)
+		}
+	}
+	
+	cmd = "movies ./test_files/movies -o"
+	command = strings.Split(cmd, " ")
+	args, err = ParseArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	} else {
+		if args.options.keepEpNums.IsSome() || args.options.hasSeason0.IsSome() || args.options.startingEpNum.IsSome() || args.options.namingScheme.IsSome() {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd)
+		}
 	}
 }
 
