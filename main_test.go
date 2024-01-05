@@ -8,7 +8,7 @@ import (
 
 func Test_ParseArgs(t *testing.T) {
 	t.Log("------------expects errors------------")
-	
+
 	cmd := "root -s0 yes"
 	command := strings.Split(cmd, " ")
 	_, err := ParseArgs(command)
@@ -62,7 +62,7 @@ func Test_ParseArgs(t *testing.T) {
 	} else {
 		t.Log(cmd, "\n\t", err)
 	}
-	
+
 	cmd = "series ./test_files root ./test_files/series"
 	command = strings.Split(cmd, " ")
 	_, err = ParseArgs(command)
@@ -89,7 +89,7 @@ func Test_ParseArgs(t *testing.T) {
 	} else {
 		t.Log(cmd, "\n\t", err)
 	}
-	
+
 	cmd = "movies ./test_files root ./test_files/movies"
 	command = strings.Split(cmd, " ")
 	_, err = ParseArgs(command)
@@ -98,7 +98,7 @@ func Test_ParseArgs(t *testing.T) {
 	} else {
 		t.Log(cmd, "\n\t", err)
 	}
-	
+
 	cmd = "root ./test_files -ken ye"
 	command = strings.Split(cmd, " ")
 	_, err = ParseArgs(command)
@@ -107,7 +107,7 @@ func Test_ParseArgs(t *testing.T) {
 	} else {
 		t.Log(cmd, "\n\t", err)
 	}
-	
+
 	cmd = "root ./test_files -sen ye"
 	command = strings.Split(cmd, " ")
 	_, err = ParseArgs(command)
@@ -116,7 +116,7 @@ func Test_ParseArgs(t *testing.T) {
 	} else {
 		t.Log(cmd, "\n\t", err)
 	}
-		
+
 	cmd = "root ./test_files -s0 ye"
 	command = strings.Split(cmd, " ")
 	_, err = ParseArgs(command)
@@ -125,12 +125,12 @@ func Test_ParseArgs(t *testing.T) {
 	} else {
 		t.Log(cmd, "\n\t", err)
 	}
-	
-	cmd = "root ./test_files -ns ye"
+
+	cmd = "root ./test_files -ns yee"
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
+	args, err := ParseArgs(command)
 	if err == nil {
-		t.Errorf("expected error 'invalid value for -ns: ye'")
+		t.Errorf("expected error 'invalid value for -ns: ye, not enclosed in double quotes'\n%s", args)
 	} else {
 		t.Log(cmd, "\n\t", err)
 	}
@@ -144,7 +144,7 @@ func Test_ParseArgs(t *testing.T) {
 	} else {
 		t.Log(cmd)
 	}
-	
+
 	cmd = "root ./test_files -s0 no"
 	command = strings.Split(cmd, " ")
 	_, err = ParseArgs(command)
@@ -172,20 +172,21 @@ func Test_ParseArgs(t *testing.T) {
 		t.Log(cmd)
 	}
 
-	cmd = `root ./test_files -ns "test"`
+	cmd = `root ./test_files -ns "test<season_num>"`
 	command = strings.Split(cmd, " ")
-	args, err := ParseArgs(command)
+	args, err = ParseArgs(command)
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
 	} else {
 		if args.options.namingScheme.IsNone() {
-			t.Errorf("unexpected error: %s", err)
+			t.Errorf("unexpected error: 'naming scheme not set'")
 		} else {
 			val, _ := args.options.namingScheme.Get()
-			if val != "test" {
-				t.Errorf("unexpected error: %s", err)
+			if val != "test<season_num>" {
+				t.Errorf("unexpected error: '%s != test<season_num>'", val)
+			} else {
+				t.Log(cmd)
 			}
-			t.Log(cmd)
 		}
 	}
 
@@ -215,7 +216,7 @@ func Test_ParseArgs(t *testing.T) {
 	} else {
 		t.Log(cmd)
 	}
-	
+
 	cmd = "root ./test_files -ken no"
 	command = strings.Split(cmd, " ")
 	_, err = ParseArgs(command)
@@ -243,7 +244,7 @@ func Test_ParseArgs(t *testing.T) {
 		t.Log(cmd)
 	}
 
-	cmd = "root ./test_files -sen yes"
+	cmd = "root ./test_files -sen 1"
 	command = strings.Split(cmd, " ")
 	_, err = ParseArgs(command)
 	if err != nil {
@@ -251,8 +252,8 @@ func Test_ParseArgs(t *testing.T) {
 	} else {
 		t.Log(cmd)
 	}
-	
-	cmd = "root ./test_files -sen no"
+
+	cmd = "root ./test_files -sen 2"
 	command = strings.Split(cmd, " ")
 	_, err = ParseArgs(command)
 	if err != nil {
@@ -281,7 +282,7 @@ func Test_ParseArgs(t *testing.T) {
 
 	cmd = `root ./test_files -ken -sen -s0 -ns "test"`
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
+	args, err = ParseArgs(command)
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
 	} else {
@@ -290,12 +291,12 @@ func Test_ParseArgs(t *testing.T) {
 		} else {
 			val, _ := args.options.namingScheme.Get()
 			if val != "test" {
-				t.Errorf("unexpected error: %s", err)
+				t.Errorf("unexpected error: '%s' != test", val)
 			}
 			t.Log(cmd)
 		}
 	}
-	
+
 	cmd = "root ./test_files -o"
 	command = strings.Split(cmd, " ")
 	args, err = ParseArgs(command)
@@ -389,7 +390,7 @@ func Test_ParseArgs(t *testing.T) {
 	} else {
 		t.Log(cmd)
 	}
-	
+
 	cmd = "series ./test_files/series -s0 no"
 	command = strings.Split(cmd, " ")
 	_, err = ParseArgs(command)
@@ -417,7 +418,7 @@ func Test_ParseArgs(t *testing.T) {
 		t.Log(cmd)
 	}
 
-	cmd = `series ./test_files/series -ns "test"`
+	cmd = `series ./test_files/series -ns "test<episode_num>"`
 	command = strings.Split(cmd, " ")
 	args, err = ParseArgs(command)
 	if err != nil {
@@ -427,10 +428,11 @@ func Test_ParseArgs(t *testing.T) {
 			t.Errorf("unexpected error: %s", err)
 		} else {
 			val, _ := args.options.namingScheme.Get()
-			if val != "test" {
-				t.Errorf("unexpected error: %s", err)
+			if val != "test<episode_num>" {
+				t.Errorf("unexpected error: '%s != test<episode_num>'", val)
+			} else {
+				t.Log(cmd)
 			}
-			t.Log(cmd)
 		}
 	}
 
@@ -460,7 +462,7 @@ func Test_ParseArgs(t *testing.T) {
 	} else {
 		t.Log(cmd)
 	}
-	
+
 	cmd = "series ./test_files/series -ken no"
 	command = strings.Split(cmd, " ")
 	_, err = ParseArgs(command)
@@ -488,7 +490,7 @@ func Test_ParseArgs(t *testing.T) {
 		t.Log(cmd)
 	}
 
-	cmd = "series ./test_files/series -sen yes"
+	cmd = "series ./test_files/series -sen 1"
 	command = strings.Split(cmd, " ")
 	_, err = ParseArgs(command)
 	if err != nil {
@@ -496,8 +498,8 @@ func Test_ParseArgs(t *testing.T) {
 	} else {
 		t.Log(cmd)
 	}
-	
-	cmd = "series ./test_files/series -sen no"
+
+	cmd = "series ./test_files/series -sen 2"
 	command = strings.Split(cmd, " ")
 	_, err = ParseArgs(command)
 	if err != nil {
@@ -526,7 +528,7 @@ func Test_ParseArgs(t *testing.T) {
 
 	cmd = `series ./test_files/series -ken -sen -s0 -ns "test"`
 	command = strings.Split(cmd, " ")
-	_, err = ParseArgs(command)
+	args, err = ParseArgs(command)
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
 	} else {
@@ -540,7 +542,7 @@ func Test_ParseArgs(t *testing.T) {
 			t.Log(cmd)
 		}
 	}
-	
+
 	cmd = "series ./test_files/series -o"
 	command = strings.Split(cmd, " ")
 	args, err = ParseArgs(command)
@@ -562,7 +564,7 @@ func Test_ParseArgs(t *testing.T) {
 	} else {
 		t.Log(cmd)
 	}
-	
+
 	cmd = "movies ./test_files/movies -s0 no"
 	command = strings.Split(cmd, " ")
 	_, err = ParseArgs(command)
@@ -633,7 +635,7 @@ func Test_ParseArgs(t *testing.T) {
 	} else {
 		t.Log(cmd)
 	}
-	
+
 	cmd = "movies ./test_files/movies -ken no"
 	command = strings.Split(cmd, " ")
 	_, err = ParseArgs(command)
@@ -661,7 +663,7 @@ func Test_ParseArgs(t *testing.T) {
 		t.Log(cmd)
 	}
 
-	cmd = "movies ./test_files/movies -sen yes"
+	cmd = "movies ./test_files/movies -sen 3"
 	command = strings.Split(cmd, " ")
 	_, err = ParseArgs(command)
 	if err != nil {
@@ -669,8 +671,8 @@ func Test_ParseArgs(t *testing.T) {
 	} else {
 		t.Log(cmd)
 	}
-	
-	cmd = "movies ./test_files/movies -sen no"
+
+	cmd = "movies ./test_files/movies -sen 4"
 	command = strings.Split(cmd, " ")
 	_, err = ParseArgs(command)
 	if err != nil {
@@ -713,7 +715,7 @@ func Test_ParseArgs(t *testing.T) {
 			t.Log(cmd)
 		}
 	}
-	
+
 	cmd = "movies ./test_files/movies -o"
 	command = strings.Split(cmd, " ")
 	args, err = ParseArgs(command)
@@ -730,105 +732,105 @@ func Test_ParseArgs(t *testing.T) {
 
 func Test_namingScheme_validation(t *testing.T) {
 	t.Log("------------expects errors------------")
-	err := ValidateNamingScheme("S<season_num:>E<episode_num:>")
+	err := ValidateNamingScheme(`"S<season_num:>E<episode_num:>"`)
 	if err == nil {
 		t.Errorf("expected error 'missing value for token: <season_num:>'")
 	} else {
 		t.Log("S<season_num:>E<episode_num:>", "\n\t", err, "\n")
 	}
 
-	err = ValidateNamingScheme(`S<season_num: 3l>`)
+	err = ValidateNamingScheme(`"S<season_num: 3l>"`)
 	if err == nil {
 		t.Errorf("expected error '3l is not a valid arg. must be a valid positive integer'")
 	} else {
 		t.Log(`S<season_num: 3l>`, "\n\t", err, "\n")
 	}
 
-	err = ValidateNamingScheme(`S<season_num: 3`)
+	err = ValidateNamingScheme(`"S<season_num: 3"`)
 	if err == nil {
 		t.Errorf("expected error 'reached end of string but still in an unclosed api: <season_num: 3'")
 	} else {
 		t.Log(`S<season_num: 3`, "\n\t", err, "\n")
 	}
 
-	err = ValidateNamingScheme(`<parent-parent:>`)
+	err = ValidateNamingScheme(`"<parent-parent:>"`)
 	if err == nil {
 		t.Errorf("expected error 'missing value for token: <parent-parent:>'")
 	} else {
 		t.Log(`<parent-parent:>`, "\n\t", err, "\n")
 	}
 
-	err = ValidateNamingScheme(`E<episode_num: -2>`)
+	err = ValidateNamingScheme(`"E<episode_num: -2>"`)
 	if err == nil {
 		t.Errorf("expected error '-2 is not a valid arg. must be a valid positive integer'")
 	} else {
 		t.Log(`E<episode_num: -2>`, "\n\t", err, "\n")
 	}
 
-	err = ValidateNamingScheme(`<parent-parent:1,>`)
+	err = ValidateNamingScheme(`"<parent-parent:1,>"`)
 	if err == nil {
 		t.Errorf("expected error '1, is not a valid arg. must be two valid positive integers separated by a comma'")
 	} else {
 		t.Log(`<parent-parent:1,>`, "\n\t", err, "\n")
 	}
 
-	err = ValidateNamingScheme(`<p-3:1,2,3>`)
+	err = ValidateNamingScheme(`"<p-3:1,2,3>"`)
 	if err == nil {
 		t.Errorf("expected error '1,2,3 is not a valid arg. must be two valid positive integers separated by a comma'")
 	} else {
 		t.Log(`<p:1,2,3>`, "\n\t", err, "\n")
 	}
 
-	err = ValidateNamingScheme(`<parent: '\d+(.*)-.*>`)
+	err = ValidateNamingScheme(`"<parent: '\d+(.*)-.*>"`)
 	if err == nil {
 		t.Errorf(`expected error ' "'\d+(.*)-.*" is not a valid arg. must be a valid regex expression enclosed by two single quotes '`)
 	} else {
 		t.Log(`<parent: '\d+(.*)-.*'>`, "\n\t", err, "\n")
 	}
 
-	err = ValidateNamingScheme(`<self: '[]'>`)
+	err = ValidateNamingScheme(`"<self: '[]'>"`)
 	if err == nil {
 		t.Errorf(`expected error ' "[]" is not a valid regex '`)
 	} else {
 		t.Log(`<self: [>`, "\n\t", err, "\n")
 	}
 
-	err = ValidateNamingScheme(`<self: '>`)
+	err = ValidateNamingScheme(`"<self: '>"`)
 	if err == nil {
 		t.Errorf(`expected error ' ' is unclosed '`)
 	} else {
 		t.Log(`<self: '>`, "\n\t", err, "\n")
 	}
 
-	err = ValidateNamingScheme(`<self: '   '>`)
+	err = ValidateNamingScheme(`"<self: '   '>"`)
 	if err == nil {
 		t.Errorf(`expected error ' '   ' is empty '`)
 	} else {
 		t.Log(`<self: '   '>`, "\n\t", err, "\n")
 	}
 
-	err = ValidateNamingScheme(`<self: ' '  '>`)
+	err = ValidateNamingScheme(`"<self: ' '  '>"`)
 	if err == nil {
 		t.Errorf(`expected error ' ' '  ' is empty '`)
 	} else {
 		t.Log(`<self: ' '  '>`, "\n\t", err, "\n")
 	}
 
-	err = ValidateNamingScheme(`<self: 2.0,-3>`)
+	err = ValidateNamingScheme(`"<self: 2.0,-3>"`)
 	if err == nil {
 		t.Errorf(`expected error ' -2,-3 is not a valid arg. must be two valid positive integers separated by a comma'`)
 	} else {
 		t.Log(`<self: 2.0,-3>`, "\n\t", err, "\n")
 	}
 
-	err = ValidateNamingScheme(`<self: 'adhd' '>`)
+	err = ValidateNamingScheme(`"<self: 'adhd' '>"`)
 	if err == nil {
 		t.Errorf(`expected error ' "" is not a valid regex '`)
 	} else {
 		t.Log(`<self: 'adhd' '>`, "\n\t", err, "\n")
 	}
 
-	err = ValidateNamingScheme(`<self: 6,5>`)
+	err = ValidateNamingScheme(`"<self: 6,5>"`)
 	if err == nil {
 		t.Errorf("expected error '6,5 is not a valid range. begin (6) must be less than or equal to end (5)'")
 	} else {
@@ -837,21 +839,21 @@ func Test_namingScheme_validation(t *testing.T) {
 
 	t.Log("------------expects success------------")
 
-	err = ValidateNamingScheme("S<season_num>E<episode_num> - <parent-parent> <parent> <p-3> <self>")
+	err = ValidateNamingScheme(`"S<season_num>E<episode_num> - <parent-parent> <parent> <p-3> <self>"`)
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
 	} else {
 		t.Log("S<season_num>E<episode_num> - <parent-parent> <parent> <p-3> <self>")
 	}
 
-	err = ValidateNamingScheme(`S<season_num: 3>E<episode_num: 2> - <parent-parent: 2,3> <parent: '\d+(.*)-.*'> <p-3: '(\d+)'> <self>: 5,5`)
+	err = ValidateNamingScheme(`"S<season_num: 3>E<episode_num: 2> - <parent-parent: 2,3> <parent: '\d+(.*)-.*'> <p-3: '(\d+)'> <self>: 5,5"`)
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
 	} else {
 		t.Log(`S<season_num: 3>E<episode_num: 2> - <parent-parent: 0,1> <parent: '\d+(.*)-.*'> <p-3: '(\d+)'> <self: 5,5>`)
 	}
 
-	err = ValidateNamingScheme(`<p> <p-2>`)
+	err = ValidateNamingScheme(`"<p> <p-2>"`)
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
 	} else {

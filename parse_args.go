@@ -47,11 +47,11 @@ func ParseArgs(args []string) (Args, error) {
 		"movies": true,
 	}
 	assignedVar := map[string]bool{
-		"--options": false,
+		"--options":         false,
 		"--keep-ep-nums":    false,
 		"--starting-ep-num": false,
 		"--has-season-0":    false,
-		"--naming-scheme":  false,
+		"--naming-scheme":   false,
 	}
 
 	parsedArgs := newArgs()
@@ -61,7 +61,7 @@ func ParseArgs(args []string) (Args, error) {
 		if skipValue != 0 && i <= skipValue {
 			continue
 
-		} else if arg[0] != '-' {
+		} else if arg[0] != '-' && !directoryArgs[arg] {
 			// catch invalid values acting as flags
 			return Args{}, fmt.Errorf("invalid flag: '%s'", arg)
 
@@ -93,11 +93,11 @@ func ParseArgs(args []string) (Args, error) {
 			}
 
 			switch arg {
-			case "--root", "-r":
+			case "root":
 				parsedArgs.root = append(parsedArgs.root, dir)
-			case "--series", "-s":
+			case "series":
 				parsedArgs.series = append(parsedArgs.series, dir)
-			case "--movies", "-m":
+			case "movies":
 				parsedArgs.movies = append(parsedArgs.movies, dir)
 			}
 			skipValue = i + 1
@@ -110,7 +110,7 @@ func ParseArgs(args []string) (Args, error) {
 			if len(args) <= i+1 || (len(args) > i+1 && args[i+1][0] == '-') {
 				parsedArgs.options.hasSeason0 = some[bool](false)
 
-			} else if args[i+1] != "yes" && args[i+1] != "var" && args[i+1] != "no"  && args[i+1] != "default" {
+			} else if args[i+1] != "yes" && args[i+1] != "var" && args[i+1] != "no" && args[i+1] != "default" {
 				return Args{}, fmt.Errorf("invalid value '%s' for flag '%s'. Must be 'yes', 'no', 'var, or 'default", args[i+1], arg)
 
 			} else {
@@ -159,20 +159,21 @@ func ParseArgs(args []string) (Args, error) {
 			// use default value
 			if len(args) <= i+1 || (len(args) > i+1 && args[i+1][0] == '-') {
 				parsedArgs.options.startingEpNum = some[int](1)
-			}
+				assignedVar["--starting-ep-num"] = true
 
-			value, err := strconv.Atoi(args[i+1])
-			if args[i+1] != "var" && err != nil && value < 1 {
+			} else if value, err := strconv.Atoi(args[i+1]); err != nil && value < 1 && args[i+1] != "var" && args[i+1] != "default" {
 				return Args{}, fmt.Errorf("invalid value '%s' for --starting-ep-num. Must be a valid positive int or 'var", args[i+1])
 
 			} else {
 				switch args[i+1] {
 				case "var":
 					parsedArgs.options.startingEpNum = none[int]()
-					assignedVar["--starting-ep-num"] = true
+				case "default":
+					parsedArgs.options.startingEpNum = some[int](1)
 				default:
 					parsedArgs.options.startingEpNum = some[int](value)
 				}
+				assignedVar["--starting-ep-num"] = true
 				skipValue = i + 1
 			}
 
@@ -210,7 +211,7 @@ func ParseArgs(args []string) (Args, error) {
 			}
 
 			err := ValidateNamingScheme(args[i+1])
-			if args[i+1] != "default" && args[i+1] != "var" && err != nil {
+			if err != nil && args[i+1] != "default" && args[i+1] != "var" {
 				return Args{}, fmt.Errorf("invalid value '%s' for --naming-scheme. Must be 'default', 'var', or a naming scheme enclosed in double quotes", args[i+1])
 
 			} else {
@@ -220,7 +221,8 @@ func ParseArgs(args []string) (Args, error) {
 				case "var":
 					parsedArgs.options.namingScheme = none[string]()
 				default:
-					parsedArgs.options.namingScheme = some[string](args[i+1])
+					namingScheme := strings.Trim(args[i+1], `"`)
+					parsedArgs.options.namingScheme = some[string](namingScheme)
 				}
 				skipValue = i + 1
 			}
@@ -254,6 +256,10 @@ func ParseArgs(args []string) (Args, error) {
 }
 
 func ValidateNamingScheme(s string) error {
+	if s[0] != '"' || s[len(s)-1] != '"' {
+		return fmt.Errorf("naming scheme must be enclosed in double quotes: %s", s)
+	}
+
 	tokens, err := TokenizeNamingScheme(s)
 	if err != nil {
 		return err
