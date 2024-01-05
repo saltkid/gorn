@@ -3,11 +3,15 @@ package main
 import "fmt"
 
 func WelcomeMsg(version string) {
-	fmt.Println("gorn - go rename tool")
-	fmt.Println("version:", version)
+	Version(version)
 	fmt.Println("renames series/movies media files based on directory naming and structure")
 	fmt.Println("for more usage information, run 'gorn -h'")
 	fmt.Println("https://github.com/saltkid/gorn")
+}
+
+func Version(version string) {
+	fmt.Println("gorn - go rename tool")
+	fmt.Println("version:", version)
 }
 
 func Help(flag string) {

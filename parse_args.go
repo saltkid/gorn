@@ -42,12 +42,9 @@ func ParseArgs(args []string) (Args, error) {
 	}
 
 	directoryArgs := map[string]bool{
-		"--root":   true,
-		"-r":       true,
-		"--series": true,
-		"-s":       true,
-		"--movies": true,
-		"-m":       true,
+		"root":   true,
+		"series": true,
+		"movies": true,
 	}
 	assignedVar := map[string]bool{
 		"--options": false,
@@ -77,7 +74,7 @@ func ParseArgs(args []string) (Args, error) {
 			return Args{}, fmt.Errorf("safe exit")
 
 		} else if arg == "--version" || arg == "-v" {
-			WelcomeMsg(version)
+			Version(version)
 			return Args{}, fmt.Errorf("safe exit")
 
 		} else if directoryArgs[arg] {
