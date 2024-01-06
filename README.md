@@ -53,7 +53,7 @@ where ... may mean media files or subdirectories (like extras, specials, subs, e
 For a more detailed explanation of recommended directory structures, different series/movie types depending on structure, see [this wiki page](https://github.com/saltkid/gorn/wiki/Directory-Structure)
 ___
 # [Usage](https://github.com/saltkid/gorn/wiki/Usage)
-To renames all series and movies in the root directory based on directory naming and structure:
+To rename all series and movies in the root directory based on directory naming and structure:
 ```
 gorn --root path/to/root/dir
 ```
@@ -80,7 +80,7 @@ Switches are flags that switch the behavior of **gorn** from its default behavio
 2. `--version | -v`
     - **values:** none
 ## [Flags](https://github.com/saltkid/gorn/wiki/Usage#optional-flags)
-These are the additional options that can be passed to the cli. For a more detailed explanation, see [this wiki page](https://github.com/saltkid/gorn/wiki/Usage#optional-flags)
+These are additional options that can be passed to the cli. For a more detailed explanation, see [this wiki page](https://github.com/saltkid/gorn/wiki/Usage#optional-flags)
 
 1. `--keep-ep-num | -ken`
     - **values:** `yes | no | default | var`
