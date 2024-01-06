@@ -55,23 +55,23 @@ ___
 # [Usage](https://github.com/saltkid/gorn/wiki/Usage)
 To rename all series and movies in the root directory based on directory naming and structure:
 ```
-gorn --root path/to/root/dir
+gorn root path/to/root/dir
 ```
 
 User can specify multiple root/subroot directories to rename:
 ```
-gorn -r path/to/root/dir --root path/to/another/root/dir
+gorn root path/to/root/dir root path/to/another/root/dir
 ```
 
 User can specify series and movie subroot dirs separately. User can also specify multiple subroot dirs. Other than that, it shares the same default renaming behavior as specifying a root dir
 ```
-gorn --series path/to/series/subroot/dir
+gorn series path/to/series/subroot/dir
 ```
 ```
-gorn --movies path/to/movies/subroot/dir
+gorn movies path/to/movies/subroot/dir
 ```
 ```
-gorn -r path/to/root/dir -s path/to/another/series/subroot/dir -m path/to/another/movies/subroot/dir
+gorn root path/to/root/dir series path/to/series/subroot/dir movies path/to/movies/subroot/dir
 ```
 ## [Switches](https://github.com/saltkid/gorn/wiki/Usage#switches)
 Switches are flags that switch the behavior of **gorn** from its default behavior of renaming media files. For a more detailed explanation, see [this wiki page](https://github.com/saltkid/gorn/wiki/Usage#switches)
