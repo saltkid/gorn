@@ -17,9 +17,10 @@ type Movies struct {
 	standalone []string
 	movieSet   []string
 }
+
 const (
 	STANDALONE = "standalone"
-	MOVIE_SET   = "movieSet"
+	MOVIE_SET  = "movieSet"
 )
 
 type Series struct {
@@ -29,11 +30,12 @@ type Series struct {
 	multipleSeasonNoMovies   []string
 	multipleSeasonWithMovies []string
 }
+
 const (
-	NAMED_SEASONS             = "namedSeasons"
-	SINGLE_SEASON_NO_MOVIES   = "singleSeasonNoMovies"
-	SINGLE_SEASON_WITH_MOVIES = "singleSeasonWithMovies"
-	MULTIPLE_SEASON_NO_MOVIES = "multipleSeasonNoMovies"
+	NAMED_SEASONS               = "namedSeasons"
+	SINGLE_SEASON_NO_MOVIES     = "singleSeasonNoMovies"
+	SINGLE_SEASON_WITH_MOVIES   = "singleSeasonWithMovies"
+	MULTIPLE_SEASON_NO_MOVIES   = "multipleSeasonNoMovies"
 	MULTIPLE_SEASON_WITH_MOVIES = "multipleSeasonWithMovies"
 )
 
@@ -148,39 +150,51 @@ func (series *Series) LogEntries() {
 	}
 }
 
-func (movies *Movies) RenameEntries(options AdditionalOptions) error{
+func (movies *Movies) RenameEntries(options Flags) error {
 	fmt.Println("Renaming standalone movies")
 	for _, v := range movies.standalone {
 		info, err := MovieRenamePrereqs(v, STANDALONE)
-		if err != nil { panic(err) }
+		if err != nil {
+			panic(err)
+		}
 
 		err = info.Rename()
-		if err != nil { panic(err) }
+		if err != nil {
+			panic(err)
+		}
 	}
 	fmt.Println()
 
 	fmt.Println("Renaming movie set")
 	for _, v := range movies.movieSet {
 		info, err := MovieRenamePrereqs(v, MOVIE_SET)
-		if err != nil { panic(err) }
+		if err != nil {
+			panic(err)
+		}
 
 		err = info.Rename()
-		if err != nil { panic(err) }
+		if err != nil {
+			panic(err)
+		}
 	}
 	fmt.Println()
 
 	return nil
 }
 
-func (series *Series) RenameEntries(options AdditionalOptions) error{
+func (series *Series) RenameEntries(options Flags) error {
 	fmt.Println("Renaming named seasons")
 	namedSeasonOptions := PromptOptionalFlags(options, "all named seasons", 0)
 	for _, v := range series.namedSeasons {
 		info, err := SeriesRenamePrereqs(v, NAMED_SEASONS, namedSeasonOptions)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 
 		err = info.Rename()
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 	}
 	fmt.Println()
 
@@ -188,10 +202,14 @@ func (series *Series) RenameEntries(options AdditionalOptions) error{
 	ssnmOptions := PromptOptionalFlags(options, "all single season with no movies", 0)
 	for _, v := range series.singleSeasonNoMovies {
 		info, err := SeriesRenamePrereqs(v, SINGLE_SEASON_NO_MOVIES, ssnmOptions)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 
 		err = info.Rename()
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 	}
 	fmt.Println()
 
@@ -199,10 +217,14 @@ func (series *Series) RenameEntries(options AdditionalOptions) error{
 	sswmOptions := PromptOptionalFlags(options, "all single season with movies", 0)
 	for _, v := range series.singleSeasonWithMovies {
 		info, err := SeriesRenamePrereqs(v, SINGLE_SEASON_WITH_MOVIES, sswmOptions)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 
 		err = info.Rename()
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 	}
 	fmt.Println()
 
@@ -210,10 +232,14 @@ func (series *Series) RenameEntries(options AdditionalOptions) error{
 	msnmOptions := PromptOptionalFlags(options, "all multiple season with no movies", 0)
 	for _, v := range series.multipleSeasonNoMovies {
 		info, err := SeriesRenamePrereqs(v, MULTIPLE_SEASON_NO_MOVIES, msnmOptions)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 
 		err = info.Rename()
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 	}
 	fmt.Println()
 
@@ -221,10 +247,14 @@ func (series *Series) RenameEntries(options AdditionalOptions) error{
 	mswmOptions := PromptOptionalFlags(options, "all multiple season with movies", 0)
 	for _, v := range series.multipleSeasonWithMovies {
 		info, err := SeriesRenamePrereqs(v, MULTIPLE_SEASON_WITH_MOVIES, mswmOptions)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 
 		err = info.Rename()
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 	}
 	fmt.Println()
 

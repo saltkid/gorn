@@ -18,14 +18,14 @@ func TokenizeArgs(args []string) ([]Arg, error) {
 	var tokenizedArgs []Arg
 	isValidName := map[string]bool{
 		// commands
-		"root":              true,
-		"series":            true,
-		"movies":            true,
+		"root":   true,
+		"series": true,
+		"movies": true,
 		// switches
-		"--help":            true,
-		"-h":                true,
-		"--version":         true,
-		"-v":                true,
+		"--help":    true,
+		"-h":        true,
+		"--version": true,
+		"-v":        true,
 		// flags
 		"--options":         true,
 		"-o":                true,
@@ -78,9 +78,9 @@ type Args struct {
 	root    []string
 	series  []string
 	movies  []string
-	options AdditionalOptions
+	options Flags
 }
-type AdditionalOptions struct {
+type Flags struct {
 	keepEpNums    Option[bool]
 	startingEpNum Option[int]
 	hasSeason0    Option[bool]
@@ -92,7 +92,7 @@ func newArgs() Args {
 		root:   make([]string, 0),
 		series: make([]string, 0),
 		movies: make([]string, 0),
-		options: AdditionalOptions{
+		options: Flags{
 			hasSeason0:    none[bool](),
 			keepEpNums:    none[bool](),
 			startingEpNum: none[int](),

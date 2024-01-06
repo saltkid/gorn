@@ -19,7 +19,7 @@ type SeriesInfo struct {
 	seriesType string
 	seasons    map[int]string
 	movies     []string
-	options    AdditionalOptions
+	options    Flags
 }
 
 type MovieInfo struct {

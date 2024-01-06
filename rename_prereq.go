@@ -10,13 +10,13 @@ import (
 	"strings"
 )
 
-func SeriesRenamePrereqs(path string, sType string, options AdditionalOptions) (SeriesInfo, error) {
+func SeriesRenamePrereqs(path string, sType string, options Flags) (SeriesInfo, error) {
 	// Get prerequsite info for renaming series
 	isValidType := map[string]bool{
 		SINGLE_SEASON_NO_MOVIES:     true,
 		SINGLE_SEASON_WITH_MOVIES:   true,
-		NAMED_SEASONS:             true,
-		MULTIPLE_SEASON_NO_MOVIES: true,
+		NAMED_SEASONS:               true,
+		MULTIPLE_SEASON_NO_MOVIES:   true,
 		MULTIPLE_SEASON_WITH_MOVIES: true,
 	}
 	if !isValidType[sType] {
@@ -55,7 +55,7 @@ func SeriesRenamePrereqs(path string, sType string, options AdditionalOptions) (
 // PromptOptionalFlags prompts the user for additional options.
 //
 // params:
-//   - options AdditionalOptions: Additional options for the prompt.
+//   - options Flags: flags for the prompt.
 //   - path string: The path of the file.
 //   - level int8: The level of the prompt.
 //
@@ -65,8 +65,8 @@ func SeriesRenamePrereqs(path string, sType string, options AdditionalOptions) (
 //   - level 2: per series season level
 //
 // return:
-//   - AdditionalOptions: The additional options for the prompt.
-func PromptOptionalFlags(options AdditionalOptions, path string, level int8) AdditionalOptions {
+//   - Flags: changed/unchanged flags for the prompt.
+func PromptOptionalFlags(options Flags, path string, level int8) Flags {
 	defaultKEN := some[bool](false)
 	defaultSEN := some[int](1)
 	defaultS0 := some[bool](false)
