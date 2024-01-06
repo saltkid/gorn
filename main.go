@@ -14,20 +14,45 @@ func main() {
 		WelcomeMsg(version)
 		return
 	}
-
 	rawArgs, err := TokenizeArgs(os.Args[1:])
-	if err != nil {
-		panic(err)
-	}
+	if err != nil { panic(err) }
 
 	args, err := ParseArgs(rawArgs)
 	if err != nil {
-		if err.Error() != "safe exit" {
-			panic(err)
-		}
-		return
+		// scuffed safe exit for --help and --version
+		if err.Error() == "safe exit" { return }
+		panic(err)
 	}
 
+	err = start(args)
+	if err != nil { panic(err) }
+}
+
+func start(args Args) error {
+	LogArgs(args)
+
+	seriesEntries, movieEntries, err := FetchEntries(args.root, args.series, args.movies)
+	if err != nil { return err }
+	LogRawEntries(seriesEntries, movieEntries)
+
+	series := &Series{}
+	err = series.SplitByType(seriesEntries)
+	if err != nil { return err }
+	series.LogEntries()
+	err = series.RenameEntries(args.options)
+	if err != nil { return err }
+
+	movies := &Movies{}
+	err = movies.SplitByType(movieEntries)
+	if err != nil { return err }
+	movies.LogEntries()
+	err = movies.RenameEntries(args.options)
+	if err != nil { return err }
+
+	return nil
+}
+
+func LogArgs(args Args) {
 	if len(args.root) > 0 {
 		fmt.Println("roots:")
 		for _, root := range args.root {
@@ -54,16 +79,17 @@ func main() {
 	if err == nil {
 		fmt.Println("starting episode number: ", sen)
 	}
-	ns, err := args.options.hasSeason0.Get()
+	s0, err := args.options.hasSeason0.Get()
+	if err == nil {
+		fmt.Println("has season 0: ", s0)
+	}
+	ns, err := args.options.namingScheme.Get()
 	if err == nil {
 		fmt.Println("naming scheme: ", ns)
 	}
+}
 
-	seriesEntries, movieEntries, err := FetchEntries(args.root, args.series, args.movies)
-	if err != nil {
-		panic(err)
-	}
-
+func LogRawEntries(seriesEntries []string, movieEntries []string) {
 	fmt.Println("series dirs (", len(seriesEntries), "): ")
 	for _, series := range seriesEntries {
 		fmt.Println("\t", series)
@@ -71,160 +97,6 @@ func main() {
 	fmt.Println("movie dirs (", len(movieEntries), "): ")
 	for _, movie := range movieEntries {
 		fmt.Println("\t", movie)
-	}
-	fmt.Println()
-
-	var series = Series{}
-	err = series.SplitByType(seriesEntries)
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println("categorized series: ")
-	fmt.Println("namedSeasons: ")
-	for _, v := range series.namedSeasons {
-		fmt.Println("\t", v)
-	}
-	fmt.Println("singleSeasonNoMovies: ")
-	for _, v := range series.singleSeasonNoMovies {
-		fmt.Println("\t", v)
-	}
-	fmt.Println("singleSeasonWithMovies: ")
-	for _, v := range series.singleSeasonWithMovies {
-		fmt.Println("\t", v)
-	}
-	fmt.Println("multipleSeasonNoMovies: ")
-	for _, v := range series.multipleSeasonNoMovies {
-		fmt.Println("\t", v)
-	}
-	fmt.Println("multipleSeasonWithMovies: ")
-	for _, v := range series.multipleSeasonWithMovies {
-		fmt.Println("\t", v)
-	}
-
-	var movie = Movies{}
-	err = movie.SplitByType(movieEntries)
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println("categorized movies: ")
-	fmt.Println("standalone: ")
-	for _, v := range movie.standalone {
-		fmt.Println("\t", v)
-	}
-	fmt.Println("movieSet: ")
-	for _, v := range movie.movieSet {
-		fmt.Println("\t", v)
-	}
-
-	fmt.Println("test for named seasons")
-	namedSeasonOptions := PromptOptionalFlags(args.options, "all named seasons", 0)
-	for _, v := range series.namedSeasons {
-		info, err := SeriesRenamePrereqs(v, "namedSeasons", namedSeasonOptions)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println(info)
-
-		err = info.Rename()
-		if err != nil {
-			panic(err)
-		}
-	}
-	fmt.Println()
-
-	fmt.Println("test for single season no movies")
-	ssnmOptions := PromptOptionalFlags(args.options, "all single season with no movies", 0)
-	for _, v := range series.singleSeasonNoMovies {
-		info, err := SeriesRenamePrereqs(v, "singleSeasonNoMovies", ssnmOptions)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println(info)
-
-		err = info.Rename()
-		if err != nil {
-			panic(err)
-		}
-	}
-	fmt.Println()
-
-	fmt.Println("test for single season with movies")
-	sswmOptions := PromptOptionalFlags(args.options, "all single season with movies", 0)
-	for _, v := range series.singleSeasonWithMovies {
-		info, err := SeriesRenamePrereqs(v, "singleSeasonWithMovies", sswmOptions)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println(info)
-
-		err = info.Rename()
-		if err != nil {
-			panic(err)
-		}
-	}
-	fmt.Println()
-
-	fmt.Println("test for multiple season no movies")
-	msnmOptions := PromptOptionalFlags(args.options, "all multiple season with no movies", 0)
-	for _, v := range series.multipleSeasonNoMovies {
-		info, err := SeriesRenamePrereqs(v, "multipleSeasonNoMovies", msnmOptions)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println(info)
-
-		err = info.Rename()
-		if err != nil {
-			panic(err)
-		}
-	}
-	fmt.Println()
-
-	fmt.Println("test for multiple season with movies")
-	mswmOptions := PromptOptionalFlags(args.options, "all multiple season with movies", 0)
-	for _, v := range series.multipleSeasonWithMovies {
-		info, err := SeriesRenamePrereqs(v, "multipleSeasonWithMovies", mswmOptions)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println(info)
-
-		err = info.Rename()
-		if err != nil {
-			panic(err)
-		}
-	}
-	fmt.Println()
-
-	fmt.Println("test for standalone")
-	for _, v := range movie.standalone {
-		info, err := MovieRenamePrereqs(v, "standalone")
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println(info)
-
-		err = info.Rename()
-		if err != nil {
-			panic(err)
-		}
-	}
-	fmt.Println()
-
-	fmt.Println("test for movie set")
-	for _, v := range movie.movieSet {
-		info, err := MovieRenamePrereqs(v, "movieSet")
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println(info)
-
-		err = info.Rename()
-		if err != nil {
-			panic(err)
-		}
 	}
 	fmt.Println()
 }
