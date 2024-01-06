@@ -13,11 +13,11 @@ import (
 func SeriesRenamePrereqs(path string, sType string, options AdditionalOptions) (SeriesInfo, error) {
 	// Get prerequsite info for renaming series
 	isValidType := map[string]bool{
-		"singleSeasonNoMovies":     true,
-		"singleSeasonWithMovies":   true,
-		"namedSeasons":             true,
-		"multipleSeasonNoMovies":   true,
-		"multipleSeasonWithMovies": true,
+		SINGLE_SEASON_NO_MOVIES:     true,
+		SINGLE_SEASON_WITH_MOVIES:   true,
+		NAMED_SEASONS:             true,
+		MULTIPLE_SEASON_NO_MOVIES: true,
+		MULTIPLE_SEASON_WITH_MOVIES: true,
 	}
 	if !isValidType[sType] {
 		return SeriesInfo{}, fmt.Errorf("unknown series type: %s", sType)
@@ -231,9 +231,9 @@ func FetchSeriesContent(path string, sType string, hasSeason0 bool) (map[int]str
 			}
 		}
 
-		if sType == "singleSeasonNoMovies" {
+		if sType == SINGLE_SEASON_NO_MOVIES {
 			continue
-		} else if sType == "singleSeasonWithMovies" {
+		} else if sType == SINGLE_SEASON_WITH_MOVIES {
 			if extrasPattern.MatchString(subdir.Name()) {
 				continue
 			} else {
@@ -244,9 +244,9 @@ func FetchSeriesContent(path string, sType string, hasSeason0 bool) (map[int]str
 
 		// Get season number from subdir name
 		var seasonNamePattern *regexp.Regexp
-		if sType == "namedSeasons" {
+		if sType == NAMED_SEASONS {
 			seasonNamePattern = regexp.MustCompile(`^(\d+)\..*$`)
-		} else if sType == "multipleSeasonNoMovies" || sType == "multipleSeasonWithMovies" {
+		} else if sType == MULTIPLE_SEASON_NO_MOVIES || sType == MULTIPLE_SEASON_WITH_MOVIES {
 			seasonNamePattern = regexp.MustCompile(`^(?i)season\s+(\d+).*$`)
 		} else {
 			return nil, nil, fmt.Errorf("unknown series type: %s; series type must be one of 'namedSeasons', 'multipleSeasonNoMovies', 'multipleSeasonWithMovies'", sType)
@@ -257,7 +257,7 @@ func FetchSeriesContent(path string, sType string, hasSeason0 bool) (map[int]str
 
 		readSeasonNum := seasonNamePattern.FindStringSubmatch(subdir.Name())
 		if readSeasonNum == nil {
-			if sType == "multipleSeasonWithMovies" {
+			if sType == MULTIPLE_SEASON_WITH_MOVIES {
 				if extrasPattern.MatchString(subdir.Name()) {
 					continue
 				} else {
@@ -294,7 +294,7 @@ func MovieRenamePrereqs(path string, mType string) (MovieInfo, error) {
 	extrasPattern := regexp.MustCompile(`^(?i)specials?|extras?|trailers?|ova`)
 
 	for _, subdir := range subdirs {
-		if mType == "standalone" {
+		if mType == STANDALONE {
 			if subdir.IsDir() && extrasPattern.MatchString(subdir.Name()) {
 				continue
 			}
@@ -313,7 +313,7 @@ func MovieRenamePrereqs(path string, mType string) (MovieInfo, error) {
 			continue
 		}
 
-		if mType == "movieSet" {
+		if mType == MOVIE_SET {
 			if extrasPattern.MatchString(subdir.Name()) {
 				continue
 			}

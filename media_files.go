@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -8,12 +9,19 @@ import (
 
 type MediaFiles interface {
 	SplitByType(entries []string) error
+	LogEntries()
+	RenameEntries()
 }
 
 type Movies struct {
 	standalone []string
 	movieSet   []string
 }
+const (
+	STANDALONE = "standalone"
+	MOVIE_SET   = "movieSet"
+)
+
 type Series struct {
 	namedSeasons             []string
 	singleSeasonNoMovies     []string
@@ -21,9 +29,16 @@ type Series struct {
 	multipleSeasonNoMovies   []string
 	multipleSeasonWithMovies []string
 }
+const (
+	NAMED_SEASONS             = "namedSeasons"
+	SINGLE_SEASON_NO_MOVIES   = "singleSeasonNoMovies"
+	SINGLE_SEASON_WITH_MOVIES = "singleSeasonWithMovies"
+	MULTIPLE_SEASON_NO_MOVIES = "multipleSeasonNoMovies"
+	MULTIPLE_SEASON_WITH_MOVIES = "multipleSeasonWithMovies"
+)
 
-func (movie *Movies) SplitByType(movieEntries []string) error {
-	for _, movieEntry := range movieEntries {
+func (movie *Movies) SplitByType(entries []string) error {
+	for _, movieEntry := range entries {
 		files, err := os.ReadDir(movieEntry)
 		if err != nil {
 			return err
@@ -45,8 +60,8 @@ func (movie *Movies) SplitByType(movieEntries []string) error {
 	return nil
 }
 
-func (series *Series) SplitByType(seriesEntries []string) error {
-	for _, seriesEntry := range seriesEntries {
+func (series *Series) SplitByType(entries []string) error {
+	for _, seriesEntry := range entries {
 		files, err := os.ReadDir(seriesEntry)
 		if err != nil {
 			return err
@@ -94,5 +109,124 @@ func (series *Series) SplitByType(seriesEntries []string) error {
 			series.singleSeasonNoMovies = append(series.singleSeasonNoMovies, seriesEntry)
 		}
 	}
+	return nil
+}
+
+func (movie *Movies) LogEntries() {
+	fmt.Println("categorized movies: ")
+	fmt.Println("standalone: ")
+	for _, v := range movie.standalone {
+		fmt.Println("\t", v)
+	}
+	fmt.Println("movie set: ")
+	for _, v := range movie.movieSet {
+		fmt.Println("\t", v)
+	}
+}
+
+func (series *Series) LogEntries() {
+	fmt.Println("categorized series: ")
+	fmt.Println("named seasons: ")
+	for _, v := range series.namedSeasons {
+		fmt.Println("\t", v)
+	}
+	fmt.Println("single season no movies: ")
+	for _, v := range series.singleSeasonNoMovies {
+		fmt.Println("\t", v)
+	}
+	fmt.Println("single season with movies: ")
+	for _, v := range series.singleSeasonWithMovies {
+		fmt.Println("\t", v)
+	}
+	fmt.Println("multiple season no movies: ")
+	for _, v := range series.multipleSeasonNoMovies {
+		fmt.Println("\t", v)
+	}
+	fmt.Println("multiple season with movies: ")
+	for _, v := range series.multipleSeasonWithMovies {
+		fmt.Println("\t", v)
+	}
+}
+
+func (movies *Movies) RenameEntries(options AdditionalOptions) error{
+	fmt.Println("Renaming standalone movies")
+	for _, v := range movies.standalone {
+		info, err := MovieRenamePrereqs(v, STANDALONE)
+		if err != nil { panic(err) }
+
+		err = info.Rename()
+		if err != nil { panic(err) }
+	}
+	fmt.Println()
+
+	fmt.Println("Renaming movie set")
+	for _, v := range movies.movieSet {
+		info, err := MovieRenamePrereqs(v, MOVIE_SET)
+		if err != nil { panic(err) }
+
+		err = info.Rename()
+		if err != nil { panic(err) }
+	}
+	fmt.Println()
+
+	return nil
+}
+
+func (series *Series) RenameEntries(options AdditionalOptions) error{
+	fmt.Println("Renaming named seasons")
+	namedSeasonOptions := PromptOptionalFlags(options, "all named seasons", 0)
+	for _, v := range series.namedSeasons {
+		info, err := SeriesRenamePrereqs(v, NAMED_SEASONS, namedSeasonOptions)
+		if err != nil { return err }
+
+		err = info.Rename()
+		if err != nil { return err }
+	}
+	fmt.Println()
+
+	fmt.Println("Renaming single season no movies")
+	ssnmOptions := PromptOptionalFlags(options, "all single season with no movies", 0)
+	for _, v := range series.singleSeasonNoMovies {
+		info, err := SeriesRenamePrereqs(v, SINGLE_SEASON_NO_MOVIES, ssnmOptions)
+		if err != nil { return err }
+
+		err = info.Rename()
+		if err != nil { return err }
+	}
+	fmt.Println()
+
+	fmt.Println("Renaming single season with movies")
+	sswmOptions := PromptOptionalFlags(options, "all single season with movies", 0)
+	for _, v := range series.singleSeasonWithMovies {
+		info, err := SeriesRenamePrereqs(v, SINGLE_SEASON_WITH_MOVIES, sswmOptions)
+		if err != nil { return err }
+
+		err = info.Rename()
+		if err != nil { return err }
+	}
+	fmt.Println()
+
+	fmt.Println("Renaming multiple season no movies")
+	msnmOptions := PromptOptionalFlags(options, "all multiple season with no movies", 0)
+	for _, v := range series.multipleSeasonNoMovies {
+		info, err := SeriesRenamePrereqs(v, MULTIPLE_SEASON_NO_MOVIES, msnmOptions)
+		if err != nil { return err }
+
+		err = info.Rename()
+		if err != nil { return err }
+	}
+	fmt.Println()
+
+	fmt.Println("Renaming multiple season with movies")
+	mswmOptions := PromptOptionalFlags(options, "all multiple season with movies", 0)
+	for _, v := range series.multipleSeasonWithMovies {
+		info, err := SeriesRenamePrereqs(v, MULTIPLE_SEASON_WITH_MOVIES, mswmOptions)
+		if err != nil { return err }
+
+		err = info.Rename()
+		if err != nil { return err }
+	}
+	fmt.Println()
+
 	return nil
 }
