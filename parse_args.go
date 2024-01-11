@@ -52,6 +52,10 @@ func TokenizeArgs(args []string) ([]Arg, error) {
 			} else {
 				return nil, fmt.Errorf("start with invalid flag: '%s'", arg)
 			}
+			if i == len(args)-1 {
+				newArg.value = value
+				tokenizedArgs = append(tokenizedArgs, newArg)
+			}
 		} else {
 			if isValidName[arg] {
 				newArg.value = value
@@ -103,7 +107,7 @@ func newArgs() Args {
 
 func ParseArgs(args []Arg) (Args, error) {
 	if len(args) < 1 {
-		return Args{}, fmt.Errorf("not enough arguments")
+		return Args{}, fmt.Errorf("not enough arguments: '%v'", args)
 	}
 
 	directoryArgs := map[string]bool{
