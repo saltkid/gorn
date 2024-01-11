@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -28,7 +29,7 @@ type MovieInfo struct {
 	movies    map[string]string
 }
 
-func (info *SeriesInfo) Rename() error {
+func (info *SeriesInfo) Rename() {
 	// for padding of season numbers when renaming: min 2 digits
 	maxSeasonDigits := len(strconv.Itoa(len(info.seasons)))
 	if maxSeasonDigits < 2 {
@@ -37,20 +38,7 @@ func (info *SeriesInfo) Rename() error {
 
 	// Rename episodes
 	for num, season := range info.seasons {
-		isValidType := map[string]bool{
-			"singleSeasonNoMovies":     true,
-			"singleSeasonWithMovies":   true,
-			"namedSeasons":             true,
-			"multipleSeasonNoMovies":   true,
-			"multipleSeasonWithMovies": true,
-		}
-		if !isValidType[info.seriesType] {
-			return fmt.Errorf("unknown series type: %s", info.seriesType)
-		}
-
 		seasonPath := filepath.Clean(info.path + "/" + season)
-		fmt.Println("path: ", seasonPath)
-
 		var mediaFiles []string
 		err := filepath.WalkDir(seasonPath, func(path string, d os.DirEntry, err error) error {
 			if err != nil {
@@ -62,7 +50,9 @@ func (info *SeriesInfo) Rename() error {
 			return nil
 		})
 		if err != nil {
-			return err
+			log.Println(ERROR, "error reading media files under:", seasonPath)
+			log.Println(ERROR, "skipping renaming all episodes in:", seasonPath)
+			continue
 		}
 		sort.Sort(FilenameSort(mediaFiles))
 
@@ -95,10 +85,13 @@ func (info *SeriesInfo) Rename() error {
 		}
 
 		if ken {
-			for _, file := range mediaFiles {
+			for i, file := range mediaFiles {
 				epNum, err = ReadEpisodeNum(file)
 				if err != nil {
-					return err
+					log.Println(WARN, "error reading episode number from:", file)
+					log.Println(WARN, "skipping renaming:", file)
+					// don't include this episode in renaming
+					mediaFiles = append(mediaFiles[:i], mediaFiles[i+1:]...)
 				}
 
 				tempMax := len(strconv.Itoa(epNum))
@@ -133,38 +126,42 @@ func (info *SeriesInfo) Rename() error {
 
 		for i, file := range mediaFiles {
 			title := DefaultTitle(info.seriesType, seasonOptions.namingScheme, info.path, seasonPath)
-			newName, err := GenerateNewName(seasonOptions.namingScheme, // namingScheme
+			newName := GenerateNewName(seasonOptions.namingScheme, // namingScheme
 				maxSeasonDigits, num, // season_pad, season_num
 				maxEpDigits, epNums[i], // ep_pad, epNum
 				title, file) // title, file path
-			if err != nil {
-				return err
-			}
+			
+			// TODO: decide whether to turn this into log or not
+			// fmt.Println(fmt.Sprintf("%-*s", 20, file), " --> ", fmt.Sprintf("%*s", 20, newName))
+			// fmt.Println("old", file, "\nnew", newName)
 
-			fmt.Println(fmt.Sprintf("%-*s", 20, file), " --> ", fmt.Sprintf("%*s", 20, newName))
-			fmt.Println("old", file, "\nnew", newName)
 			_, err = os.Stat(newName)
 			if err == nil {
-				fmt.Println("renaming", filepath.Base(file), "to", filepath.Base(newName)+" failed: file already exists")
+				log.Println(WARN, "renaming", filepath.Base(file), "to", filepath.Base(newName), "failed: file already exists")
+				log.Println(WARN, "skipping renaming:", file)
 				continue
 			} else if os.IsNotExist(err) {
 				err = os.Rename(file, newName)
 				if err != nil {
-					return err
+					log.Println(ERROR, "error renaming", filepath.Base(file), "to", filepath.Base(newName), ":", err)
+					log.Println(ERROR, "skipping renaming:", file)
+					continue
 				}
 			} else {
-				return err
+				log.Println(ERROR, "unexpected error when checking if file exists before renaming:", err)
+				continue
 			}
 		}
-		fmt.Println()
 	}
 
 	// Rename movies if needed
-	if info.seriesType == "singleSeasonWithMovies" || info.seriesType == "multipleSeasonWithMovies" {
+	if info.seriesType == SINGLE_SEASON_WITH_MOVIES || info.seriesType == MULTIPLE_SEASON_WITH_MOVIES {
 		for _, movie := range info.movies {
 			files, err := os.ReadDir(info.path + "/" + movie)
 			if err != nil {
-				return err
+				log.Println(ERROR, "error reading media files under:", info.path+"/"+movie)
+				log.Println(ERROR, "skipping renaming:", info.path+"/"+movie)
+				continue
 			}
 
 			mediaFiles := make([]string, 0)
@@ -178,24 +175,30 @@ func (info *SeriesInfo) Rename() error {
 			}
 
 			if len(mediaFiles) > 1 {
-				return fmt.Errorf("multiple media files found in %s for a movie direcotry in %s", movie, info.path+"/"+filepath.Base(movie))
+				log.Println(WARN, "multiple media files found in supposed movie directory under series:", info.path+"/"+movie)
+				log.Println(WARN, "skipping renaming:", info.path+"/"+movie)
+				continue
 			} else if len(mediaFiles) == 0 {
-				return fmt.Errorf("no media files found in %s for a movie directory in %s", movie, info.path+"/"+filepath.Base(movie))
+				log.Println(WARN, "no media files found in:", info.path+"/"+movie)
+				log.Println(WARN, "skipping renaming:", info.path+"/"+movie)
+				continue
 			}
 
 			newName := fmt.Sprintf("%s %s%s", filepath.Base(info.path), filepath.Base(movie), filepath.Ext(mediaFiles[0]))
-			fmt.Println(fmt.Sprintf("%-*s", 20, mediaFiles[0]), " --> ", fmt.Sprintf("%*s", 20, newName))
-			fmt.Println("old", info.path+"/"+movie+"/"+mediaFiles[0], "new", info.path+"/"+movie+"/"+newName)
+			// TODO: decide whether to turn this into log or not
+			// fmt.Println(fmt.Sprintf("%-*s", 20, mediaFiles[0]), " --> ", fmt.Sprintf("%*s", 20, newName))
+			// fmt.Println("old", info.path+"/"+movie+"/"+mediaFiles[0], "new", info.path+"/"+movie+"/"+newName)
 			err = os.Rename(info.path+"/"+movie+"/"+mediaFiles[0], info.path+"/"+movie+"/"+newName)
 			if err != nil {
-				return err
+				log.Println(ERROR, "error renaming", mediaFiles[0], "to", newName, ":", err)
+				log.Println(ERROR, "skipping renaming:", info.path+"/"+movie)
+				continue
 			}
 		}
 	}
-	return nil
 }
 
-func (info *MovieInfo) Rename() error {
+func (info *MovieInfo) Rename() {
 	for dir, file := range info.movies {
 		newName := CleanTitle(dir) + filepath.Ext(file)
 		old_name := file
@@ -204,14 +207,26 @@ func (info *MovieInfo) Rename() error {
 			newName = dir + "/" + newName
 		}
 
-		fmt.Println(fmt.Sprintf("%-*s", 20, old_name), " --> ", fmt.Sprintf("%*s", 20, newName))
-		fmt.Println("old", info.path+"/"+old_name, "new", info.path+"/"+newName)
-		err := os.Rename(info.path+"/"+old_name, info.path+"/"+newName)
-		if err != nil {
-			return err
+		// TODO: decide whether to turn this into log or not
+		// fmt.Println(fmt.Sprintf("%-*s", 20, old_name), " --> ", fmt.Sprintf("%*s", 20, newName))
+		// fmt.Println("old", info.path+"/"+old_name, "new", info.path+"/"+newName)
+		_, err := os.Stat(info.path+"/"+newName)
+		if err == nil {
+			log.Println(WARN, "renaming", filepath.Base(old_name), "to", filepath.Base(newName), "failed: file already exists")
+			log.Println(WARN, "skipping renaming:", info.path+"/"+old_name)
+			continue
+		} else if os.IsNotExist(err) {
+			err = os.Rename(info.path+"/"+old_name, info.path+"/"+newName)
+			if err != nil {
+				log.Println(ERROR, "error renaming", filepath.Base(old_name), "to", filepath.Base(newName), ":", err)
+				log.Println(ERROR, "skipping renaming:", info.path+"/"+old_name)
+				continue
+			}
+		} else {
+			log.Println(ERROR, "unexpected error when checking if file exists before renaming:", err)
+			continue
 		}
 	}
-	return nil
 }
 
 func DefaultTitle(seriesType string, namingScheme Option[string], path string, seasonPath string) string {
@@ -226,14 +241,10 @@ func DefaultTitle(seriesType string, namingScheme Option[string], path string, s
 	return CleanTitle(title)
 }
 
-func GenerateNewName(namingScheme Option[string], season_pad int, season_num int, ep_pad int, epNum int, title string, abs_path string) (string, error) {
+func GenerateNewName(namingScheme Option[string], season_pad int, season_num int, ep_pad int, epNum int, title string, abs_path string) string {
 	var newName string
-	ns, _ := namingScheme.Get()
-	if namingScheme.IsSome() && ns != "default" {
-		scheme, err := namingScheme.Get()
-		if err != nil {
-			return "", err
-		}
+	scheme, _ := namingScheme.Get()
+	if namingScheme.IsSome() && scheme != "default" {
 		// replace <season_num>
 		newName = regexp.MustCompile(`<season_num(\s*:\s*\d+)?>`).ReplaceAllStringFunc(scheme, func(match string) string {
 			// <season_num: \d+>
@@ -338,7 +349,7 @@ func GenerateNewName(namingScheme Option[string], season_pad int, season_num int
 		// append ext
 		newName = filepath.Join(filepath.Dir(abs_path), fmt.Sprintf("%s%s", newName, filepath.Ext(abs_path)))
 
-	} else if namingScheme.IsNone() || ns == "default" {
+	} else if namingScheme.IsNone() || scheme == "default" {
 		newName = fmt.Sprintf("S%0*dE%0*d %s%s",
 			season_pad, season_num,
 			ep_pad, epNum,
@@ -346,5 +357,5 @@ func GenerateNewName(namingScheme Option[string], season_pad int, season_num int
 		newName = filepath.Join(filepath.Dir(abs_path), newName)
 	}
 
-	return newName, nil
+	return newName
 }
