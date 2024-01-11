@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"log"
 )
 
 var version string
@@ -17,26 +18,18 @@ func main() {
 		return
 	}
 	rawArgs, err := TokenizeArgs(os.Args[1:])
-	if err != nil {
-		fmt.Println("Error:", err)
-		return
-	}
+	if err != nil { log.Fatalln(FATAL, err) }
 
 	args, err := ParseArgs(rawArgs)
 	if err != nil {
 		// scuffed safe exit for --help and --version
-		if _, ok := err.(SafeError); !ok {
-			fmt.Println("Error:", err)
-		}
+		if _, ok := err.(SafeError); !ok { log.Fatalln(FATAL, err) }
 		return
 	}
 	go LogArgs(args)
 
 	err = start(args)
-	if err != nil {
-		fmt.Println("Error:", err)
-		return
-	}
+	if err != nil { log.Fatalln(FATAL, err) }
 }
 
 func start(args Args) error {
@@ -50,64 +43,64 @@ func start(args Args) error {
 	err = series.SplitByType(seriesEntries)
 	if err != nil { return err }
 	go series.LogEntries()
-	err = series.RenameEntries(args.options)
-	if err != nil { return err }
+	// err = series.RenameEntries(args.options)
+	// if err != nil { return err }
 
 	movies := &Movies{}
 	err = movies.SplitByType(movieEntries)
 	if err != nil { return err }
 	go movies.LogEntries()
-	err = movies.RenameEntries(args.options)
-	if err != nil { return err }
+	// err = movies.RenameEntries(args.options)
+	// if err != nil { return err }
 
 	return nil
 }
 
 func LogArgs(args Args) {
 	if len(args.root) > 0 {
-		fmt.Println("roots:")
+		log.Println(INFO, "root directories: ")
 		for _, root := range args.root {
-			fmt.Println("\t", root)
+			log.Println(INFO, "\t", root)
 		}
 	}
 	if len(args.series) > 0 {
-		fmt.Println("series:")
+		log.Println(INFO, "series sources:")
 		for _, series := range args.series {
-			fmt.Println("\t", series)
+			log.Println(INFO, "\t", series)
 		}
 	}
 	if len(args.movies) > 0 {
-		fmt.Println("movies:")
+		log.Println(INFO, "movies sources:")
 		for _, movie := range args.movies {
-			fmt.Println("\t", movie)
+			log.Println(INFO, "\t", movie)
 		}
 	}
 	ken, err := args.options.keepEpNums.Get()
 	if err == nil {
-		fmt.Println("keep episode numbers: ", ken)
+		log.Println(INFO, "keep episode numbers: ", ken)
 	}
 	sen, err := args.options.startingEpNum.Get()
 	if err == nil {
-		fmt.Println("starting episode number: ", sen)
+		log.Println(INFO, "starting episode number: ", sen)
 	}
 	s0, err := args.options.hasSeason0.Get()
 	if err == nil {
-		fmt.Println("has season 0: ", s0)
+		log.Println(INFO, "has season 0: ", s0)
 	}
 	ns, err := args.options.namingScheme.Get()
 	if err == nil {
-		fmt.Println("naming scheme: ", ns)
+		log.Println(INFO, "naming scheme: ", ns)
 	}
 }
 
 func LogRawEntries(seriesEntries []string, movieEntries []string) {
-	fmt.Println("series dirs (", len(seriesEntries), "): ")
+	log.Println(INFO, "series dirs (", len(seriesEntries), "): ")
 	for _, series := range seriesEntries {
-		fmt.Println("\t", series)
+		log.Println(INFO, "\t", series)
 	}
-	fmt.Println("movie dirs (", len(movieEntries), "): ")
+	log.Println(INFO, "movie dirs (", len(movieEntries), "): ")
 	for _, movie := range movieEntries {
-		fmt.Println("\t", movie)
+		log.Println(INFO, "\t", movie)
 	}
 	fmt.Println()
 }

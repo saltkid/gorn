@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -17,7 +18,6 @@ type Movies struct {
 	standalone []string
 	movieSet   []string
 }
-
 const (
 	STANDALONE = "standalone"
 	MOVIE_SET  = "movieSet"
@@ -30,7 +30,6 @@ type Series struct {
 	multipleSeasonNoMovies   []string
 	multipleSeasonWithMovies []string
 }
-
 const (
 	NAMED_SEASONS               = "namedSeasons"
 	SINGLE_SEASON_NO_MOVIES     = "singleSeasonNoMovies"
@@ -115,38 +114,38 @@ func (series *Series) SplitByType(entries []string) error {
 }
 
 func (movie *Movies) LogEntries() {
-	fmt.Println("categorized movies: ")
-	fmt.Println("standalone: ")
+	log.Println(INFO, "categorized movies: ")
+	log.Println(INFO, "standalone: ")
 	for _, v := range movie.standalone {
-		fmt.Println("\t", v)
+		log.Println(INFO, "\t", v)
 	}
-	fmt.Println("movie set: ")
+	log.Println(INFO, "movie set: ")
 	for _, v := range movie.movieSet {
-		fmt.Println("\t", v)
+		log.Println(INFO, "\t", v)
 	}
 }
 
 func (series *Series) LogEntries() {
-	fmt.Println("categorized series: ")
-	fmt.Println("named seasons: ")
+	log.Println(INFO, "categorized series: ")
+	log.Println(INFO, "named seasons: ")
 	for _, v := range series.namedSeasons {
-		fmt.Println("\t", v)
+		log.Println(INFO, "\t", v)
 	}
-	fmt.Println("single season no movies: ")
+	log.Println(INFO, "single season no movies: ")
 	for _, v := range series.singleSeasonNoMovies {
-		fmt.Println("\t", v)
+		log.Println(INFO, "\t", v)
 	}
-	fmt.Println("single season with movies: ")
+	log.Println(INFO, "single season with movies: ")
 	for _, v := range series.singleSeasonWithMovies {
-		fmt.Println("\t", v)
+		log.Println(INFO, "\t", v)
 	}
-	fmt.Println("multiple season no movies: ")
+	log.Println(INFO, "multiple season no movies: ")
 	for _, v := range series.multipleSeasonNoMovies {
-		fmt.Println("\t", v)
+		log.Println(INFO, "\t", v)
 	}
-	fmt.Println("multiple season with movies: ")
+	log.Println(INFO, "multiple season with movies: ")
 	for _, v := range series.multipleSeasonWithMovies {
-		fmt.Println("\t", v)
+		log.Println(INFO, "\t", v)
 	}
 }
 

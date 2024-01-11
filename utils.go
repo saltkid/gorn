@@ -279,3 +279,11 @@ func timer(name string) func() {
         fmt.Printf("%s took %v\n", name, time.Since(start))
     }
 }
+
+// for logging purposes
+const (
+	INFO = "[INFO] " 					// no color
+	WARN = "\033[93m[WARN]\033[0m "		// yellow
+	ERROR = "\033[91m[ERROR]\033[0m "	// red
+	FATAL = "\033[91m[FATAL]\033[0m "	// red
+)

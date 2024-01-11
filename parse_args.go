@@ -127,7 +127,7 @@ func ParseArgs(args []Arg) (Args, error) {
 	for i, arg := range args {
 		if arg.name == "--help" || arg.name == "-h" {
 			if len(args) <= i+1 {
-				Help("")
+				Help(arg.value)
 			} else if len(args) > i+1 {
 				Help(args[i+1].name)
 			}

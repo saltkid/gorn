@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+)
 
 func WelcomeMsg(version string) {
 	Version(version)
@@ -14,8 +17,8 @@ func Version(version string) {
 	fmt.Println("version:", version)
 }
 
-func Help(flag string) {
-	switch flag {
+func Help(val string) {
+	switch val {
 	case "":
 		fmt.Println("Usage")
 		fmt.Println("\n  gorn root <path/to/root>")
@@ -56,7 +59,7 @@ func Help(flag string) {
 	case "-ns", "--naming-scheme":
 		HelpNS(true)
 	default:
-		fmt.Printf("invalid flag: %s\n\n", flag)
+		log.Println(WARN, "invalid value for 'help':", val) 
 		Help("")
 	}
 }
