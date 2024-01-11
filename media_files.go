@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sync"
 )
 
 type MediaFiles interface {
@@ -102,7 +103,10 @@ func (series *Series) SplitByType(entries []string) {
 	}
 }
 
-func (movie *Movies) LogEntries() {
+func (movie *Movies) LogEntries(wg *sync.WaitGroup) {
+	wg.Add(1)
+	defer wg.Done()
+
 	log.Println(INFO, "categorized movies: ")
 	log.Println(INFO, "standalone: ")
 	for _, v := range movie.standalone {
@@ -114,7 +118,10 @@ func (movie *Movies) LogEntries() {
 	}
 }
 
-func (series *Series) LogEntries() {
+func (series *Series) LogEntries(wg *sync.WaitGroup) {
+	wg.Add(1)
+	defer wg.Done()
+
 	log.Println(INFO, "categorized series: ")
 	log.Println(INFO, "named seasons: ")
 	for _, v := range series.namedSeasons {

@@ -27,7 +27,6 @@ func main() {
 		if _, ok := err.(SafeError); !ok { log.Fatalln(FATAL, err) }
 		return
 	}
-	LogArgs(args)
 
 	err = start(args)
 	if err != nil { log.Fatalln(FATAL, err) }
@@ -35,44 +34,33 @@ func main() {
 
 func start(args Args) error {
 	defer timer("start")()
+	
 	var wg sync.WaitGroup
 	defer wg.Wait() // for any early return errors
+
+	go LogArgs(args, &wg)
 
 	seriesEntries, movieEntries, err := FetchEntries(args.root, args.series, args.movies)
 	if err != nil { return err }
 
 	// don't wait for logs to split entries by types
-	go func(){
-		LogRawEntries(seriesEntries, movieEntries)
-		wg.Done()
-	}()
-	wg.Add(1)
+	go LogRawEntries(seriesEntries, movieEntries, &wg)
 
 	series := &Series{}
-	err = series.SplitByType(seriesEntries)
-	if err != nil { return err }
+	series.SplitByType(seriesEntries)
 	
 	// wait for previous log to finish printing to keep chronological order
 	wg.Wait()
-	go func(){
-		series.LogEntries()
-		wg.Done()
-	}()
-	wg.Add(1)
+	go series.LogEntries(&wg)
 
 	// err = series.RenameEntries(args.options)
 	// if err != nil { return err }
 
 	movies := &Movies{}
-	err = movies.SplitByType(movieEntries)
-	if err != nil { return err }
+	movies.SplitByType(movieEntries)
 
 	wg.Wait()
-	go func() {
-		movies.LogEntries()
-		wg.Done()
-	}()
-	wg.Add(1)
+	go movies.LogEntries(&wg)
 	
 	// err = movies.RenameEntries(args.options)
 	// if err != nil { return err }
@@ -80,7 +68,10 @@ func start(args Args) error {
 	return nil
 }
 
-func LogArgs(args Args) {
+func LogArgs(args Args, wg *sync.WaitGroup) {
+	wg.Add(1)
+	defer wg.Done()
+
 	if len(args.root) > 0 {
 		log.Println(INFO, "root directories: ")
 		for _, root := range args.root {
@@ -117,7 +108,10 @@ func LogArgs(args Args) {
 	}
 }
 
-func LogRawEntries(seriesEntries []string, movieEntries []string) {
+func LogRawEntries(seriesEntries []string, movieEntries []string, wg *sync.WaitGroup) {
+	wg.Add(1)
+	defer wg.Done()
+
 	log.Println(INFO, "series dirs (", len(seriesEntries), "): ")
 	for _, series := range seriesEntries {
 		log.Println(INFO, "\t", series)
