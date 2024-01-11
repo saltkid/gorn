@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
-	"log"
+	"sync"
 )
 
 var version string
@@ -26,7 +27,15 @@ func main() {
 		if _, ok := err.(SafeError); !ok { log.Fatalln(FATAL, err) }
 		return
 	}
-	go LogArgs(args)
+	
+	var wg sync.WaitGroup
+	defer wg.Wait()
+
+	go func(){
+		LogArgs(args)
+		wg.Done()
+	}()
+	wg.Add(1)
 
 	err = start(args)
 	if err != nil { log.Fatalln(FATAL, err) }
@@ -34,22 +43,38 @@ func main() {
 
 func start(args Args) error {
 	defer timer("start")()
+	var wg sync.WaitGroup
+	defer wg.Wait()
 
 	seriesEntries, movieEntries, err := FetchEntries(args.root, args.series, args.movies)
 	if err != nil { return err }
-	go LogRawEntries(seriesEntries, movieEntries)
+	go func(){
+		LogRawEntries(seriesEntries, movieEntries)
+		wg.Done()
+	}()
+	wg.Add(1)
 
 	series := &Series{}
 	err = series.SplitByType(seriesEntries)
 	if err != nil { return err }
-	go series.LogEntries()
+	go func(){
+		series.LogEntries()
+		wg.Done()
+	}()
+	wg.Add(1)
+
 	// err = series.RenameEntries(args.options)
 	// if err != nil { return err }
 
 	movies := &Movies{}
 	err = movies.SplitByType(movieEntries)
 	if err != nil { return err }
-	go movies.LogEntries()
+	go func() {
+		movies.LogEntries()
+		wg.Done()
+	}()
+	wg.Add(1)
+	
 	// err = movies.RenameEntries(args.options)
 	// if err != nil { return err }
 
