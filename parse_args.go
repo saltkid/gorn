@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -102,6 +103,43 @@ func newArgs() Args {
 			startingEpNum: none[int](),
 			namingScheme:  none[string](),
 		},
+	}
+}
+
+func (args *Args) Log() {
+	if len(args.root) > 0 {
+		log.Println(INFO, "root directories: ")
+		for _, root := range args.root {
+			log.Println(INFO, "\t", root)
+		}
+	}
+	if len(args.series) > 0 {
+		log.Println(INFO, "series sources:")
+		for _, series := range args.series {
+			log.Println(INFO, "\t", series)
+		}
+	}
+	if len(args.movies) > 0 {
+		log.Println(INFO, "movies sources:")
+		for _, movie := range args.movies {
+			log.Println(INFO, "\t", movie)
+		}
+	}
+	ken, err := args.options.keepEpNums.Get()
+	if err == nil {
+		log.Println(INFO, "keep episode numbers: ", ken)
+	}
+	sen, err := args.options.startingEpNum.Get()
+	if err == nil {
+		log.Println(INFO, "starting episode number: ", sen)
+	}
+	s0, err := args.options.hasSeason0.Get()
+	if err == nil {
+		log.Println(INFO, "has season 0: ", s0)
+	}
+	ns, err := args.options.namingScheme.Get()
+	if err == nil {
+		log.Println(INFO, "naming scheme: ", ns)
 	}
 }
 
