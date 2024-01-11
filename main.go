@@ -32,35 +32,25 @@ func main() {
 	seriesEntries, movieEntries := FetchEntries(args.root, args.series, args.movies)
 	LogRawEntries(seriesEntries, movieEntries)
 	
-	var errChan = make(chan error, 2)
 	wg := new(sync.WaitGroup)
 
 	series := &Series{}
 	wg.Add(1)
-	go processMedia(series, seriesEntries, args.options, wg, errChan)
+	go processMedia(series, seriesEntries, args.options, wg)
 
 	movies := &Movies{}
 	wg.Add(1)
-	go processMedia(movies, movieEntries, args.options, wg, errChan)
+	go processMedia(movies, movieEntries, args.options, wg)
 	
 	wg.Wait()
-	close(errChan)
-	for err := range errChan {
-		log.Println(ERROR, err)
-	}
-
 	movies.LogEntries()
 	series.LogEntries()
 }
 
-func processMedia(mediaFiles MediaFiles, entries []string, flags Flags, wg *sync.WaitGroup, errChan chan error) {
+func processMedia(mediaFiles MediaFiles, entries []string, flags Flags, wg *sync.WaitGroup) {
 	defer timer("processMedia")()
-
 	mediaFiles.SplitByType(entries)
-	err := mediaFiles.RenameEntries(flags)
-	if err != nil {
-		errChan <- err
-	}
+	mediaFiles.RenameEntries(flags)
 	wg.Done()
 }
 
