@@ -11,7 +11,7 @@ import (
 type MediaFiles interface {
 	SplitByType(entries []string) error
 	LogEntries()
-	RenameEntries()
+	RenameEntries(Flags) error
 }
 
 type Movies struct {
