@@ -11,7 +11,7 @@ import (
 type MediaFiles interface {
 	SplitByType(entries []string) error
 	LogEntries()
-	RenameEntries(Flags) error
+	RenameEntries(Flags)
 }
 
 type Movies struct {
@@ -38,12 +38,9 @@ const (
 	MULTIPLE_SEASON_WITH_MOVIES = "multipleSeasonWithMovies"
 )
 
-func (movie *Movies) SplitByType(entries []string) error {
+func (movie *Movies) SplitByType(entries []string) {
 	for _, movieEntry := range entries {
-		files, err := os.ReadDir(movieEntry)
-		if err != nil {
-			return err
-		}
+		files, _ := os.ReadDir(movieEntry)
 
 		extrasPattern := regexp.MustCompile(`^(?i)specials?|extras?|trailers?`)
 
@@ -58,16 +55,12 @@ func (movie *Movies) SplitByType(entries []string) error {
 			}
 		}
 	}
-	return nil
 }
 
-func (series *Series) SplitByType(entries []string) error {
+func (series *Series) SplitByType(entries []string) {
 	for _, seriesEntry := range entries {
-		files, err := os.ReadDir(seriesEntry)
-		if err != nil {
-			return err
-		}
-
+		files, _ := os.ReadDir(seriesEntry)
+		
 		namedSeasonsPattern := regexp.MustCompile(`^\d+\.\s+(.*)$`)
 		seasonalPattern := regexp.MustCompile(`^(?i)season\s+(\d+)`)
 		possiblySingleSeason := false
@@ -84,10 +77,7 @@ func (series *Series) SplitByType(entries []string) error {
 					break
 
 				} else if seasonalPattern.MatchString(file.Name()) {
-					HasMovie, err := HasMovie(seriesEntry)
-					if err != nil {
-						return err
-					}
+					HasMovie, _ := HasMovie(seriesEntry)
 
 					if HasMovie {
 						series.multipleSeasonWithMovies = append(series.multipleSeasonWithMovies, seriesEntry)
@@ -110,7 +100,6 @@ func (series *Series) SplitByType(entries []string) error {
 			series.singleSeasonNoMovies = append(series.singleSeasonNoMovies, seriesEntry)
 		}
 	}
-	return nil
 }
 
 func (movie *Movies) LogEntries() {
