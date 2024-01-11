@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -10,20 +11,8 @@ import (
 	"strings"
 )
 
-func SeriesRenamePrereqs(path string, sType string, options Flags) (SeriesInfo, error) {
-	// Get prerequsite info for renaming series
-	isValidType := map[string]bool{
-		SINGLE_SEASON_NO_MOVIES:     true,
-		SINGLE_SEASON_WITH_MOVIES:   true,
-		NAMED_SEASONS:               true,
-		MULTIPLE_SEASON_NO_MOVIES:   true,
-		MULTIPLE_SEASON_WITH_MOVIES: true,
-	}
-	if !isValidType[sType] {
-		return SeriesInfo{}, fmt.Errorf("unknown series type: %s", sType)
-	}
-
-	// if additional options are none aka user inputted var, ask for user input
+func SeriesRenamePrereqs(path string, sType string, options Flags) (SeriesInfo) {
+	// if flags are none aka user inputted var, ask for user input again
 	options = PromptOptionalFlags(options, path, 1)
 	info := SeriesInfo{
 		path:       path,
@@ -33,23 +22,13 @@ func SeriesRenamePrereqs(path string, sType string, options Flags) (SeriesInfo, 
 		options:    options,
 	}
 
-	s0, err := options.hasSeason0.Get()
-	if err != nil {
-		return SeriesInfo{}, err
-	}
-	seasons, movies, err := FetchSeriesContent(path, sType, s0)
-	if err != nil {
-		return SeriesInfo{}, err
-	}
-	if sType == "singleSeasonNoMovies" {
-		seasons[1] = ""
-	} else if sType == "singleSeasonWithMovies" {
-		seasons[1] = filepath.Base(path)
-	}
+	// has season 0 will always be of some value at this point
+	s0, _ := options.hasSeason0.Get()
+	seasons, movies := FetchSeriesContent(path, sType, s0)
 	info.seasons = seasons
 	info.movies = movies
 
-	return info, nil
+	return info
 }
 
 // PromptOptionalFlags prompts the user for additional options.
@@ -199,13 +178,15 @@ func PromptOptionalFlags(options Flags, path string, level int8) Flags {
 	return options
 }
 
-func FetchSeriesContent(path string, sType string, hasSeason0 bool) (map[int]string, []string, error) {
+func FetchSeriesContent(path string, sType string, hasSeason0 bool) (map[int]string, []string) {
 	seasons := make(map[int]string)
 	movies := make([]string, 0)
 
 	subdirs, err := os.ReadDir(path)
 	if err != nil {
-		return nil, nil, err
+		log.Println(ERROR, "error reading series entry:", path)
+		log.Println(ERROR, "skipping renaming entry:", path)
+		return seasons, movies
 	}
 
 	extrasPattern := regexp.MustCompile(`^(?i)(specials?|extras?|o(v|n)a)`)
@@ -214,15 +195,16 @@ func FetchSeriesContent(path string, sType string, hasSeason0 bool) (map[int]str
 			continue
 		}
 
-		// skip subdir with same name as directory if sType is 'singleSeasonWithMovies'
-		// season is assigned outside of this function
-		if sType == "singleSeasonWithMovies" && subdir.Name() == filepath.Base(path) {
+		if sType == SINGLE_SEASON_WITH_MOVIES && subdir.Name() == filepath.Base(path) {
+			seasons[1] = subdir.Name()
 			continue
 		}
 
 		if hasSeason0 {
 			if seasons[0] != "" {
-				return nil, nil, fmt.Errorf("multiple specials/extras directories found in %s", path)
+				log.Println(WARN, "multiple specials/extras directories found")
+				log.Println(WARN, "skipping renaming entry:", path)
+				return make(map[int]string), make([]string, 0)
 			}
 
 			if extrasPattern.MatchString(subdir.Name()) {
@@ -232,6 +214,7 @@ func FetchSeriesContent(path string, sType string, hasSeason0 bool) (map[int]str
 		}
 
 		if sType == SINGLE_SEASON_NO_MOVIES {
+			seasons[1] = ""
 			continue
 		} else if sType == SINGLE_SEASON_WITH_MOVIES {
 			if extrasPattern.MatchString(subdir.Name()) {
@@ -245,14 +228,9 @@ func FetchSeriesContent(path string, sType string, hasSeason0 bool) (map[int]str
 		// Get season number from subdir name
 		var seasonNamePattern *regexp.Regexp
 		if sType == NAMED_SEASONS {
-			seasonNamePattern = regexp.MustCompile(`^(\d+)\..*$`)
+			seasonNamePattern = regexp.MustCompile(`^(\d+)\s*(?:\.|_|-).*$`)
 		} else if sType == MULTIPLE_SEASON_NO_MOVIES || sType == MULTIPLE_SEASON_WITH_MOVIES {
 			seasonNamePattern = regexp.MustCompile(`^(?i)season\s+(\d+).*$`)
-		} else {
-			return nil, nil, fmt.Errorf("unknown series type: %s; series type must be one of 'namedSeasons', 'multipleSeasonNoMovies', 'multipleSeasonWithMovies'", sType)
-		}
-		if seasonNamePattern == nil {
-			return nil, nil, fmt.Errorf("unknown series type: %s; series type must be one of 'namedSeasons', 'multipleSeasonNoMovies', 'multipleSeasonWithMovies'", sType)
 		}
 
 		readSeasonNum := seasonNamePattern.FindStringSubmatch(subdir.Name())
@@ -269,26 +247,27 @@ func FetchSeriesContent(path string, sType string, hasSeason0 bool) (map[int]str
 		}
 
 		// readSeasonNum[0] is the whole string so we only need readSeasonNum[1] (first matched group)
-		num, err := strconv.Atoi(readSeasonNum[1])
-		if err != nil {
-			return nil, nil, err
-		}
+		// first matched group will always be a number
+		num, _ := strconv.Atoi(readSeasonNum[1])
 		seasons[num] = subdir.Name()
 	}
 
-	return seasons, movies, nil
+	return seasons, movies
 }
 
-func MovieRenamePrereqs(path string, mType string) (MovieInfo, error) {
+func MovieRenamePrereqs(path string, mType string) (MovieInfo) {
 	info := MovieInfo{
 		path:      path,
 		movieType: mType,
 		movies:    make(map[string]string),
 	}
+	defaultInfo := info
 
 	subdirs, err := os.ReadDir(path)
 	if err != nil {
-		return MovieInfo{}, err
+		log.Println(ERROR, "error reading movie entry:", path)
+		log.Println(ERROR, "skipping renaming entry:", path)
+		return info
 	}
 
 	extrasPattern := regexp.MustCompile(`^(?i)specials?|extras?|trailers?|ova`)
@@ -304,7 +283,9 @@ func MovieRenamePrereqs(path string, mType string) (MovieInfo, error) {
 					info.movies[filepath.Base(path)] = subdir.Name()
 					continue
 				} else {
-					return MovieInfo{}, fmt.Errorf("multiple media files found in %s for an entry marked as a standalone movie", path)
+					log.Println(WARN, "multiple media files found in supposedly standalone movie directory")
+					log.Println(WARN, "skipping renaming entry:", path)
+					return defaultInfo
 				}
 			}
 		}
@@ -320,14 +301,18 @@ func MovieRenamePrereqs(path string, mType string) (MovieInfo, error) {
 
 			files, err := os.ReadDir(filepath.Join(path, subdir.Name()))
 			if err != nil {
-				return MovieInfo{}, err
+				log.Println(ERROR, "error reading entry:", filepath.Join(path, subdir.Name()))
+				log.Println(ERROR, "skipping renaming entry:", path)
+				return defaultInfo
 			}
 
 			movieCount := 0
 			for _, file := range files {
 				if IsMediaFile(file.Name()) {
 					if movieCount > 0 {
-						return MovieInfo{}, fmt.Errorf("multiple media files found in %s", path)
+						log.Println(WARN, "multiple media files found in", file)
+						log.Println(WARN, "skipping renaming movie:", subdir, "under movie set:", path)
+						continue
 					}
 
 					info.movies[subdir.Name()] = file.Name()
@@ -336,10 +321,12 @@ func MovieRenamePrereqs(path string, mType string) (MovieInfo, error) {
 			}
 
 			if movieCount == 0 {
-				return MovieInfo{}, fmt.Errorf("no media files found in %s", path)
+				log.Println(WARN, "no media files found in", subdir.Name())
+				log.Println(WARN, "skipping renaming entry:", subdir)
+				return defaultInfo
 			}
 		}
 	}
 
-	return info, nil
+	return info
 }
