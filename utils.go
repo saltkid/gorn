@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
-	"unicode"
 	"time"
+	"unicode"
 )
 
 func IsMediaFile(file string) bool {
@@ -276,7 +277,7 @@ func (s SafeError) Error() string {
 func timer(name string) func() {
     start := time.Now()
     return func() {
-        fmt.Printf("%s took %v\n", name, time.Since(start))
+        log.Printf("%s %s took %v\n", TIME, name, time.Since(start))
     }
 }
 
@@ -286,4 +287,5 @@ const (
 	WARN = "\033[93m[WARN]\033[0m "		// yellow
 	ERROR = "\033[91m[ERROR]\033[0m "	// red
 	FATAL = "\033[91m[FATAL]\033[0m "	// red
+	TIME = "\033[94m[TIME]\033[0m "		// blue
 )

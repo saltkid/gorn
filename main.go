@@ -34,24 +34,23 @@ func main() {
 
 func start(args Args) error {
 	defer timer("start")()
-	
-	var wg sync.WaitGroup
+
+	wg := new(sync.WaitGroup)
 	defer wg.Wait() // for any early return errors
 
-	go LogArgs(args, &wg)
+	go LogArgs(args, wg)
 
-	seriesEntries, movieEntries, err := FetchEntries(args.root, args.series, args.movies)
-	if err != nil { return err }
+	seriesEntries, movieEntries := FetchEntries(args.root, args.series, args.movies)
 
 	// don't wait for logs to split entries by types
-	go LogRawEntries(seriesEntries, movieEntries, &wg)
+	go LogRawEntries(seriesEntries, movieEntries, wg)
 
 	series := &Series{}
 	series.SplitByType(seriesEntries)
 	
 	// wait for previous log to finish printing to keep chronological order
 	wg.Wait()
-	go series.LogEntries(&wg)
+	go series.LogEntries(wg)
 
 	// err = series.RenameEntries(args.options)
 	// if err != nil { return err }
@@ -60,7 +59,7 @@ func start(args Args) error {
 	movies.SplitByType(movieEntries)
 
 	wg.Wait()
-	go movies.LogEntries(&wg)
+	go movies.LogEntries(wg)
 	
 	// err = movies.RenameEntries(args.options)
 	// if err != nil { return err }
@@ -130,51 +129,35 @@ func LogRawEntries(seriesEntries []string, movieEntries []string, wg *sync.WaitG
 // movieDirs: A slice of movie directories to search for entries.
 //
 // Returns the series entries and movie entries as string slices.
-func FetchEntries(rootDirs []string, seriesDirs []string, movieDirs []string) ([]string, []string, error) {
-	if len(rootDirs) == 0 && len(seriesDirs) == 0 && len(movieDirs) == 0 {
-		return nil, nil, fmt.Errorf("passed no root, series, or movie directories")
-	}
-
+func FetchEntries(rootDirs []string, seriesDirs []string, movieDirs []string) ([]string, []string) {
 	entries := map[string][]string{
 		"movies": make([]string, 0),
 		"series": make([]string, 0),
 	}
 	for _, root := range rootDirs {
-		separated, err := SeparateRoots(root)
-		if err != nil {
-			return nil, nil, err
-		}
+		separated := SeparateRoots(root)
 
 		for key, roots := range separated {
 			for _, dir := range roots {
-				subdirs, err := FetchSubdirs(dir)
-				if err != nil {
-					return nil, nil, err
-				}
+				subdirs := FetchSubdirs(dir)
 				entries[key] = append(entries[key], subdirs...)
 			}
 		}
 	}
 
 	for _, v := range seriesDirs {
-		subdirs, err := FetchSubdirs(v)
-		if err != nil {
-			return nil, nil, err
-		}
+		subdirs := FetchSubdirs(v)
 		entries["series"] = append(entries["series"], subdirs...)
 	}
 	for _, v := range movieDirs {
-		subdirs, err := FetchSubdirs(v)
-		if err != nil {
-			return nil, nil, err
-		}
+		subdirs := FetchSubdirs(v)
 		entries["movies"] = append(entries["movies"], subdirs...)
 	}
 
-	return entries["series"], entries["movies"], nil
+	return entries["series"], entries["movies"]
 }
 
-func SeparateRoots(root string) (map[string][]string, error) {
+func SeparateRoots(root string) (map[string][]string) {
 	rootDirs := map[string][]string{
 		"movies": {},
 		"series": {},
@@ -214,17 +197,21 @@ func SeparateRoots(root string) (map[string][]string, error) {
 	})
 
 	if err != nil {
-		return nil, err
+		log.Println(ERROR, err)
+		return map[string][]string{
+			"movies": {},
+			"series": {},
+		}
 	}
 
 	if len(rootDirs["movies"]) == 0 && len(rootDirs["series"]) == 0 {
-		return nil, fmt.Errorf("no movie and series directory found")
+		log.Println(WARN, "no movie or series directory found under", root)
 	}
 
-	return rootDirs, nil
+	return rootDirs
 }
 
-func FetchSubdirs(dir string) ([]string, error) {
+func FetchSubdirs(dir string) []string {
 	entries := []string{}
 	err := filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
@@ -241,11 +228,13 @@ func FetchSubdirs(dir string) ([]string, error) {
 	})
 
 	if err != nil {
-		return nil, err
-	}
-	if len(entries) == 0 {
-		return nil, fmt.Errorf("no entries found under %s", dir)
+		log.Println(ERROR, err)
+		return []string{}
 	}
 
-	return entries, nil
+	if len(entries) == 0 {
+		log.Println(WARN, "no entries found under", dir)
+	}
+
+	return entries
 }
