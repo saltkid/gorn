@@ -27,15 +27,7 @@ func main() {
 		if _, ok := err.(SafeError); !ok { log.Fatalln(FATAL, err) }
 		return
 	}
-	
-	var wg sync.WaitGroup
-	defer wg.Wait()
-
-	go func(){
-		LogArgs(args)
-		wg.Done()
-	}()
-	wg.Add(1)
+	LogArgs(args)
 
 	err = start(args)
 	if err != nil { log.Fatalln(FATAL, err) }
@@ -44,10 +36,12 @@ func main() {
 func start(args Args) error {
 	defer timer("start")()
 	var wg sync.WaitGroup
-	defer wg.Wait()
+	defer wg.Wait() // for any early return errors
 
 	seriesEntries, movieEntries, err := FetchEntries(args.root, args.series, args.movies)
 	if err != nil { return err }
+
+	// don't wait for logs to split entries by types
 	go func(){
 		LogRawEntries(seriesEntries, movieEntries)
 		wg.Done()
@@ -57,6 +51,9 @@ func start(args Args) error {
 	series := &Series{}
 	err = series.SplitByType(seriesEntries)
 	if err != nil { return err }
+	
+	// wait for previous log to finish printing to keep chronological order
+	wg.Wait()
 	go func(){
 		series.LogEntries()
 		wg.Done()
@@ -69,6 +66,8 @@ func start(args Args) error {
 	movies := &Movies{}
 	err = movies.SplitByType(movieEntries)
 	if err != nil { return err }
+
+	wg.Wait()
 	go func() {
 		movies.LogEntries()
 		wg.Done()
