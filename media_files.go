@@ -40,7 +40,12 @@ const (
 
 func (movie *Movies) SplitByType(entries []string) {
 	for _, movieEntry := range entries {
-		files, _ := os.ReadDir(movieEntry)
+		files, err := os.ReadDir(movieEntry)
+		if err != nil {
+			log.Println(ERROR, "error reading movie entry:", movieEntry)
+			log.Println(ERROR, "skipping categorizing entry:", movieEntry)
+			continue
+		}
 
 		extrasPattern := regexp.MustCompile(`^(?i)specials?|extras?|trailers?`)
 
@@ -59,7 +64,12 @@ func (movie *Movies) SplitByType(entries []string) {
 
 func (series *Series) SplitByType(entries []string) {
 	for _, seriesEntry := range entries {
-		files, _ := os.ReadDir(seriesEntry)
+		files, err := os.ReadDir(seriesEntry)
+		if err != nil {
+			log.Println(ERROR, "error reading series entry:", seriesEntry)
+			log.Println(ERROR, "skipping categorizing entry:", seriesEntry)
+			continue
+		}
 		
 		namedSeasonsPattern := regexp.MustCompile(`^\d+\.\s+(.*)$`)
 		seasonalPattern := regexp.MustCompile(`^(?i)season\s+(\d+)`)
@@ -141,21 +151,15 @@ func (series *Series) LogEntries() {
 func (movies *Movies) RenameEntries(options Flags) error {
 	log.Println(INFO, "Renaming standalone movies")
 	for _, v := range movies.standalone {
-		info, err := MovieRenamePrereqs(v, STANDALONE)
-		if err != nil { return err }
-	
-		err = info.Rename()
-		if err != nil { return err }
+		info := MovieRenamePrereqs(v, STANDALONE)
+		info.Rename()
 	}
 	fmt.Println()
 
 	log.Println(INFO, "Renaming movie set")
 	for _, v := range movies.movieSet {
-		info, err := MovieRenamePrereqs(v, MOVIE_SET)
-		if err != nil { return err }
-
-		err = info.Rename()
-		if err != nil { return err }
+		info := MovieRenamePrereqs(v, MOVIE_SET)
+		info.Rename()
 	}
 	fmt.Println()
 
@@ -166,75 +170,40 @@ func (series *Series) RenameEntries(options Flags) error {
 	log.Println(INFO, "Renaming named seasons")
 	namedSeasonOptions := PromptOptionalFlags(options, "all named seasons", 0)
 	for _, v := range series.namedSeasons {
-		info, err := SeriesRenamePrereqs(v, NAMED_SEASONS, namedSeasonOptions)
-		if err != nil {
-			return err
-		}
-
-		err = info.Rename()
-		if err != nil {
-			return err
-		}
+		info := SeriesRenamePrereqs(v, NAMED_SEASONS, namedSeasonOptions)
+		info.Rename()
 	}
 	fmt.Println()
 
 	log.Println(INFO, "Renaming single season no movies")
 	ssnmOptions := PromptOptionalFlags(options, "all single season with no movies", 0)
 	for _, v := range series.singleSeasonNoMovies {
-		info, err := SeriesRenamePrereqs(v, SINGLE_SEASON_NO_MOVIES, ssnmOptions)
-		if err != nil {
-			return err
-		}
-
-		err = info.Rename()
-		if err != nil {
-			return err
-		}
+		info := SeriesRenamePrereqs(v, SINGLE_SEASON_NO_MOVIES, ssnmOptions)
+		info.Rename()
 	}
 	fmt.Println()
 
 	log.Println(INFO, "Renaming single season with movies")
 	sswmOptions := PromptOptionalFlags(options, "all single season with movies", 0)
 	for _, v := range series.singleSeasonWithMovies {
-		info, err := SeriesRenamePrereqs(v, SINGLE_SEASON_WITH_MOVIES, sswmOptions)
-		if err != nil {
-			return err
-		}
-
-		err = info.Rename()
-		if err != nil {
-			return err
-		}
+		info := SeriesRenamePrereqs(v, SINGLE_SEASON_WITH_MOVIES, sswmOptions)
+		info.Rename()
 	}
 	fmt.Println()
 
 	log.Println(INFO, "Renaming multiple season no movies")
 	msnmOptions := PromptOptionalFlags(options, "all multiple season with no movies", 0)
 	for _, v := range series.multipleSeasonNoMovies {
-		info, err := SeriesRenamePrereqs(v, MULTIPLE_SEASON_NO_MOVIES, msnmOptions)
-		if err != nil {
-			return err
-		}
-
-		err = info.Rename()
-		if err != nil {
-			return err
-		}
+		info := SeriesRenamePrereqs(v, MULTIPLE_SEASON_NO_MOVIES, msnmOptions)
+		info.Rename()
 	}
 	fmt.Println()
 
 	log.Println(INFO, "Renaming multiple season with movies")
 	mswmOptions := PromptOptionalFlags(options, "all multiple season with movies", 0)
 	for _, v := range series.multipleSeasonWithMovies {
-		info, err := SeriesRenamePrereqs(v, MULTIPLE_SEASON_WITH_MOVIES, mswmOptions)
-		if err != nil {
-			return err
-		}
-
-		err = info.Rename()
-		if err != nil {
-			return err
-		}
+		info := SeriesRenamePrereqs(v, MULTIPLE_SEASON_WITH_MOVIES, mswmOptions)
+		info.Rename()
 	}
 	fmt.Println()
 
