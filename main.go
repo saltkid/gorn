@@ -14,6 +14,8 @@ var version string
 func main() {
 	defer timer("main")()
 
+	// handling input of user
+	// errors can happen here and interrupt the process
 	if len(os.Args) < 2 {
 		WelcomeMsg(version)
 		return
@@ -29,26 +31,30 @@ func main() {
 	}
 	args.Log()
 
+	// renaming process
+	// there should be no errors in renaming process since:
+	//   - we already checked for errors in ParseArgs and TokenizeArgs
+	//   - we can safely skip renaming a file if an error does occur
 	seriesEntries, movieEntries := FetchEntries(args.root, args.series, args.movies)
 	LogRawEntries(seriesEntries, movieEntries)
-	
+
 	wg := new(sync.WaitGroup)
 
 	series := &Series{}
 	wg.Add(1)
-	go processMedia(series, seriesEntries, args.options, wg)
+	go ProcessMedia(series, seriesEntries, args.options, wg)
 
 	movies := &Movies{}
 	wg.Add(1)
-	go processMedia(movies, movieEntries, args.options, wg)
-	
+	go ProcessMedia(movies, movieEntries, args.options, wg)
+
 	wg.Wait()
 	movies.LogEntries()
 	series.LogEntries()
 }
 
-func processMedia(mediaFiles MediaFiles, entries []string, flags Flags, wg *sync.WaitGroup) {
-	defer timer("processMedia")()
+func ProcessMedia(mediaFiles MediaFiles, entries []string, flags Flags, wg *sync.WaitGroup) {
+	defer timer("ProcessMedia")()
 	mediaFiles.SplitByType(entries)
 	mediaFiles.RenameEntries(flags)
 	wg.Done()
