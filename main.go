@@ -33,35 +33,35 @@ func main() {
 	LogRawEntries(seriesEntries, movieEntries)
 	
 	var errChan = make(chan error, 2)
-	defer close(errChan)
 	wg := new(sync.WaitGroup)
 
 	series := &Series{}
+	wg.Add(1)
 	go processMedia(series, seriesEntries, args.options, wg, errChan)
+
 	movies := &Movies{}
+	wg.Add(1)
 	go processMedia(movies, movieEntries, args.options, wg, errChan)
 	
-	// wait for all goroutines before logging entries
 	wg.Wait()
-	series.LogEntries()
-	movies.LogEntries()
-
-	// read errors from errChan and print if any
+	close(errChan)
 	for err := range errChan {
 		log.Println(ERROR, err)
 	}
+
+	movies.LogEntries()
+	series.LogEntries()
 }
 
-func processMedia(mediaFiles MediaFiles, entries []string, options Flags, wg *sync.WaitGroup, errChan chan error) {
+func processMedia(mediaFiles MediaFiles, entries []string, flags Flags, wg *sync.WaitGroup, errChan chan error) {
 	defer timer("processMedia")()
-	wg.Add(1)
-	defer wg.Done()
 
 	mediaFiles.SplitByType(entries)
-	err := mediaFiles.RenameEntries(options)
+	err := mediaFiles.RenameEntries(flags)
 	if err != nil {
 		errChan <- err
 	}
+	wg.Done()
 }
 
 func LogRawEntries(seriesEntries []string, movieEntries []string) {
