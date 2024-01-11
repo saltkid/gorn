@@ -27,90 +27,44 @@ func main() {
 		if _, ok := err.(SafeError); !ok { log.Fatalln(FATAL, err) }
 		return
 	}
-
-	err = start(args)
-	if err != nil { log.Fatalln(FATAL, err) }
-}
-
-func start(args Args) error {
-	defer timer("start")()
-
-	wg := new(sync.WaitGroup)
-	defer wg.Wait() // for any early return errors
-
-	go LogArgs(args, wg)
+	args.Log()
 
 	seriesEntries, movieEntries := FetchEntries(args.root, args.series, args.movies)
-
-	// don't wait for logs to split entries by types
-	go LogRawEntries(seriesEntries, movieEntries, wg)
+	LogRawEntries(seriesEntries, movieEntries)
+	
+	var errChan = make(chan error, 2)
+	defer close(errChan)
+	wg := new(sync.WaitGroup)
 
 	series := &Series{}
-	series.SplitByType(seriesEntries)
-	
-	// wait for previous log to finish printing to keep chronological order
-	wg.Wait()
-	go series.LogEntries(wg)
-
-	// err = series.RenameEntries(args.options)
-	// if err != nil { return err }
-
+	go processMedia(series, seriesEntries, args.options, wg, errChan)
 	movies := &Movies{}
-	movies.SplitByType(movieEntries)
-
-	wg.Wait()
-	go movies.LogEntries(wg)
+	go processMedia(movies, movieEntries, args.options, wg, errChan)
 	
-	// err = movies.RenameEntries(args.options)
-	// if err != nil { return err }
+	// wait for all goroutines before logging entries
+	wg.Wait()
+	series.LogEntries()
+	movies.LogEntries()
 
-	return nil
-}
-
-func LogArgs(args Args, wg *sync.WaitGroup) {
-	wg.Add(1)
-	defer wg.Done()
-
-	if len(args.root) > 0 {
-		log.Println(INFO, "root directories: ")
-		for _, root := range args.root {
-			log.Println(INFO, "\t", root)
-		}
-	}
-	if len(args.series) > 0 {
-		log.Println(INFO, "series sources:")
-		for _, series := range args.series {
-			log.Println(INFO, "\t", series)
-		}
-	}
-	if len(args.movies) > 0 {
-		log.Println(INFO, "movies sources:")
-		for _, movie := range args.movies {
-			log.Println(INFO, "\t", movie)
-		}
-	}
-	ken, err := args.options.keepEpNums.Get()
-	if err == nil {
-		log.Println(INFO, "keep episode numbers: ", ken)
-	}
-	sen, err := args.options.startingEpNum.Get()
-	if err == nil {
-		log.Println(INFO, "starting episode number: ", sen)
-	}
-	s0, err := args.options.hasSeason0.Get()
-	if err == nil {
-		log.Println(INFO, "has season 0: ", s0)
-	}
-	ns, err := args.options.namingScheme.Get()
-	if err == nil {
-		log.Println(INFO, "naming scheme: ", ns)
+	// read errors from errChan and print if any
+	for err := range errChan {
+		log.Println(ERROR, err)
 	}
 }
 
-func LogRawEntries(seriesEntries []string, movieEntries []string, wg *sync.WaitGroup) {
+func processMedia(mediaFiles MediaFiles, entries []string, options Flags, wg *sync.WaitGroup, errChan chan error) {
+	defer timer("processMedia")()
 	wg.Add(1)
 	defer wg.Done()
 
+	mediaFiles.SplitByType(entries)
+	err := mediaFiles.RenameEntries(options)
+	if err != nil {
+		errChan <- err
+	}
+}
+
+func LogRawEntries(seriesEntries []string, movieEntries []string) {
 	log.Println(INFO, "series dirs (", len(seriesEntries), "): ")
 	for _, series := range seriesEntries {
 		log.Println(INFO, "\t", series)
