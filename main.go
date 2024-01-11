@@ -10,6 +10,8 @@ import (
 var version string
 
 func main() {
+	defer timer("main")()
+
 	if len(os.Args) < 2 {
 		WelcomeMsg(version)
 		return
@@ -28,6 +30,7 @@ func main() {
 		}
 		return
 	}
+	go LogArgs(args)
 
 	err = start(args)
 	if err != nil {
@@ -37,23 +40,23 @@ func main() {
 }
 
 func start(args Args) error {
-	LogArgs(args)
+	defer timer("start")()
 
 	seriesEntries, movieEntries, err := FetchEntries(args.root, args.series, args.movies)
 	if err != nil { return err }
-	LogRawEntries(seriesEntries, movieEntries)
+	go LogRawEntries(seriesEntries, movieEntries)
 
 	series := &Series{}
 	err = series.SplitByType(seriesEntries)
 	if err != nil { return err }
-	series.LogEntries()
+	go series.LogEntries()
 	err = series.RenameEntries(args.options)
 	if err != nil { return err }
 
 	movies := &Movies{}
 	err = movies.SplitByType(movieEntries)
 	if err != nil { return err }
-	movies.LogEntries()
+	go movies.LogEntries()
 	err = movies.RenameEntries(args.options)
 	if err != nil { return err }
 

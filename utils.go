@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"unicode"
+	"time"
 )
 
 func IsMediaFile(file string) bool {
@@ -263,4 +264,18 @@ func SafeErrorF(s string, args ...interface{}) SafeError {
 
 func (s SafeError) Error() string {
 	return s.safe.Error()
+}
+
+// Usage: put `defer timer("func_name")()` at the start of a function
+//
+// where "func_name" is just for logging purposes
+//
+// Reference:
+//   - https://stackoverflow.com/questions/45766572/is-there-an-efficient-way-to-calculate-execution-time-in-golang
+// thank you Cerise Limón
+func timer(name string) func() {
+    start := time.Now()
+    return func() {
+        fmt.Printf("%s took %v\n", name, time.Since(start))
+    }
 }
