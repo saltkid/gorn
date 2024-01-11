@@ -20,7 +20,7 @@ func main() {
 	args, err := ParseArgs(rawArgs)
 	if err != nil {
 		// scuffed safe exit for --help and --version
-		if err.Error() == "safe exit" { return }
+		if _, ok := err.(SafeError); ok { return }
 		panic(err)
 	}
 

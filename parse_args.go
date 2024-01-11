@@ -127,11 +127,11 @@ func ParseArgs(args []Arg) (Args, error) {
 			} else if len(args) > i+1 {
 				Help(args[i+1].name)
 			}
-			return Args{}, fmt.Errorf("safe exit")
+			return Args{}, SafeErrorF("safe exit")
 
 		} else if arg.name == "--version" || arg.name == "-v" {
 			Version(version)
-			return Args{}, fmt.Errorf("safe exit")
+			return Args{}, SafeErrorF("safe exit")
 
 		} else if directoryArgs[arg.name] {
 			// no value after flag / flag after flag

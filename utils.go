@@ -250,3 +250,17 @@ func ParentN(path string, n int) string {
 	}
 	return filepath.Base(path)
 }
+
+type SafeError struct {
+	safe error
+}
+
+func SafeErrorF(s string, args ...interface{}) SafeError {
+	return SafeError{
+		safe: fmt.Errorf(s, args...),
+	}
+}
+
+func (s SafeError) Error() string {
+	return s.safe.Error()
+}
