@@ -9,9 +9,9 @@ import (
 )
 
 type MediaFiles interface {
-	SplitByType(entries []string) error
+	SplitByType(entries []string)
 	LogEntries()
-	RenameEntries(Flags)
+	RenameEntries(Flags) error
 }
 
 type Movies struct {
