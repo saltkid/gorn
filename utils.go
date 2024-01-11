@@ -57,10 +57,11 @@ func HasMovie(path string) (bool, error) {
 // Episode 01 | Episode02 | EP03 | EP-04 | E_05 | EP.06
 func ReadEpisodeNum(file string) (int, error) {
 
-	// match_id:											 				 [1]				   					  [2]										  [3]
-	// captured:                                             				 vv                    					  vv                 						  vv
-	// substring:		                       s 01      x  _  -   .      e  02 | 03      x  _  -   .            e    04 |ep    isode          _  -   .           05
-	episodePattern := regexp.MustCompile(`(?i)s\d+\s*(?:x*|_*|-*|[.]*)\s*e(\d+)|\d+\s*(?:x+|_+|-+|[.]+|\s)\s*(?:e)?(\d+)|ep?(?:isode\s)?\s*(?:_+|-+|[.]+|\s?)\s*(\d+)`)
+	// https://regex-vis.com/?r=s%5Cd%2B%5Cs*%28%3F%3Ax*%7C_*%7C-*%7C%5B.%5D*%29%5Cs*e%28%5Cd%2B%29%7C%5Cd%2B%5Cs*%28%3F%3Ax%2B%7C_%2B%7C-%2B%7C%5B.%5D%2B%29%5Cs*%28%5Cd%2B%29%7Cep%3F%28%3F%3Aisode%29%3F%5Cs*%28%3F%3A_%2B%7C-%2B%7C%5B.%5D%2B%29%5Cs*%28%5Cd%2B%29&e=0
+	// match_id:											 			    [1]				   				   [2]									       [3]
+	// captured:                                             				vv                    			   vv                 						   vv
+	// substring:		                      s 01      x  _  -   .      e  02 | 03      x  _  -   .           04 |ep    isode          _  -   .           05
+	episodePattern := regexp.MustCompile(`(?i)s\d+\s*(?:x*|_*|-*|[.]*)\s*e(\d+)|\d+\s*(?:x+|_+|-+|[.]+)\s*(\d+)|ep?(?:isode)?\s*(?:_+|-+|[.]+)\s*(\d+)`)
 	match := episodePattern.FindStringSubmatch(file)
 	if len(match) > 1 {
 		epNumStr := ""
