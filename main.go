@@ -15,17 +15,25 @@ func main() {
 		return
 	}
 	rawArgs, err := TokenizeArgs(os.Args[1:])
-	if err != nil { panic(err) }
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
 
 	args, err := ParseArgs(rawArgs)
 	if err != nil {
 		// scuffed safe exit for --help and --version
-		if _, ok := err.(SafeError); ok { return }
-		panic(err)
+		if _, ok := err.(SafeError); !ok {
+			fmt.Println("Error:", err)
+		}
+		return
 	}
 
 	err = start(args)
-	if err != nil { panic(err) }
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
 }
 
 func start(args Args) error {

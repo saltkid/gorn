@@ -154,28 +154,20 @@ func (movies *Movies) RenameEntries(options Flags) error {
 	fmt.Println("Renaming standalone movies")
 	for _, v := range movies.standalone {
 		info, err := MovieRenamePrereqs(v, STANDALONE)
-		if err != nil {
-			panic(err)
-		}
+		if err != nil { return err }
 
 		err = info.Rename()
-		if err != nil {
-			panic(err)
-		}
+		if err != nil { return err }
 	}
 	fmt.Println()
 
 	fmt.Println("Renaming movie set")
 	for _, v := range movies.movieSet {
 		info, err := MovieRenamePrereqs(v, MOVIE_SET)
-		if err != nil {
-			panic(err)
-		}
+		if err != nil { return err }
 
 		err = info.Rename()
-		if err != nil {
-			panic(err)
-		}
+		if err != nil { return err }
 	}
 	fmt.Println()
 
