@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sync"
 )
 
 type MediaFiles interface {
@@ -110,19 +111,29 @@ func (series *Series) SplitByType(entries []string) {
 }
 
 func (movies *Movies) RenameEntries(options Flags) {
+	wg := new(sync.WaitGroup)
+
 	log.Println(INFO, "Renaming standalone movies..")
 	for _, v := range movies.standalone {
-		info := MovieRenamePrereqs(v, STANDALONE)
-		info.Rename()
+		wg.Add(1)
+		go func(v string){
+			info := MovieRenamePrereqs(v, STANDALONE)
+			info.Rename(wg)
+			wg.Done()
+		}(v)
 	}
-	log.Println(INFO, "Done renaming standalone movies.")
-
 	log.Println(INFO, "Renaming movie sets...")
 	for _, v := range movies.movieSet {
-		info := MovieRenamePrereqs(v, MOVIE_SET)
-		info.Rename()
+		wg.Add(1)
+		go func(v string){
+			info := MovieRenamePrereqs(v, MOVIE_SET)
+			info.Rename(wg)
+			wg.Done()
+		}(v)
 	}
-	log.Println(INFO, "Done renaming movie sets.")
+
+	wg.Wait()
+	log.Println(INFO, "Done renaming movie entries.")
 }
 
 func (series *Series) RenameEntries(options Flags) {

@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 type Rename interface {
@@ -190,32 +191,37 @@ func (info *SeriesInfo) Rename() {
 	}
 }
 
-func (info *MovieInfo) Rename() {
+func (info *MovieInfo) Rename(wg *sync.WaitGroup) {
 	for dir, file := range info.movies {
-		newName := CleanTitle(dir) + filepath.Ext(file)
-		old_name := file
-		if info.movieType == "movieSet" {
-			old_name = dir + "/" + old_name
-			newName = dir + "/" + newName
-		}
+		wg.Add(1)
+		go func(dir string, file string) {
+			defer wg.Done()
 
-		// TODO: decide whether to turn this into log or not
-		// fmt.Println(fmt.Sprintf("%-*s", 20, old_name), " --> ", fmt.Sprintf("%*s", 20, newName))
-		// fmt.Println("old", info.path+"/"+old_name, "new", info.path+"/"+newName)
-		_, err := os.Stat(info.path+"/"+newName)
-		if err == nil {
-			log.Println(WARN, "file already exists: renaming", filepath.Base(old_name), "to", filepath.Base(newName), "failed; skipping renaming:", info.path+"/"+old_name)
-			continue
-		} else if os.IsNotExist(err) {
-			err = os.Rename(info.path+"/"+old_name, info.path+"/"+newName)
-			if err != nil {
-				log.Println(WARN, "renaming error:", err, "; skipping renaming:", info.path+"/"+old_name)
-				continue
+			newName := CleanTitle(dir) + filepath.Ext(file)
+			old_name := file
+			if info.movieType == "movieSet" {
+				old_name = dir + "/" + old_name
+				newName = dir + "/" + newName
 			}
-		} else {
-			log.Println(WARN, "unexpected error when checking if file exists before renaming:", err)
-			continue
-		}
+	
+			// TODO: decide whether to turn this into log or not
+			// fmt.Println(fmt.Sprintf("%-*s", 20, old_name), " --> ", fmt.Sprintf("%*s", 20, newName))
+			// fmt.Println("old", info.path+"/"+old_name, "new", info.path+"/"+newName)
+			_, err := os.Stat(info.path+"/"+newName)
+			if err == nil {
+				log.Println(WARN, "file already exists: renaming", filepath.Base(old_name), "to", filepath.Base(newName), "failed; skipping renaming:", info.path+"/"+old_name)
+				return
+			} else if os.IsNotExist(err) {
+				err = os.Rename(info.path+"/"+old_name, info.path+"/"+newName)
+				if err != nil {
+					log.Println(WARN, "renaming error:", err, "; skipping renaming:", info.path+"/"+old_name)
+					return
+				}
+			} else {
+				log.Println(WARN, "unexpected error when checking if file exists before renaming:", err)
+				return
+			}
+		}(dir, file)
 	}
 }
 
