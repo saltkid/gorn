@@ -363,6 +363,7 @@ func GenerateNewName(namingScheme Option[string], season_pad int, season_num int
 				regex_pattern := strings.Trim(val, "'")
 				_, err := regexp.Compile(regex_pattern)
 				if err != nil {
+					log.Println(WARN, "invalid regex:", regex_pattern, "; using entire parent name:", parent_name, " instead in renaming:", abs_path, "using naming scheme:", scheme)	
 					return parent_name
 				}
 				sub_regexes := SplitRegexByPipe(regex_pattern)
@@ -373,7 +374,7 @@ func GenerateNewName(namingScheme Option[string], season_pad int, season_num int
 						return sub_match[1]
 					}
 				}
-				// did not find a substring match
+				log.Println(WARN, "no substring match found in regex:", regex_pattern, "; using entire parent name:", parent_name, " instead in renaming:", abs_path, "using naming scheme:", scheme)
 				return parent_name
 
 			// <parent: 1>

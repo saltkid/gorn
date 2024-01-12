@@ -1409,16 +1409,46 @@ func Test_SplitRegexByPipe(t *testing.T) {
 		}
 	}
 
-	parts = SplitRegexByPipe(`(a(b)c)|d`)
+	parts = SplitRegexByPipe(`(a\(b\)c)|d`)
 	if len(parts) != 2 {
-		if parts[0] != "(a(b)c)" {
-			t.Errorf("expected '(a(b)c)'; got '%s'", parts[0])
+		if parts[0] != `(a\(b\)c)` {
+			t.Errorf(`expected '(a\(b\)c)'; got '%s'`, parts[0])
 		}
-		if parts[1] != "d" {
+		if len(parts) > 1 && parts[1] != "d" {
 			t.Errorf("expected 'd'; got '%s'", parts[1])
 		}
 	} else {
-		t.Log(`'(a(b)c)|d'`, "\n\t", parts)
+		t.Log(`'(a\(b\)c)|d'`, "\n\t", parts)
+		for _, part := range parts {
+			t.Log("\t", part, "has only one match group?", HasOnlyOneMatchGroup(part))
+		}
+	}
+
+	parts = SplitRegexByPipe(`(a[(b)]c)|d`)
+	if len(parts) != 2 {
+		if parts[0] != `(a[(b)]c)` {
+			t.Errorf(`expected '(a[(b)]c)'; got '%s'`, parts[0])
+		}
+		if len(parts) > 1 && parts[1] != "d" {
+			t.Errorf("expected 'd'; got '%s'", parts[1])
+		}
+	} else {
+		t.Log(`'(a[(b)]c)|d'`, "\n\t", parts)
+		for _, part := range parts {
+			t.Log("\t", part, "has only one match group?", HasOnlyOneMatchGroup(part))
+		}
+	}
+
+	parts = SplitRegexByPipe(`(a\[\(b\)\]c)|d`)
+	if len(parts) != 2 {
+		if parts[0] != `(a\[\(b\)\]c)` {
+			t.Errorf(`expected '(a\[\(b\)\]c)'; got '%s'`, parts[0])
+		}
+		if len(parts) > 1 && parts[1] != "d" {
+			t.Errorf("expected 'd'; got '%s'", parts[1])
+		}
+	} else {
+		t.Log(`'(a\[\(b\)\]c)|d'`, "\n\t", parts)
 		for _, part := range parts {
 			t.Log("\t", part, "has only one match group?", HasOnlyOneMatchGroup(part))
 		}

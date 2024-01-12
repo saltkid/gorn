@@ -151,15 +151,37 @@ func SplitRegexByPipe(s string) []string {
 	var parts []string
 	depth := 0
 	part_start := 0
+	inBrackets := false
 
 	for i, c := range s {
 		if c == '|' && depth == 0 {
 			parts = append(parts, s[part_start:i])
 			part_start = i + 1
+
 		} else if c == '(' {
+			if i > 0 && s[i-1] == '\\' {
+				continue
+			}
 			depth++
+
 		} else if c == ')' {
+			if i > 0 && s[i-1] == '\\' {
+				continue
+			}
 			depth--
+
+		} else if c == '[' && !inBrackets {
+			// check if escaped
+			if i > 0 && s[i-1] == '\\' {
+				continue
+			}
+			inBrackets = true
+		} else if c == ']' && inBrackets {
+			// check if escaped
+			if i > 0 && s[i-1] == '\\' {
+				continue
+			}
+			inBrackets = false
 		}
 	}
 
@@ -180,13 +202,49 @@ func HasOnlyOneMatchGroup(s string) bool {
 	openingCount := 0
 	closingCount := 0
 	matchGroupCount := 0
+	inBrackets := false
 
-	for _, c := range s {
+	for i, c := range s {
 		if c == '(' {
+			// check if escaped
+			if i > 0 && s[i-1] == '\\' {
+				continue
+			}
+			if i+1 < len(s) && s[i+1] == '?' {
+				if i+2 < len(s) && s[i+2] == ':' {
+					continue
+				}
+				openingCount++
+			}
+			if inBrackets {
+				continue
+			}
 			openingCount++
+
 		} else if c == ')' && closingCount < openingCount {
+			// check if escaped
+			if s[i-1] == '\\' {
+				continue
+			}
+			if inBrackets {
+				continue
+			}
 			closingCount++
 			matchGroupCount++
+
+		} else if c == '[' && !inBrackets {
+			// check if escaped
+			if i > 0 && s[i-1] == '\\' {
+				continue
+			}
+			inBrackets = true
+		
+		} else if c == ']' && inBrackets {
+			// check if escaped
+			if s[i-1] == '\\' {
+				continue
+			}
+			inBrackets = false
 		}
 	}
 
