@@ -137,41 +137,65 @@ func (movies *Movies) RenameEntries(options Flags) {
 }
 
 func (series *Series) RenameEntries(options Flags) {
+	wg := new(sync.WaitGroup)
+
 	log.Println(INFO, "Renaming named seasons...")
 	namedSeasonOptions := PromptOptionalFlags(options, "all named seasons", 0)
 	for _, v := range series.namedSeasons {
-		info := SeriesRenamePrereqs(v, NAMED_SEASONS, namedSeasonOptions)
-		info.Rename()
+		wg.Add(1)
+		go func(v string){
+			info := SeriesRenamePrereqs(v, NAMED_SEASONS, namedSeasonOptions)
+			info.Rename()
+			wg.Done()
+		}(v)
 	}
-	log.Println(INFO, "Done renaming named seasons.")
+	
 	log.Println(INFO, "Renaming single season no movies...")
 	ssnmOptions := PromptOptionalFlags(options, "all single season with no movies", 0)
 	for _, v := range series.singleSeasonNoMovies {
-		info := SeriesRenamePrereqs(v, SINGLE_SEASON_NO_MOVIES, ssnmOptions)
-		info.Rename()
+		wg.Add(1)
+		go func(v string){
+			info := SeriesRenamePrereqs(v, SINGLE_SEASON_NO_MOVIES, ssnmOptions)
+			info.Rename()
+			wg.Done()
+		}(v)
 	}
-	log.Println(INFO, "Done renaming single season no movies.")
+	
 	log.Println(INFO, "Renaming single season with movies...")
 	sswmOptions := PromptOptionalFlags(options, "all single season with movies", 0)
 	for _, v := range series.singleSeasonWithMovies {
-		info := SeriesRenamePrereqs(v, SINGLE_SEASON_WITH_MOVIES, sswmOptions)
-		info.Rename()
+		wg.Add(1)
+		go func(v string) {
+			info := SeriesRenamePrereqs(v, SINGLE_SEASON_WITH_MOVIES, sswmOptions)
+			info.Rename()
+			wg.Done()
+		}(v)
 	}
-	log.Println(INFO, "Done renaming single season with movies.")
+	
 	log.Println(INFO, "Renaming multiple season no movies...")
 	msnmOptions := PromptOptionalFlags(options, "all multiple season with no movies", 0)
 	for _, v := range series.multipleSeasonNoMovies {
-		info := SeriesRenamePrereqs(v, MULTIPLE_SEASON_NO_MOVIES, msnmOptions)
-		info.Rename()
+		wg.Add(1)
+		go func(v string){
+			info := SeriesRenamePrereqs(v, MULTIPLE_SEASON_NO_MOVIES, msnmOptions)
+			info.Rename()
+			wg.Done()
+		}(v)
 	}
-	log.Println(INFO, "Done renaming multiple season no movies.")
+	
 	log.Println(INFO, "Renaming multiple season with movies...")
 	mswmOptions := PromptOptionalFlags(options, "all multiple season with movies", 0)
 	for _, v := range series.multipleSeasonWithMovies {
-		info := SeriesRenamePrereqs(v, MULTIPLE_SEASON_WITH_MOVIES, mswmOptions)
-		info.Rename()
+		wg.Add(1)
+		go func(v string){
+			info := SeriesRenamePrereqs(v, MULTIPLE_SEASON_WITH_MOVIES, mswmOptions)
+			info.Rename()
+			wg.Done()
+		}(v)
 	}
-	log.Println(INFO, "Done renaming multiple season with movies.")
+	
+	wg.Wait()
+	log.Println(INFO, "Done renaming series entries.")
 }
 
 func (movie *Movies) LogEntries() {
