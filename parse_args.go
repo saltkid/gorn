@@ -14,6 +14,17 @@ type Arg struct {
 	name  string
 	value string
 }
+type LogFlag struct {
+	all    Option[bool]
+	header Option[[]string]
+	level  Option[int]
+}
+func IsValidLogHeader(header string) bool {
+	return 	header == "info" ||
+			header == "warn" ||
+			header == "fatal" ||
+			header == "time"
+}
 
 func TokenizeArgs(args []string) ([]Arg, error) {
 	defer timer("TokenizeArgs")()
@@ -40,6 +51,8 @@ func TokenizeArgs(args []string) ([]Arg, error) {
 		"-s0":               true,
 		"--naming-scheme":   true,
 		"-ns":               true,
+		"--logs":            true,
+		"-l":                true,
 	}
 	var newArg Arg
 	var value string
@@ -86,6 +99,7 @@ type Args struct {
 	series  []string
 	movies  []string
 	options Flags
+	log 	LogFlag
 }
 type Flags struct {
 	keepEpNums    Option[bool]
@@ -93,7 +107,6 @@ type Flags struct {
 	hasSeason0    Option[bool]
 	namingScheme  Option[string]
 }
-
 func newArgs() Args {
 	return Args{
 		root:   make([]string, 0),
@@ -105,12 +118,17 @@ func newArgs() Args {
 			startingEpNum: none[int](),
 			namingScheme:  none[string](),
 		},
+		log: LogFlag{
+			all:    some[bool](true),
+			header: none[[]string](),
+			level:  none[int](),
+		},
 	}
 }
 
 func (args *Args) Log() {
 	defer timer("Args.Log")()
-	
+
 	if len(args.root) > 0 {
 		log.Println(INFO, "root directories: ")
 		for _, root := range args.root {
@@ -165,6 +183,7 @@ func ParseArgs(args []Arg) (Args, error) {
 		"--starting-ep-num": false,
 		"--has-season-0":    false,
 		"--naming-scheme":   false,
+		"--logs":            false,
 	}
 
 	parsedArgs := newArgs()
@@ -308,7 +327,40 @@ func ParseArgs(args []Arg) (Args, error) {
 					parsedArgs.options.namingScheme = some[string](namingScheme)
 				}
 			}
+		} else if arg.name == "--logs" || arg.name == "-l" {
+			if isAssigned["--logs"] {
+				return Args{}, fmt.Errorf("only one --logs flag is allowed")
+			}
+			// default value
+			if arg.value == "" || arg.value == "all"{
+				isAssigned["--logs"] = true
 
+			} else if arg.value == "none" {
+				parsedArgs.log.all = some[bool](false)
+				isAssigned["--logs"] = true
+
+			} else if IsValidLogHeader(arg.value) {
+				if parsedArgs.log.header.IsNone() {
+					parsedArgs.log.header = some[[]string]([]string{arg.value})
+					parsedArgs.log.all = none[bool]()
+					isAssigned["--logs"] = true
+					continue
+				}
+				logHeader, _ := parsedArgs.log.header.Get()
+				logHeader = append(logHeader, arg.value)
+				parsedArgs.log.header = some[[]string](logHeader)
+
+			} else if value, err := strconv.Atoi(arg.value); err == nil {
+				if value < 1 || value > 3 {
+					return Args{}, fmt.Errorf("invalid value '%s' for --logs. Levels must be 1, 2, or 3", arg.value)
+				}
+				parsedArgs.log.level = some[int](value)
+				parsedArgs.log.all = none[bool]()
+				isAssigned["--logs"] = true
+
+			} else {
+				return Args{}, fmt.Errorf("invalid value '%s' for --logs. Must be 'all', 'none', a valid log header, or a log level (1,2,3)", arg.value)
+			}
 		} else {
 			return Args{}, fmt.Errorf("unknown flag: %s", arg.name)
 		}
