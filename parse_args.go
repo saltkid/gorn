@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -15,17 +16,19 @@ type Arg struct {
 }
 
 func TokenizeArgs(args []string) ([]Arg, error) {
+	defer timer("TokenizeArgs")()
+
 	var tokenizedArgs []Arg
 	isValidName := map[string]bool{
 		// commands
-		"root":              true,
-		"series":            true,
-		"movies":            true,
+		"root":   true,
+		"series": true,
+		"movies": true,
 		// switches
-		"--help":            true,
-		"-h":                true,
-		"--version":         true,
-		"-v":                true,
+		"--help":    true,
+		"-h":        true,
+		"--version": true,
+		"-v":        true,
 		// flags
 		"--options":         true,
 		"-o":                true,
@@ -51,6 +54,10 @@ func TokenizeArgs(args []string) ([]Arg, error) {
 				readValues = true
 			} else {
 				return nil, fmt.Errorf("start with invalid flag: '%s'", arg)
+			}
+			if i == len(args)-1 {
+				newArg.value = value
+				tokenizedArgs = append(tokenizedArgs, newArg)
 			}
 		} else {
 			if isValidName[arg] {
@@ -78,9 +85,9 @@ type Args struct {
 	root    []string
 	series  []string
 	movies  []string
-	options AdditionalOptions
+	options Flags
 }
-type AdditionalOptions struct {
+type Flags struct {
 	keepEpNums    Option[bool]
 	startingEpNum Option[int]
 	hasSeason0    Option[bool]
@@ -92,7 +99,7 @@ func newArgs() Args {
 		root:   make([]string, 0),
 		series: make([]string, 0),
 		movies: make([]string, 0),
-		options: AdditionalOptions{
+		options: Flags{
 			hasSeason0:    none[bool](),
 			keepEpNums:    none[bool](),
 			startingEpNum: none[int](),
@@ -101,9 +108,50 @@ func newArgs() Args {
 	}
 }
 
+func (args *Args) Log() {
+	defer timer("Args.Log")()
+	
+	if len(args.root) > 0 {
+		log.Println(INFO, "root directories: ")
+		for _, root := range args.root {
+			log.Println(INFO, "\t", root)
+		}
+	}
+	if len(args.series) > 0 {
+		log.Println(INFO, "series sources:")
+		for _, series := range args.series {
+			log.Println(INFO, "\t", series)
+		}
+	}
+	if len(args.movies) > 0 {
+		log.Println(INFO, "movies sources:")
+		for _, movie := range args.movies {
+			log.Println(INFO, "\t", movie)
+		}
+	}
+	ken, err := args.options.keepEpNums.Get()
+	if err == nil {
+		log.Println(INFO, "keep episode numbers: ", ken)
+	}
+	sen, err := args.options.startingEpNum.Get()
+	if err == nil {
+		log.Println(INFO, "starting episode number: ", sen)
+	}
+	s0, err := args.options.hasSeason0.Get()
+	if err == nil {
+		log.Println(INFO, "has season 0: ", s0)
+	}
+	ns, err := args.options.namingScheme.Get()
+	if err == nil {
+		log.Println(INFO, "naming scheme: ", ns)
+	}
+}
+
 func ParseArgs(args []Arg) (Args, error) {
+	defer timer("ParseArgs")()
+
 	if len(args) < 1 {
-		return Args{}, fmt.Errorf("not enough arguments")
+		return Args{}, fmt.Errorf("not enough arguments: '%v'", args)
 	}
 
 	directoryArgs := map[string]bool{
@@ -123,15 +171,15 @@ func ParseArgs(args []Arg) (Args, error) {
 	for i, arg := range args {
 		if arg.name == "--help" || arg.name == "-h" {
 			if len(args) <= i+1 {
-				Help("")
+				Help(arg.value)
 			} else if len(args) > i+1 {
 				Help(args[i+1].name)
 			}
-			return Args{}, fmt.Errorf("safe exit")
+			return Args{}, SafeErrorF("safe exit")
 
 		} else if arg.name == "--version" || arg.name == "-v" {
 			Version(version)
-			return Args{}, fmt.Errorf("safe exit")
+			return Args{}, SafeErrorF("safe exit")
 
 		} else if directoryArgs[arg.name] {
 			// no value after flag / flag after flag

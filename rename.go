@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 type Rename interface {
@@ -19,7 +21,7 @@ type SeriesInfo struct {
 	seriesType string
 	seasons    map[int]string
 	movies     []string
-	options    AdditionalOptions
+	options    Flags
 }
 
 type MovieInfo struct {
@@ -28,7 +30,7 @@ type MovieInfo struct {
 	movies    map[string]string
 }
 
-func (info *SeriesInfo) Rename() error {
+func (info *SeriesInfo) Rename() {
 	// for padding of season numbers when renaming: min 2 digits
 	maxSeasonDigits := len(strconv.Itoa(len(info.seasons)))
 	if maxSeasonDigits < 2 {
@@ -37,20 +39,7 @@ func (info *SeriesInfo) Rename() error {
 
 	// Rename episodes
 	for num, season := range info.seasons {
-		isValidType := map[string]bool{
-			"singleSeasonNoMovies":     true,
-			"singleSeasonWithMovies":   true,
-			"namedSeasons":             true,
-			"multipleSeasonNoMovies":   true,
-			"multipleSeasonWithMovies": true,
-		}
-		if !isValidType[info.seriesType] {
-			return fmt.Errorf("unknown series type: %s", info.seriesType)
-		}
-
 		seasonPath := filepath.Clean(info.path + "/" + season)
-		fmt.Println("path: ", seasonPath)
-
 		var mediaFiles []string
 		err := filepath.WalkDir(seasonPath, func(path string, d os.DirEntry, err error) error {
 			if err != nil {
@@ -62,7 +51,8 @@ func (info *SeriesInfo) Rename() error {
 			return nil
 		})
 		if err != nil {
-			return err
+			log.Println(WARN, "error reading media files:", err, "; skipping renaming all episodes in:", seasonPath)
+			continue
 		}
 		sort.Sort(FilenameSort(mediaFiles))
 
@@ -95,10 +85,12 @@ func (info *SeriesInfo) Rename() error {
 		}
 
 		if ken {
-			for _, file := range mediaFiles {
+			for i, file := range mediaFiles {
 				epNum, err = ReadEpisodeNum(file)
 				if err != nil {
-					return err
+					log.Println(WARN, "error reading episode number from", file, ":", err, "; skipping renaming")
+					// don't include this episode in renaming
+					mediaFiles = append(mediaFiles[:i], mediaFiles[i+1:]...)
 				}
 
 				tempMax := len(strconv.Itoa(epNum))
@@ -133,38 +125,39 @@ func (info *SeriesInfo) Rename() error {
 
 		for i, file := range mediaFiles {
 			title := DefaultTitle(info.seriesType, seasonOptions.namingScheme, info.path, seasonPath)
-			newName, err := GenerateNewName(seasonOptions.namingScheme, // namingScheme
+			newName := GenerateNewName(seasonOptions.namingScheme, // namingScheme
 				maxSeasonDigits, num, // season_pad, season_num
 				maxEpDigits, epNums[i], // ep_pad, epNum
 				title, file) // title, file path
-			if err != nil {
-				return err
-			}
+			
+			// TODO: decide whether to turn this into log or not
+			// fmt.Println(fmt.Sprintf("%-*s", 20, file), " --> ", fmt.Sprintf("%*s", 20, newName))
+			// fmt.Println("old", file, "\nnew", newName)
 
-			fmt.Println(fmt.Sprintf("%-*s", 20, file), " --> ", fmt.Sprintf("%*s", 20, newName))
-			fmt.Println("old", file, "\nnew", newName)
 			_, err = os.Stat(newName)
 			if err == nil {
-				fmt.Println("renaming", filepath.Base(file), "to", filepath.Base(newName)+" failed: file already exists")
+				log.Println(WARN, "file already exists: renaming", filepath.Base(file), "to", filepath.Base(newName), "failed; skipping renaming:", file)
 				continue
 			} else if os.IsNotExist(err) {
 				err = os.Rename(file, newName)
 				if err != nil {
-					return err
+					log.Println(WARN, "renaming error:", err, "; skipping renaming:", file)
+					continue
 				}
 			} else {
-				return err
+				log.Println(WARN, "unexpected error when checking if file exists before renaming:", err)
+				continue
 			}
 		}
-		fmt.Println()
 	}
 
 	// Rename movies if needed
-	if info.seriesType == "singleSeasonWithMovies" || info.seriesType == "multipleSeasonWithMovies" {
+	if info.seriesType == SINGLE_SEASON_WITH_MOVIES || info.seriesType == MULTIPLE_SEASON_WITH_MOVIES {
 		for _, movie := range info.movies {
 			files, err := os.ReadDir(info.path + "/" + movie)
 			if err != nil {
-				return err
+				log.Println(WARN, "error reading media files under ", info.path+"/"+movie, ":", err, "; skipping renaming")
+				continue
 			}
 
 			mediaFiles := make([]string, 0)
@@ -178,62 +171,119 @@ func (info *SeriesInfo) Rename() error {
 			}
 
 			if len(mediaFiles) > 1 {
-				return fmt.Errorf("multiple media files found in %s for a movie direcotry in %s", movie, info.path+"/"+filepath.Base(movie))
+				log.Println(WARN, "multiple media files found in supposed movie directory under series:", info.path+"/"+movie, "; skipping renaming")
+				continue
 			} else if len(mediaFiles) == 0 {
-				return fmt.Errorf("no media files found in %s for a movie directory in %s", movie, info.path+"/"+filepath.Base(movie))
+				log.Println(WARN, "no media files found in:", info.path+"/"+movie, "; skipping renaming")
+				continue
 			}
 
 			newName := fmt.Sprintf("%s %s%s", filepath.Base(info.path), filepath.Base(movie), filepath.Ext(mediaFiles[0]))
-			fmt.Println(fmt.Sprintf("%-*s", 20, mediaFiles[0]), " --> ", fmt.Sprintf("%*s", 20, newName))
-			fmt.Println("old", info.path+"/"+movie+"/"+mediaFiles[0], "new", info.path+"/"+movie+"/"+newName)
+			// TODO: decide whether to turn this into log or not
+			// fmt.Println(fmt.Sprintf("%-*s", 20, mediaFiles[0]), " --> ", fmt.Sprintf("%*s", 20, newName))
+			// fmt.Println("old", info.path+"/"+movie+"/"+mediaFiles[0], "new", info.path+"/"+movie+"/"+newName)
 			err = os.Rename(info.path+"/"+movie+"/"+mediaFiles[0], info.path+"/"+movie+"/"+newName)
 			if err != nil {
-				return err
+				log.Println(WARN, "renaming error:", err, "; skipping renaming:", info.path+"/"+movie+"/"+mediaFiles[0])
+				continue
 			}
 		}
 	}
-	return nil
 }
 
-func (info *MovieInfo) Rename() error {
+func (info *MovieInfo) Rename(wg *sync.WaitGroup) {
 	for dir, file := range info.movies {
-		newName := CleanTitle(dir) + filepath.Ext(file)
-		old_name := file
-		if info.movieType == "movieSet" {
-			old_name = dir + "/" + old_name
-			newName = dir + "/" + newName
+		wg.Add(1)
+		go func(dir string, file string) {
+			defer wg.Done()
+
+			newName := CleanTitle(dir) + filepath.Ext(file)
+			old_name := file
+			if info.movieType == "movieSet" {
+				old_name = dir + "/" + old_name
+				newName = dir + "/" + newName
+			}
+	
+			// TODO: decide whether to turn this into log or not
+			// fmt.Println(fmt.Sprintf("%-*s", 20, old_name), " --> ", fmt.Sprintf("%*s", 20, newName))
+			// fmt.Println("old", info.path+"/"+old_name, "new", info.path+"/"+newName)
+			_, err := os.Stat(info.path+"/"+newName)
+			if err == nil {
+				log.Println(WARN, "file already exists: renaming", filepath.Base(old_name), "to", filepath.Base(newName), "failed; skipping renaming:", info.path+"/"+old_name)
+				return
+			} else if os.IsNotExist(err) {
+				err = os.Rename(info.path+"/"+old_name, info.path+"/"+newName)
+				if err != nil {
+					log.Println(WARN, "renaming error:", err, "; skipping renaming:", info.path+"/"+old_name)
+					return
+				}
+			} else {
+				log.Println(WARN, "unexpected error when checking if file exists before renaming:", err)
+				return
+			}
+		}(dir, file)
+	}
+}
+
+// valid filename substring formats
+//
+// case insensitive
+// can have spaces between season part and episode part (`S01 x E02`, `S01. E02`, `S01 _E02`, `S01 E02`)
+// but can't have spaces between episode/season indicator and episode/season number.
+// separators like `-` or `_` are allowed and can be repeated (`S01---E02`, `S01 __ E02`, `S01 xxE02`, `S01    E02`)
+//
+// S01E02 | S03.E04 | S05_E06 | S07-E08 | S09xE10 | S11 E12
+//
+// 01.02 | 03_04 | 05-06 | 07x08 | 09 10
+//
+// Episode 01 | Episode02 | EP03 | EP-04 | E_05 | EP.06
+func ReadEpisodeNum(file string) (int, error) {
+
+	// https://regex-vis.com/?r=s%5Cd%2B%5Cs*%28%3F%3Ax*%7C_*%7C-*%7C%5B.%5D*%29%5Cs*e%28%5Cd%2B%29%7C%5Cd%2B%5Cs*%28%3F%3Ax%2B%7C_%2B%7C-%2B%7C%5B.%5D%2B%29%5Cs*%28%5Cd%2B%29%7Cep%3F%28%3F%3Aisode%29%3F%5Cs*%28%3F%3A_%2B%7C-%2B%7C%5B.%5D%2B%29%5Cs*%28%5Cd%2B%29&e=0
+	// match_id:											 			    [1]				   				   [2]									       [3]
+	// captured:                                             				vv                    			   vv                 						   vv
+	// substring:		                      s 01      x  _  -   .      e  02 | 03      x  _  -   .           04 |ep    isode          _  -   .           05
+	episodePattern := regexp.MustCompile(`(?i)s\d+\s*(?:x*|_*|-*|[.]*)\s*e(\d+)|\d+\s*(?:x+|_+|-+|[.]+)\s*(\d+)|ep?(?:isode)?\s*(?:_+|-+|[.]+)\s*(\d+)`)
+	match := episodePattern.FindStringSubmatch(file)
+	if len(match) > 1 {
+		epNumStr := ""
+		for _, v := range match[1:] {
+			if v != "" && epNumStr != "" {
+				return 0, fmt.Errorf("multiple episode numbers found in %s: '%s', '%s' and '%s'", file, match[1], match[2], match[3])
+			} else if v != "" {
+				epNumStr = v
+			}
+		}
+		if epNumStr == "" {
+			return 0, fmt.Errorf("could not find episode number in %s", file)
 		}
 
-		fmt.Println(fmt.Sprintf("%-*s", 20, old_name), " --> ", fmt.Sprintf("%*s", 20, newName))
-		fmt.Println("old", info.path+"/"+old_name, "new", info.path+"/"+newName)
-		err := os.Rename(info.path+"/"+old_name, info.path+"/"+newName)
+		epNum, err := strconv.Atoi(epNumStr)
 		if err != nil {
-			return err
+			return 0, err
 		}
+		return epNum, nil
+	} else {
+		return 0, fmt.Errorf("could not find episode number in %s", file)
 	}
-	return nil
 }
 
 func DefaultTitle(seriesType string, namingScheme Option[string], path string, seasonPath string) string {
 	var title string
-	if seriesType == "singleSeasonNoMovies" || seriesType == "multipleSeasonNoMovies" || seriesType == "multipleSeasonWithMovies" {
+	if seriesType == SINGLE_SEASON_NO_MOVIES || seriesType == MULTIPLE_SEASON_NO_MOVIES || seriesType == MULTIPLE_SEASON_WITH_MOVIES {
 		title = filepath.Base(path)
-	} else if seriesType == "singleSeasonWithMovies" {
+	} else if seriesType == SINGLE_SEASON_WITH_MOVIES {
 		title = filepath.Base(seasonPath)
-	} else if seriesType == "namedSeasons" {
+	} else if seriesType == NAMED_SEASONS {
 		title = filepath.Base(path) + " " + filepath.Base(seasonPath)
 	}
 	return CleanTitle(title)
 }
 
-func GenerateNewName(namingScheme Option[string], season_pad int, season_num int, ep_pad int, epNum int, title string, abs_path string) (string, error) {
+func GenerateNewName(namingScheme Option[string], season_pad int, season_num int, ep_pad int, epNum int, title string, abs_path string) string {
 	var newName string
-	ns, _ := namingScheme.Get()
-	if namingScheme.IsSome() && ns != "default" {
-		scheme, err := namingScheme.Get()
-		if err != nil {
-			return "", err
-		}
+	scheme, _ := namingScheme.Get()
+	if namingScheme.IsSome() && scheme != "default" {
 		// replace <season_num>
 		newName = regexp.MustCompile(`<season_num(\s*:\s*\d+)?>`).ReplaceAllStringFunc(scheme, func(match string) string {
 			// <season_num: \d+>
@@ -313,6 +363,7 @@ func GenerateNewName(namingScheme Option[string], season_pad int, season_num int
 				regex_pattern := strings.Trim(val, "'")
 				_, err := regexp.Compile(regex_pattern)
 				if err != nil {
+					log.Println(WARN, "invalid regex:", regex_pattern, "; using entire parent name:", parent_name, " instead in renaming:", abs_path, "using naming scheme:", scheme)	
 					return parent_name
 				}
 				sub_regexes := SplitRegexByPipe(regex_pattern)
@@ -323,7 +374,7 @@ func GenerateNewName(namingScheme Option[string], season_pad int, season_num int
 						return sub_match[1]
 					}
 				}
-				// did not find a substring match
+				log.Println(WARN, "no substring match found in regex:", regex_pattern, "; using entire parent name:", parent_name, " instead in renaming:", abs_path, "using naming scheme:", scheme)
 				return parent_name
 
 			// <parent: 1>
@@ -338,7 +389,7 @@ func GenerateNewName(namingScheme Option[string], season_pad int, season_num int
 		// append ext
 		newName = filepath.Join(filepath.Dir(abs_path), fmt.Sprintf("%s%s", newName, filepath.Ext(abs_path)))
 
-	} else if namingScheme.IsNone() || ns == "default" {
+	} else if namingScheme.IsNone() || scheme == "default" {
 		newName = fmt.Sprintf("S%0*dE%0*d %s%s",
 			season_pad, season_num,
 			ep_pad, epNum,
@@ -346,5 +397,36 @@ func GenerateNewName(namingScheme Option[string], season_pad int, season_num int
 		newName = filepath.Join(filepath.Dir(abs_path), newName)
 	}
 
-	return newName, nil
+	return newName
+}
+
+func ParentTokenToInt(s string) (int, error) {
+	// lmao https://regex-vis.com/?r=%3Cparent%28-parent%29*%28%5Cs*%3A%5Cs*%28%28%5Cd+%5Cs*%2C%5Cs*%5Cd+%29%7C%28%27%5B%5E%27%5D*%27%29%29%29%3F%5Cs*%3E&e=0
+	longForm := regexp.MustCompile(`<parent(-parent)*(\s*:\s*((\d+(\s*,\s*\d+)?)|('[^']*')))?\s*>`)
+	// lul https://regex-vis.com/?r=%3Cp%28-%5Cd%2B%29%3F%28%5Cs*%3A%5Cs*%28%28%5Cd%5Cs*%2C%5Cs*%5Cd%29%7C%28%27%5B%5E%27%5D*%27%29%29%29%3F%5Cs*%3E&e=0
+	shortForm := regexp.MustCompile(`<p(-\d+)?(\s*:\s*((\d+(\s*,\s*\d+)?)|('[^']*')))?\s*>`)
+
+	if longForm.MatchString(s) {
+		return strings.Count(s, "parent"), nil
+
+	} else if shortForm.MatchString(s) {
+		// only p
+		singleP := regexp.MustCompile(`p\s*[^-]:?`)
+		if singleP.MatchString(s) {
+			return 1, nil
+		}
+		// p-int
+		matchNum := regexp.MustCompile(`p-(\d+)`).FindStringSubmatch(s)
+		if len(matchNum) != 2 {
+			return 0, fmt.Errorf("invalid parent token: %s", s)
+		}
+		num, err := strconv.Atoi(matchNum[1])
+		if err != nil {
+			return 0, err
+		}
+		return num, nil
+
+	} else {
+		return 0, fmt.Errorf("invalid parent token: %s", s)
+	}
 }

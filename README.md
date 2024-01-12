@@ -7,50 +7,51 @@ ___
     2. [Flags](#flags)
 ___ 
 # [Overview](https://github.com/saltkid/gorn/wiki)
-Renames your movies and series based on directory naming and structure. Note that you still have to rename directories, just not the individual media files themselves. This is for easier metadata scraping when using jellyfin, kodi, plex, etc.
+Renames your movies and series based on directory naming and structure. Note that you still have to rename directories, just not the individual media files themselves. This is for easier metadata scraping.
 
 # [Prerequisites](https://github.com/saltkid/gorn/wiki/Directory-Structure)
 Have at least one of any of these directories:
-1. **root directory containing series roots and/or movie roots (subroots)**
+1. **root directory containing series source and/or movie source**
 ```
 <root dir>
-|__ <series root dir 1>
+|__ <series source dir 1>
 |   |__ <series entry 1>
 |   |   |__ ...
 |   |
 |   |__ <series entry 2>
 |       |__ ...
 |
-|__ <movie root dir 1>
+|__ <movie source dir 1>
     |__ <movie entry 1>
     |   |__ ...
     |
     |__ <movie entry 2>
         |__ ...
 
-where ... may mean media files or subdirectories (like extras, specials, subs, etc)
 ```
-*Note that there can be multiple series/movie subroots in the same root directory.*
+*where ... may mean media files or subdirectories (like extras, specials, subs, etc)*
 
-2. **series subroot directory containing series entries**
+*Note that there can be multiple series/movie sources in the same root directory.*
+
+2. **series source directory containing series entries**
 ```
-<series root dir 1>
+<series source dir 1>
 |__ <series entry 1>
 |   |__ ...
 |
 |__ <series entry 2>
     |__ ...
 ```
-3. **movie subroot directory containing movie entries**
+3. **movie source directory containing movie entries**
 ```
-<movie root dir 1>
+<movie source dir 1>
     |__ <movie entry 1>
     |   |__ ...
     |
     |__ <movie entry 2>
         |__ ...
 ```
-For a more detailed explanation of recommended directory structures, different series/movie types depending on structure, see [this wiki page](https://github.com/saltkid/gorn/wiki/Directory-Structure)
+For a more detailed explanation of recommended directory structures, different series/movie types, default naming schemes, and more, see [this wiki page](https://github.com/saltkid/gorn/wiki/Directory-Structure)
 ___
 # [Usage](https://github.com/saltkid/gorn/wiki/Usage)
 To rename all series and movies in the root directory based on directory naming and structure:
@@ -58,20 +59,20 @@ To rename all series and movies in the root directory based on directory naming 
 gorn root path/to/root/dir
 ```
 
-User can specify multiple root/subroot directories to rename:
+User can specify multiple root/source directories to rename:
 ```
 gorn root path/to/root/dir root path/to/another/root/dir
 ```
 
-User can specify series and movie subroot dirs separately. User can also specify multiple subroot dirs. Other than that, it shares the same default renaming behavior as specifying a root dir
+User can specify series and movie source dirs separately. User can also specify multiple source dirs. Other than that, it shares the same default renaming behavior as specifying a root dir
 ```
-gorn series path/to/series/subroot/dir
-```
-```
-gorn movies path/to/movies/subroot/dir
+gorn series path/to/series/source/dir
 ```
 ```
-gorn root path/to/root/dir series path/to/series/subroot/dir movies path/to/movies/subroot/dir
+gorn movies path/to/movies/source/dir
+```
+```
+gorn root path/to/root/dir series path/to/series/source/dir movies path/to/movies/source/dir
 ```
 ## [Switches](https://github.com/saltkid/gorn/wiki/Usage#switches)
 Switches are flags that switch the behavior of **gorn** from its default behavior of renaming media files. For a more detailed explanation, see [this wiki page](https://github.com/saltkid/gorn/wiki/Usage#switches)
