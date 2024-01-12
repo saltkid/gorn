@@ -200,12 +200,11 @@ func FetchSeriesContent(path string, sType string, hasSeason0 bool) (map[int]str
 		}
 
 		if hasSeason0 {
-			if seasons[0] != "" {
-				log.Println(WARN, "multiple specials/extras directories found [", seasons[0], ",", subdir.Name(), "]; skipping renaming entry:", path )
-				return make(map[int]string), make([]string, 0)
-			}
-
 			if extrasPattern.MatchString(subdir.Name()) {
+				if seasons[0] != "" {
+					log.Println(WARN, "multiple specials/extras directories found [", seasons[0], ",", subdir.Name(), "]; skipping renaming entry:", path )
+					return make(map[int]string), make([]string, 0)
+				}
 				seasons[0] = subdir.Name()
 				continue
 			}
