@@ -16,6 +16,8 @@ type Arg struct {
 }
 
 func TokenizeArgs(args []string) ([]Arg, error) {
+	defer timer("TokenizeArgs")()
+
 	var tokenizedArgs []Arg
 	isValidName := map[string]bool{
 		// commands
@@ -107,6 +109,8 @@ func newArgs() Args {
 }
 
 func (args *Args) Log() {
+	defer timer("Args.Log")()
+	
 	if len(args.root) > 0 {
 		log.Println(INFO, "root directories: ")
 		for _, root := range args.root {
@@ -144,6 +148,8 @@ func (args *Args) Log() {
 }
 
 func ParseArgs(args []Arg) (Args, error) {
+	defer timer("ParseArgs")()
+
 	if len(args) < 1 {
 		return Args{}, fmt.Errorf("not enough arguments: '%v'", args)
 	}

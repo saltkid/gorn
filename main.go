@@ -61,6 +61,8 @@ func ProcessMedia(mediaFiles MediaFiles, entries []string, flags Flags, wg *sync
 }
 
 func LogRawEntries(seriesEntries []string, movieEntries []string) {
+	defer timer("LogRawEntries")()
+	
 	log.Println(INFO, "series dirs (", len(seriesEntries), "): ")
 	for _, series := range seriesEntries {
 		log.Println(INFO, "\t", series)
@@ -80,6 +82,8 @@ func LogRawEntries(seriesEntries []string, movieEntries []string) {
 //
 // Returns the series entries and movie entries as string slices.
 func FetchEntries(rootDirs []string, seriesDirs []string, movieDirs []string) ([]string, []string) {
+	defer timer("FetchEntries")()
+
 	entries := map[string][]string{
 		"movies": make([]string, 0),
 		"series": make([]string, 0),

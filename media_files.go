@@ -164,6 +164,8 @@ func (series *Series) RenameEntries(options Flags) {
 }
 
 func (movie *Movies) LogEntries() {
+	defer timer("movies LogEntries")()
+
 	log.Println(INFO, "categorized movies: ")
 	log.Println(INFO, "standalone: ")
 	for _, v := range movie.standalone {
@@ -176,6 +178,7 @@ func (movie *Movies) LogEntries() {
 }
 
 func (series *Series) LogEntries() {
+	defer timer("series LogEntries")()
 	log.Println(INFO, "categorized series: ")
 	log.Println(INFO, "named seasons: ")
 	for _, v := range series.namedSeasons {
