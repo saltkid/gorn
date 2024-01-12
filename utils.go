@@ -1,3 +1,5 @@
+// utils.go
+// contains helper functions that are general purpose
 package main
 
 import (
@@ -12,6 +14,9 @@ import (
 	"unicode"
 )
 
+// checks if a file is a media file through checking the file extension
+//
+// current media extensions: .mkv, .mp4, .avi, .mov, .webm, .ts
 func IsMediaFile(file string) bool {
 	// TODO: find a better way to identify media files
 	mediaExtensions := map[string]bool{
@@ -25,6 +30,8 @@ func IsMediaFile(file string) bool {
 	return mediaExtensions[filepath.Ext(file)]
 }
 
+// checks if a series entry contains a movie subdir through checking
+// if the subdir name is not a season or an extras/specials subdir
 func HasMovie(path string) (bool, error) {
 	files, err := os.ReadDir(path)
 	if err != nil {
@@ -45,50 +52,9 @@ func HasMovie(path string) (bool, error) {
 	return false, nil
 }
 
-// valid filename substring formats
+// natural sorting of filenames
 //
-// case insensitive
-// can have spaces between season part and episode part (`S01 x E02`, `S01. E02`, `S01 _E02`, `S01 E02`)
-// but can't have spaces between episode/season indicator and episode/season number.
-// separators like `-` or `_` are allowed and can be repeated (`S01---E02`, `S01 __ E02`, `S01 xxE02`, `S01    E02`)
-//
-// S01E02 | S03.E04 | S05_E06 | S07-E08 | S09xE10 | S11 E12
-//
-// 01.02 | 03_04 | 05-06 | 07x08 | 09 10
-//
-// Episode 01 | Episode02 | EP03 | EP-04 | E_05 | EP.06
-func ReadEpisodeNum(file string) (int, error) {
-
-	// https://regex-vis.com/?r=s%5Cd%2B%5Cs*%28%3F%3Ax*%7C_*%7C-*%7C%5B.%5D*%29%5Cs*e%28%5Cd%2B%29%7C%5Cd%2B%5Cs*%28%3F%3Ax%2B%7C_%2B%7C-%2B%7C%5B.%5D%2B%29%5Cs*%28%5Cd%2B%29%7Cep%3F%28%3F%3Aisode%29%3F%5Cs*%28%3F%3A_%2B%7C-%2B%7C%5B.%5D%2B%29%5Cs*%28%5Cd%2B%29&e=0
-	// match_id:											 			    [1]				   				   [2]									       [3]
-	// captured:                                             				vv                    			   vv                 						   vv
-	// substring:		                      s 01      x  _  -   .      e  02 | 03      x  _  -   .           04 |ep    isode          _  -   .           05
-	episodePattern := regexp.MustCompile(`(?i)s\d+\s*(?:x*|_*|-*|[.]*)\s*e(\d+)|\d+\s*(?:x+|_+|-+|[.]+)\s*(\d+)|ep?(?:isode)?\s*(?:_+|-+|[.]+)\s*(\d+)`)
-	match := episodePattern.FindStringSubmatch(file)
-	if len(match) > 1 {
-		epNumStr := ""
-		for _, v := range match[1:] {
-			if v != "" && epNumStr != "" {
-				return 0, fmt.Errorf("multiple episode numbers found in %s: '%s', '%s' and '%s'", file, match[1], match[2], match[3])
-			} else if v != "" {
-				epNumStr = v
-			}
-		}
-		if epNumStr == "" {
-			return 0, fmt.Errorf("could not find episode number in %s", file)
-		}
-
-		epNum, err := strconv.Atoi(epNumStr)
-		if err != nil {
-			return 0, err
-		}
-		return epNum, nil
-	} else {
-		return 0, fmt.Errorf("could not find episode number in %s", file)
-	}
-}
-
-// filename renaming
+// usage: sort.Sort(FilenameSort(slice of paths))
 type FilenameSort []string
 
 // implement sort.Interface (Len, Less, Swap)
@@ -149,6 +115,7 @@ func SplitFilename(filename string) []string {
 	return parts
 }
 
+// checks if a string is a valid number
 func IsNumeric(s string) bool {
 	_, err := strconv.Atoi(s)
 	return err == nil
@@ -175,6 +142,11 @@ func CleanTitle(title string) string {
 	return title
 }
 
+// splits a regex by outermost pipes
+//
+// example:
+//	`a|b|c|d|e` --> `a`, `b`, `c`, `d`, `e`
+//	`a|(b|c|d|e)` --> `a`, `(b|c|d|e)`
 func SplitRegexByPipe(s string) []string {
 	var parts []string
 	depth := 0
@@ -195,6 +167,15 @@ func SplitRegexByPipe(s string) []string {
 	return parts
 }
 
+// checks if a regex has only one match group
+//
+// note that this is usually called after SplitRegexByPipe so outermost pipes are removed first
+//
+// examples:
+//	`(a|b)` --> true
+//	`(a(b)a)` --> false
+//	`(a|b|c)` --> true
+//	`a` --> true
 func HasOnlyOneMatchGroup(s string) bool {
 	openingCount := 0
 	closingCount := 0
@@ -215,37 +196,12 @@ func HasOnlyOneMatchGroup(s string) bool {
 	return matchGroupCount == 1
 }
 
-func ParentTokenToInt(s string) (int, error) {
-	// lmao https://regex-vis.com/?r=%3Cparent%28-parent%29*%28%5Cs*%3A%5Cs*%28%28%5Cd+%5Cs*%2C%5Cs*%5Cd+%29%7C%28%27%5B%5E%27%5D*%27%29%29%29%3F%5Cs*%3E&e=0
-	longForm := regexp.MustCompile(`<parent(-parent)*(\s*:\s*((\d+(\s*,\s*\d+)?)|('[^']*')))?\s*>`)
-	// lul https://regex-vis.com/?r=%3Cp%28-%5Cd%2B%29%3F%28%5Cs*%3A%5Cs*%28%28%5Cd%5Cs*%2C%5Cs*%5Cd%29%7C%28%27%5B%5E%27%5D*%27%29%29%29%3F%5Cs*%3E&e=0
-	shortForm := regexp.MustCompile(`<p(-\d+)?(\s*:\s*((\d+(\s*,\s*\d+)?)|('[^']*')))?\s*>`)
-
-	if longForm.MatchString(s) {
-		return strings.Count(s, "parent"), nil
-
-	} else if shortForm.MatchString(s) {
-		// only p
-		singleP := regexp.MustCompile(`p\s*[^-]:?`)
-		if singleP.MatchString(s) {
-			return 1, nil
-		}
-		// p-int
-		matchNum := regexp.MustCompile(`p-(\d+)`).FindStringSubmatch(s)
-		if len(matchNum) != 2 {
-			return 0, fmt.Errorf("invalid parent token: %s", s)
-		}
-		num, err := strconv.Atoi(matchNum[1])
-		if err != nil {
-			return 0, err
-		}
-		return num, nil
-
-	} else {
-		return 0, fmt.Errorf("invalid parent token: %s", s)
-	}
-}
-
+// returns the nth parent directory
+//
+// examples:
+// 	ParentN("a/b/c", 1) --> "a/b"
+// 	ParentN("a/b/c", 2) --> "a"
+// 	ParentN("a/b/c", 3) --> ""
 func ParentN(path string, n int) string {
 	for i := 0; i < n; i++ {
 		path = filepath.Dir(path)
@@ -253,16 +209,21 @@ func ParentN(path string, n int) string {
 	return filepath.Base(path)
 }
 
+// specifically for exiting safely when user passed these switches:
+//	`--help, -h`
+//	`--version, -v`
 type SafeError struct {
 	safe error
 }
 
+// acts exactly like fmt.Errorf but returns a SafeError instead of error
 func SafeErrorF(s string, args ...interface{}) SafeError {
 	return SafeError{
 		safe: fmt.Errorf(s, args...),
 	}
 }
 
+// returns the underlying safe error as a string
 func (s SafeError) Error() string {
 	return s.safe.Error()
 }

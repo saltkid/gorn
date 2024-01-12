@@ -225,13 +225,56 @@ func (info *MovieInfo) Rename(wg *sync.WaitGroup) {
 	}
 }
 
+// valid filename substring formats
+//
+// case insensitive
+// can have spaces between season part and episode part (`S01 x E02`, `S01. E02`, `S01 _E02`, `S01 E02`)
+// but can't have spaces between episode/season indicator and episode/season number.
+// separators like `-` or `_` are allowed and can be repeated (`S01---E02`, `S01 __ E02`, `S01 xxE02`, `S01    E02`)
+//
+// S01E02 | S03.E04 | S05_E06 | S07-E08 | S09xE10 | S11 E12
+//
+// 01.02 | 03_04 | 05-06 | 07x08 | 09 10
+//
+// Episode 01 | Episode02 | EP03 | EP-04 | E_05 | EP.06
+func ReadEpisodeNum(file string) (int, error) {
+
+	// https://regex-vis.com/?r=s%5Cd%2B%5Cs*%28%3F%3Ax*%7C_*%7C-*%7C%5B.%5D*%29%5Cs*e%28%5Cd%2B%29%7C%5Cd%2B%5Cs*%28%3F%3Ax%2B%7C_%2B%7C-%2B%7C%5B.%5D%2B%29%5Cs*%28%5Cd%2B%29%7Cep%3F%28%3F%3Aisode%29%3F%5Cs*%28%3F%3A_%2B%7C-%2B%7C%5B.%5D%2B%29%5Cs*%28%5Cd%2B%29&e=0
+	// match_id:											 			    [1]				   				   [2]									       [3]
+	// captured:                                             				vv                    			   vv                 						   vv
+	// substring:		                      s 01      x  _  -   .      e  02 | 03      x  _  -   .           04 |ep    isode          _  -   .           05
+	episodePattern := regexp.MustCompile(`(?i)s\d+\s*(?:x*|_*|-*|[.]*)\s*e(\d+)|\d+\s*(?:x+|_+|-+|[.]+)\s*(\d+)|ep?(?:isode)?\s*(?:_+|-+|[.]+)\s*(\d+)`)
+	match := episodePattern.FindStringSubmatch(file)
+	if len(match) > 1 {
+		epNumStr := ""
+		for _, v := range match[1:] {
+			if v != "" && epNumStr != "" {
+				return 0, fmt.Errorf("multiple episode numbers found in %s: '%s', '%s' and '%s'", file, match[1], match[2], match[3])
+			} else if v != "" {
+				epNumStr = v
+			}
+		}
+		if epNumStr == "" {
+			return 0, fmt.Errorf("could not find episode number in %s", file)
+		}
+
+		epNum, err := strconv.Atoi(epNumStr)
+		if err != nil {
+			return 0, err
+		}
+		return epNum, nil
+	} else {
+		return 0, fmt.Errorf("could not find episode number in %s", file)
+	}
+}
+
 func DefaultTitle(seriesType string, namingScheme Option[string], path string, seasonPath string) string {
 	var title string
-	if seriesType == "singleSeasonNoMovies" || seriesType == "multipleSeasonNoMovies" || seriesType == "multipleSeasonWithMovies" {
+	if seriesType == SINGLE_SEASON_NO_MOVIES || seriesType == MULTIPLE_SEASON_NO_MOVIES || seriesType == MULTIPLE_SEASON_WITH_MOVIES {
 		title = filepath.Base(path)
-	} else if seriesType == "singleSeasonWithMovies" {
+	} else if seriesType == SINGLE_SEASON_WITH_MOVIES {
 		title = filepath.Base(seasonPath)
-	} else if seriesType == "namedSeasons" {
+	} else if seriesType == NAMED_SEASONS {
 		title = filepath.Base(path) + " " + filepath.Base(seasonPath)
 	}
 	return CleanTitle(title)
@@ -354,4 +397,35 @@ func GenerateNewName(namingScheme Option[string], season_pad int, season_num int
 	}
 
 	return newName
+}
+
+func ParentTokenToInt(s string) (int, error) {
+	// lmao https://regex-vis.com/?r=%3Cparent%28-parent%29*%28%5Cs*%3A%5Cs*%28%28%5Cd+%5Cs*%2C%5Cs*%5Cd+%29%7C%28%27%5B%5E%27%5D*%27%29%29%29%3F%5Cs*%3E&e=0
+	longForm := regexp.MustCompile(`<parent(-parent)*(\s*:\s*((\d+(\s*,\s*\d+)?)|('[^']*')))?\s*>`)
+	// lul https://regex-vis.com/?r=%3Cp%28-%5Cd%2B%29%3F%28%5Cs*%3A%5Cs*%28%28%5Cd%5Cs*%2C%5Cs*%5Cd%29%7C%28%27%5B%5E%27%5D*%27%29%29%29%3F%5Cs*%3E&e=0
+	shortForm := regexp.MustCompile(`<p(-\d+)?(\s*:\s*((\d+(\s*,\s*\d+)?)|('[^']*')))?\s*>`)
+
+	if longForm.MatchString(s) {
+		return strings.Count(s, "parent"), nil
+
+	} else if shortForm.MatchString(s) {
+		// only p
+		singleP := regexp.MustCompile(`p\s*[^-]:?`)
+		if singleP.MatchString(s) {
+			return 1, nil
+		}
+		// p-int
+		matchNum := regexp.MustCompile(`p-(\d+)`).FindStringSubmatch(s)
+		if len(matchNum) != 2 {
+			return 0, fmt.Errorf("invalid parent token: %s", s)
+		}
+		num, err := strconv.Atoi(matchNum[1])
+		if err != nil {
+			return 0, err
+		}
+		return num, nil
+
+	} else {
+		return 0, fmt.Errorf("invalid parent token: %s", s)
+	}
 }
