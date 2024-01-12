@@ -283,9 +283,15 @@ func timer(name string) func() {
 
 // for logging purposes
 const (
+	// for informational purposes
 	INFO = "[INFO] " 					// no color
+
+	// can safely skip error, doesn't interrupt process
 	WARN = "\033[93m[WARN]\033[0m "		// yellow
-	ERROR = "\033[91m[ERROR]\033[0m "	// red
+	
+	// cannot safely skip error, must interrupt process
 	FATAL = "\033[91m[FATAL]\033[0m "	// red
+	
+	// for timing purposes
 	TIME = "\033[94m[TIME]\033[0m "		// blue
 )
