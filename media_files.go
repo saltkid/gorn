@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -42,8 +41,7 @@ func (movie *Movies) SplitByType(entries []string) {
 	for _, movieEntry := range entries {
 		files, err := os.ReadDir(movieEntry)
 		if err != nil {
-			log.Println(ERROR, "error reading movie entry:", movieEntry)
-			log.Println(ERROR, "skipping categorizing entry:", movieEntry)
+			log.Println(WARN, "there was anerror reading movie entry:", err, "; skipping categorizing entry:", movieEntry)
 			continue
 		}
 
@@ -66,8 +64,7 @@ func (series *Series) SplitByType(entries []string) {
 	for _, seriesEntry := range entries {
 		files, err := os.ReadDir(seriesEntry)
 		if err != nil {
-			log.Println(ERROR, "error reading series entry:", seriesEntry)
-			log.Println(ERROR, "skipping categorizing entry:", seriesEntry)
+			log.Println(WARN, "there was an error reading series entry:", err, "; skipping categorizing entry:", seriesEntry)
 			continue
 		}
 		
@@ -113,52 +110,57 @@ func (series *Series) SplitByType(entries []string) {
 }
 
 func (movies *Movies) RenameEntries(options Flags) {
-	log.Println(INFO, "Renaming standalone movies")
+	log.Println(INFO, "Renaming standalone movies..")
 	for _, v := range movies.standalone {
 		info := MovieRenamePrereqs(v, STANDALONE)
 		info.Rename()
 	}
-	fmt.Println()
+	log.Println(INFO, "Done renaming standalone movies.")
 
-	log.Println(INFO, "Renaming movie set")
+	log.Println(INFO, "Renaming movie sets...")
 	for _, v := range movies.movieSet {
 		info := MovieRenamePrereqs(v, MOVIE_SET)
 		info.Rename()
 	}
-	fmt.Println()
+	log.Println(INFO, "Done renaming movie sets.")
 }
 
 func (series *Series) RenameEntries(options Flags) {
-	log.Println(INFO, "Renaming named seasons")
+	log.Println(INFO, "Renaming named seasons...")
 	namedSeasonOptions := PromptOptionalFlags(options, "all named seasons", 0)
 	for _, v := range series.namedSeasons {
 		info := SeriesRenamePrereqs(v, NAMED_SEASONS, namedSeasonOptions)
 		info.Rename()
 	}
-	log.Println(INFO, "Renaming single season no movies")
+	log.Println(INFO, "Done renaming named seasons.")
+	log.Println(INFO, "Renaming single season no movies...")
 	ssnmOptions := PromptOptionalFlags(options, "all single season with no movies", 0)
 	for _, v := range series.singleSeasonNoMovies {
 		info := SeriesRenamePrereqs(v, SINGLE_SEASON_NO_MOVIES, ssnmOptions)
 		info.Rename()
 	}
-	log.Println(INFO, "Renaming single season with movies")
+	log.Println(INFO, "Done renaming single season no movies.")
+	log.Println(INFO, "Renaming single season with movies...")
 	sswmOptions := PromptOptionalFlags(options, "all single season with movies", 0)
 	for _, v := range series.singleSeasonWithMovies {
 		info := SeriesRenamePrereqs(v, SINGLE_SEASON_WITH_MOVIES, sswmOptions)
 		info.Rename()
 	}
-	log.Println(INFO, "Renaming multiple season no movies")
+	log.Println(INFO, "Done renaming single season with movies.")
+	log.Println(INFO, "Renaming multiple season no movies...")
 	msnmOptions := PromptOptionalFlags(options, "all multiple season with no movies", 0)
 	for _, v := range series.multipleSeasonNoMovies {
 		info := SeriesRenamePrereqs(v, MULTIPLE_SEASON_NO_MOVIES, msnmOptions)
 		info.Rename()
 	}
-	log.Println(INFO, "Renaming multiple season with movies")
+	log.Println(INFO, "Done renaming multiple season no movies.")
+	log.Println(INFO, "Renaming multiple season with movies...")
 	mswmOptions := PromptOptionalFlags(options, "all multiple season with movies", 0)
 	for _, v := range series.multipleSeasonWithMovies {
 		info := SeriesRenamePrereqs(v, MULTIPLE_SEASON_WITH_MOVIES, mswmOptions)
 		info.Rename()
 	}
+	log.Println(INFO, "Done renaming multiple season with movies.")
 }
 
 func (movie *Movies) LogEntries() {

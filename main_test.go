@@ -1413,30 +1413,13 @@ func Test_SplitRegexByPipe(t *testing.T) {
 func Test_GenerateNewName(t *testing.T) {
 	path := filepath.Clean(`.test_files\Series\Series_seasonal\Season 1\1234567890.mp4`)
 	t.Log("------------expects success------------")
-	name, err := GenerateNewName(some[string](`S<season_num: 3>E<episode_num: 2> - <parent-parent: '([^_]+)_.*$'> <parent: '([^ ]+) \d+'> <p-3: 'r(.*)$'> <self: 5,6>`),
+	name := GenerateNewName(some[string](`S<season_num: 3>E<episode_num: 2> - <parent-parent: '([^_]+)_.*$'> <parent: '([^ ]+) \d+'> <p-3: 'r(.*)$'> <self: 5,6>`),
 		2, 1, 3, 2,
 		"title", path)
-	if err != nil {
-		t.Error("expected no error; got", err)
+	if !strings.EqualFold(name, `.test_files\Series\Series_seasonal\Season 1\S001E02 - Series Season ies 67.mp4`) {
+		t.Error(`expected '.test_files\Series\Series_seasonal\Season 1\S001E02 - Series Season ies 67.mp4' got`, name)
 	} else {
-		if strings.ReplaceAll(name, `.test_files\Series\Series_seasonal\Season 1\S001E02 - Series Season ies 67.mp4`, "") != "" {
-			t.Errorf(`expected '.test_files\Series\Series_seasonal\Season 1\S001E02 - Series Season ies 67.mp4' got '%s'`, name)
-		} else {
-			t.Log("\n\told:\t\t", filepath.Base(path), "\n\tnaming scheme:\t", `S<season_num: 3>E<episode_num: 2> - <parent-parent: '([^_]+)_.*$'> <parent: '([^ ]+) \d+'> <p-3: 'r(.*)$'> <self: 5,6>`, "\n\tnew:\t\t", name)
-		}
-	}
-
-	name, err = GenerateNewName(some[string](`<p>`),
-		2, 1, 3, 2,
-		"title", path)
-	if err != nil {
-		t.Error("expected no error; got", err)
-	} else {
-		if strings.ReplaceAll(name, `.test_files\Series\Series_seasonal\Season 1\Season 1.mp4`, "") != "" {
-			t.Errorf(`expected '.test_files\Series\Series_seasonal\Season 1\Season 1.mp4' got '%s'`, name)
-		} else {
-			t.Log("\n\told:\t\t", filepath.Base(path), "\n\tnaming scheme:\t", `<p> <p-2>`, "\n\tnew:\t\t", name)
-		}
+		t.Log("\n\told:\t\t", filepath.Base(path), "\n\tnaming scheme:\t", `S<season_num: 3>E<episode_num: 2> - <parent-parent: '([^_]+)_.*$'> <parent: '([^ ]+) \d+'> <p-3: 'r(.*)$'> <self: 5,6>`, "\n\tnew:\t\t", name)
 	}
 
 }

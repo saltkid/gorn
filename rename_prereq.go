@@ -184,8 +184,7 @@ func FetchSeriesContent(path string, sType string, hasSeason0 bool) (map[int]str
 
 	subdirs, err := os.ReadDir(path)
 	if err != nil {
-		log.Println(ERROR, "error reading series entry:", path)
-		log.Println(ERROR, "skipping renaming entry:", path)
+		log.Println(WARN, "there was an error reading series entry:", err, "; skipping renaming entry:", path)
 		return seasons, movies
 	}
 
@@ -202,8 +201,7 @@ func FetchSeriesContent(path string, sType string, hasSeason0 bool) (map[int]str
 
 		if hasSeason0 {
 			if seasons[0] != "" {
-				log.Println(WARN, "multiple specials/extras directories found")
-				log.Println(WARN, "skipping renaming entry:", path)
+				log.Println(WARN, "multiple specials/extras directories found [", seasons[0], ",", subdir.Name(), "]; skipping renaming entry:", path )
 				return make(map[int]string), make([]string, 0)
 			}
 
@@ -265,8 +263,7 @@ func MovieRenamePrereqs(path string, mType string) (MovieInfo) {
 
 	subdirs, err := os.ReadDir(path)
 	if err != nil {
-		log.Println(ERROR, "error reading movie entry:", path)
-		log.Println(ERROR, "skipping renaming entry:", path)
+		log.Println(WARN, "error reading movie entry:", err, "; skipping renaming entry:", path)
 		return info
 	}
 
@@ -283,8 +280,7 @@ func MovieRenamePrereqs(path string, mType string) (MovieInfo) {
 					info.movies[filepath.Base(path)] = subdir.Name()
 					continue
 				} else {
-					log.Println(WARN, "multiple media files found in supposedly standalone movie directory")
-					log.Println(WARN, "skipping renaming entry:", path)
+					log.Println(WARN, "multiple media files found in supposedly standalone movie directory: [", info.movies[filepath.Base(path)], ",", subdir.Name(), "]; skipping renaming entry:", path )
 					return defaultInfo
 				}
 			}
@@ -301,29 +297,31 @@ func MovieRenamePrereqs(path string, mType string) (MovieInfo) {
 
 			files, err := os.ReadDir(filepath.Join(path, subdir.Name()))
 			if err != nil {
-				log.Println(ERROR, "error reading entry:", filepath.Join(path, subdir.Name()))
-				log.Println(ERROR, "skipping renaming entry:", path)
+				log.Println(WARN, "error reading entry:", filepath.Join(path, subdir.Name()), "; skipping renaming entry:", path)
 				return defaultInfo
 			}
 
 			movieCount := 0
+			skipEntry := false
 			for _, file := range files {
 				if IsMediaFile(file.Name()) {
 					if movieCount > 0 {
-						log.Println(WARN, "multiple media files found in", file)
-						log.Println(WARN, "skipping renaming movie:", subdir, "under movie set:", path)
-						continue
+						log.Println(WARN, "multiple media files found in", file, ": [", info.movies[subdir.Name()], ",", file.Name(), "]; skipping renaming movie:", subdir, "under movie set:", path)
+						skipEntry = true
+						break
 					}
 
 					info.movies[subdir.Name()] = file.Name()
 					movieCount++
 				}
 			}
+			if skipEntry {
+				continue
+			}
 
 			if movieCount == 0 {
-				log.Println(WARN, "no media files found in", subdir.Name())
-				log.Println(WARN, "skipping renaming entry:", subdir)
-				return defaultInfo
+				log.Println(WARN, "no media files found in", subdir.Name(), "; skipping renaming movie entry:", subdir)
+				continue
 			}
 		}
 	}

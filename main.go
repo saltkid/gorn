@@ -147,11 +147,7 @@ func SeparateRoots(root string) (map[string][]string) {
 	})
 
 	if err != nil {
-		log.Println(ERROR, err)
-		return map[string][]string{
-			"movies": {},
-			"series": {},
-		}
+		log.Println(WARN, "there was an error reading root directory", err)
 	}
 
 	if len(rootDirs["movies"]) == 0 && len(rootDirs["series"]) == 0 {
@@ -178,8 +174,7 @@ func FetchSubdirs(dir string) []string {
 	})
 
 	if err != nil {
-		log.Println(ERROR, err)
-		return []string{}
+		log.Println(WARN, "there was an error reading directory:", err)
 	}
 
 	if len(entries) == 0 {
