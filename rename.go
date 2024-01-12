@@ -135,12 +135,12 @@ func (info *SeriesInfo) Rename() {
 
 			_, err = os.Stat(newName)
 			if err == nil {
-				log.Println(WARN, "renaming", filepath.Base(file), "to", filepath.Base(newName), "failed: file already exists; skipping renaming:", file)
+				log.Println(WARN, "file already exists: renaming", filepath.Base(file), "to", filepath.Base(newName), "failed; skipping renaming:", file)
 				continue
 			} else if os.IsNotExist(err) {
 				err = os.Rename(file, newName)
 				if err != nil {
-					log.Println(WARN, "error renaming", filepath.Base(file), "to", filepath.Base(newName), ":", err, "; skipping renaming:", file)
+					log.Println(WARN, "renaming error:", err, "; skipping renaming:", file)
 					continue
 				}
 			} else {
@@ -183,7 +183,7 @@ func (info *SeriesInfo) Rename() {
 			// fmt.Println("old", info.path+"/"+movie+"/"+mediaFiles[0], "new", info.path+"/"+movie+"/"+newName)
 			err = os.Rename(info.path+"/"+movie+"/"+mediaFiles[0], info.path+"/"+movie+"/"+newName)
 			if err != nil {
-				log.Println(WARN, "error renaming", mediaFiles[0], "to", newName, ":", err, "; skipping renaming:", info.path+"/"+movie+"/"+mediaFiles[0])
+				log.Println(WARN, "renaming error:", err, "; skipping renaming:", info.path+"/"+movie+"/"+mediaFiles[0])
 				continue
 			}
 		}
@@ -204,12 +204,12 @@ func (info *MovieInfo) Rename() {
 		// fmt.Println("old", info.path+"/"+old_name, "new", info.path+"/"+newName)
 		_, err := os.Stat(info.path+"/"+newName)
 		if err == nil {
-			log.Println(WARN, "renaming", filepath.Base(old_name), "to", filepath.Base(newName), "failed: file already exists; skipping renaming:", info.path+"/"+old_name)
+			log.Println(WARN, "file already exists: renaming", filepath.Base(old_name), "to", filepath.Base(newName), "failed; skipping renaming:", info.path+"/"+old_name)
 			continue
 		} else if os.IsNotExist(err) {
 			err = os.Rename(info.path+"/"+old_name, info.path+"/"+newName)
 			if err != nil {
-				log.Println(WARN, "error renaming", filepath.Base(old_name), "to", filepath.Base(newName), ":", err, "; skipping renaming:", info.path+"/"+old_name)
+				log.Println(WARN, "renaming error:", err, "; skipping renaming:", info.path+"/"+old_name)
 				continue
 			}
 		} else {

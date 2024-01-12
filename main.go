@@ -147,7 +147,7 @@ func SeparateRoots(root string) (map[string][]string) {
 	})
 
 	if err != nil {
-		log.Println(WARN, "there was an error reading root directory", err)
+		log.Println(WARN, "reading root directory error:", err)
 	}
 
 	if len(rootDirs["movies"]) == 0 && len(rootDirs["series"]) == 0 {

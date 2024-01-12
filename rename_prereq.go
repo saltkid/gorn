@@ -184,7 +184,7 @@ func FetchSeriesContent(path string, sType string, hasSeason0 bool) (map[int]str
 
 	subdirs, err := os.ReadDir(path)
 	if err != nil {
-		log.Println(WARN, "there was an error reading series entry:", err, "; skipping renaming entry:", path)
+		log.Println(WARN, "error reading series entry:", err, "; skipping renaming entry:", path)
 		return seasons, movies
 	}
 
