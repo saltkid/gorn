@@ -180,20 +180,17 @@ func HasOnlyOneMatchGroup(s string) bool {
 	openingCount := 0
 	closingCount := 0
 	matchGroupCount := 0
-	depth := 0
 
 	for _, c := range s {
-		if c == '(' && depth == 0 {
+		if c == '(' {
 			openingCount++
-			depth++
-		} else if c == ')' && depth == 1 {
+		} else if c == ')' && closingCount < openingCount {
 			closingCount++
 			matchGroupCount++
-			depth--
 		}
 	}
 
-	return matchGroupCount == 1
+	return matchGroupCount == 1 || matchGroupCount == 0
 }
 
 // returns the nth parent directory

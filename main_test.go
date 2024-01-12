@@ -1408,6 +1408,21 @@ func Test_SplitRegexByPipe(t *testing.T) {
 			t.Log("\t", part, "has only one match group?", HasOnlyOneMatchGroup(part))
 		}
 	}
+
+	parts = SplitRegexByPipe(`(a(b)c)|d`)
+	if len(parts) != 2 {
+		if parts[0] != "(a(b)c)" {
+			t.Errorf("expected '(a(b)c)'; got '%s'", parts[0])
+		}
+		if parts[1] != "d" {
+			t.Errorf("expected 'd'; got '%s'", parts[1])
+		}
+	} else {
+		t.Log(`'(a(b)c)|d'`, "\n\t", parts)
+		for _, part := range parts {
+			t.Log("\t", part, "has only one match group?", HasOnlyOneMatchGroup(part))
+		}
+	}
 }
 
 func Test_GenerateNewName(t *testing.T) {
