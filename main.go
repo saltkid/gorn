@@ -53,6 +53,11 @@ func main() {
 	series.LogEntries()
 }
 
+// ProcessMedia first categorizes the entries by type, then renames them using the given flags.
+// 	mediaFiles: The media files to process. This should be a pointer to a struct that implements the MediaFiles interface
+//	entries: The entries to categorize by type
+//	flags: The flags to use for renaming
+//	wg: The wait group to use for synchronization
 func ProcessMedia(mediaFiles MediaFiles, entries []string, flags Flags, wg *sync.WaitGroup) {
 	defer timer("ProcessMedia")()
 	mediaFiles.SplitByType(entries)
@@ -60,6 +65,7 @@ func ProcessMedia(mediaFiles MediaFiles, entries []string, flags Flags, wg *sync
 	wg.Done()
 }
 
+// LogRawEntries logs the uncategorized series and movie entries to the console.
 func LogRawEntries(seriesEntries []string, movieEntries []string) {
 	defer timer("LogRawEntries")()
 	
@@ -76,12 +82,12 @@ func LogRawEntries(seriesEntries []string, movieEntries []string) {
 
 // FetchEntries retrieves the series and movie entries from the given root, series, and movie directories.
 //
-// rootDirs: A slice of root directories to search for entries.
-// seriesDirs: A slice of series directories to search for entries.
-// movieDirs: A slice of movie directories to search for entries.
+//	rootDirs: A slice of root directories to search for entries.
+//	seriesSourceDirs: A slice of series directories to search for entries.
+//	movieSourceDirs: A slice of movie directories to search for entries.
 //
-// Returns the series entries and movie entries as string slices.
-func FetchEntries(rootDirs []string, seriesDirs []string, movieDirs []string) ([]string, []string) {
+//	Returns the series entries and movie entries as string slices.
+func FetchEntries(rootDirs []string, seriesSourceDirs []string, movieSourceDirs []string) ([]string, []string) {
 	defer timer("FetchEntries")()
 
 	entries := map[string][]string{
@@ -89,9 +95,9 @@ func FetchEntries(rootDirs []string, seriesDirs []string, movieDirs []string) ([
 		"series": make([]string, 0),
 	}
 	for _, root := range rootDirs {
-		separated := SeparateRoots(root)
+		sources := FetchSourcesFromRoot(root)
 
-		for key, roots := range separated {
+		for key, roots := range sources {
 			for _, dir := range roots {
 				subdirs := FetchSubdirs(dir)
 				entries[key] = append(entries[key], subdirs...)
@@ -99,11 +105,11 @@ func FetchEntries(rootDirs []string, seriesDirs []string, movieDirs []string) ([
 		}
 	}
 
-	for _, v := range seriesDirs {
+	for _, v := range seriesSourceDirs {
 		subdirs := FetchSubdirs(v)
 		entries["series"] = append(entries["series"], subdirs...)
 	}
-	for _, v := range movieDirs {
+	for _, v := range movieSourceDirs {
 		subdirs := FetchSubdirs(v)
 		entries["movies"] = append(entries["movies"], subdirs...)
 	}
@@ -111,16 +117,21 @@ func FetchEntries(rootDirs []string, seriesDirs []string, movieDirs []string) ([
 	return entries["series"], entries["movies"]
 }
 
-func SeparateRoots(root string) (map[string][]string) {
-	rootDirs := map[string][]string{
+// FetchSourcesFromRoot retrieves the source directories from the given root.
+//
+// Sources are directories containing entries:
+//	- series source directories contains series entries
+//	- movie source directories contains movie entries
+func FetchSourcesFromRoot(root string) (map[string][]string) {
+	sourceDirs := map[string][]string{
 		"movies": {},
 		"series": {},
 	}
-	validMoviePathNames := map[string]bool{
+	validMovieSourceNames := map[string]bool{
 		"movies": true,
 		"movie":  true,
 	}
-	validSeriesPathNames := map[string]bool{
+	validSeriesSourceNames := map[string]bool{
 		"series":  true,
 		"shows":   true,
 		"show":    true,
@@ -137,12 +148,12 @@ func SeparateRoots(root string) (map[string][]string) {
 			// Get only directories of depth 1 (directly under root)
 			if path != root && filepath.Dir(path) == root {
 				dirName := strings.ToLower(filepath.Base(path))
-				if validMoviePathNames[dirName] {
-					rootDirs["movies"] = append(rootDirs["movies"], path)
+				if validMovieSourceNames[dirName] {
+					sourceDirs["movies"] = append(sourceDirs["movies"], path)
 					return filepath.SkipDir
 
-				} else if validSeriesPathNames[dirName] {
-					rootDirs["series"] = append(rootDirs["series"], path)
+				} else if validSeriesSourceNames[dirName] {
+					sourceDirs["series"] = append(sourceDirs["series"], path)
 					return filepath.SkipDir
 				}
 			}
@@ -154,22 +165,25 @@ func SeparateRoots(root string) (map[string][]string) {
 		log.Println(WARN, "reading root directory error:", err)
 	}
 
-	if len(rootDirs["movies"]) == 0 && len(rootDirs["series"]) == 0 {
-		log.Println(WARN, "no movie or series directory found under", root)
+	if len(sourceDirs["movies"]) == 0 && len(sourceDirs["series"]) == 0 {
+		log.Println(WARN, "no movie and/or series source directories found under:", root)
 	}
 
-	return rootDirs
+	return sourceDirs
 }
 
-func FetchSubdirs(dir string) []string {
+// FetchSubdirs retrieves the actual entries of the given source directory.
+// 	- if source is a series source, this returns series entries
+//	- if source is a movie source, this returns movie entries
+func FetchSubdirs(source string) []string {
 	entries := []string{}
-	err := filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
+	err := filepath.WalkDir(source, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 		if d.IsDir() {
 			// Get only directories of depth 1 (directly under series dir) and does not start with a '.'
-			if path != dir && filepath.Dir(path) == dir && !strings.HasPrefix(filepath.Base(path), ".") {
+			if path != source && filepath.Dir(path) == source && !strings.HasPrefix(filepath.Base(path), ".") {
 				entries = append(entries, path)
 				return filepath.SkipDir
 			}
@@ -182,7 +196,7 @@ func FetchSubdirs(dir string) []string {
 	}
 
 	if len(entries) == 0 {
-		log.Println(WARN, "no entries found under", dir)
+		log.Println(WARN, "no entries found under", source)
 	}
 
 	return entries

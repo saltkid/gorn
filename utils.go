@@ -16,7 +16,8 @@ import (
 
 // checks if a file is a media file through checking the file extension
 //
-// current media extensions: .mkv, .mp4, .avi, .mov, .webm, .ts
+// current media extensions:
+//	`.mkv`, `.mp4`, `.avi`, `.mov`, `.webm`, `.ts`
 func IsMediaFile(file string) bool {
 	// TODO: find a better way to identify media files
 	mediaExtensions := map[string]bool{
@@ -56,7 +57,6 @@ func HasMovie(path string) (bool, error) {
 //
 // usage: sort.Sort(FilenameSort(slice of paths))
 type FilenameSort []string
-
 // implement sort.Interface (Len, Less, Swap)
 
 func (f FilenameSort) Len() int {
@@ -194,10 +194,12 @@ func SplitRegexByPipe(s string) []string {
 // note that this is usually called after SplitRegexByPipe so outermost pipes are removed first
 //
 // examples:
-//	`(a|b)` --> true
-//	`(a(b)a)` --> false
-//	`(a|b|c)` --> true
-//	`a` --> true
+//	`a` 		--> true
+//	`(a)` 		--> true
+//	`(a|b)` 	--> true
+//	`(a(b)a)` 	--> false
+//	`(a\(b\)c)`	--> true
+// 	`(a[(b)]c)`	--> true
 func HasOnlyOneMatchGroup(s string) bool {
 	openingCount := 0
 	closingCount := 0
@@ -253,10 +255,10 @@ func HasOnlyOneMatchGroup(s string) bool {
 
 // returns the nth parent directory
 //
-// examples:
-// 	ParentN("a/b/c", 1) --> "a/b"
-// 	ParentN("a/b/c", 2) --> "a"
-// 	ParentN("a/b/c", 3) --> ""
+//	examples:
+// 	ParentN("path/to/dir", 1) --> "to"
+// 	ParentN("path/to/dir", 2) --> "path"
+// 	ParentN("path/to/dir", 3) --> ""
 func ParentN(path string, n int) string {
 	for i := 0; i < n; i++ {
 		path = filepath.Dir(path)
@@ -299,7 +301,7 @@ func timer(name string) func() {
 
 // for logging purposes
 const (
-	// for informational purposes
+	// for informational logs
 	INFO = "[INFO] " 					// no color
 
 	// can safely skip error, doesn't interrupt process

@@ -11,6 +11,10 @@ import (
 	"strings"
 )
 
+// SeriesRenamePrereqs returns a SeriesInfo with information needed to rename a series entry.
+//	path: The path of the series.
+//	sType: The type of series.
+//	options: Flags for the prompt.
 func SeriesRenamePrereqs(path string, sType string, options Flags) (SeriesInfo) {
 	// if flags are none aka user inputted var, ask for user input again
 	options = PromptOptionalFlags(options, path, 1)
@@ -178,6 +182,10 @@ func PromptOptionalFlags(options Flags, path string, level int8) Flags {
 	return options
 }
 
+// FetchSeriesContent retrieves the season directories and movie directories from the given series entry.
+//	path: The path of the series entry.
+//	sType: The type of series.
+//	hasSeason0: Whether the series has a season 0 directory.
 func FetchSeriesContent(path string, sType string, hasSeason0 bool) (map[int]string, []string) {
 	seasons := make(map[int]string)
 	movies := make([]string, 0)
@@ -252,6 +260,9 @@ func FetchSeriesContent(path string, sType string, hasSeason0 bool) (map[int]str
 	return seasons, movies
 }
 
+// MovieRenamePrereqs returns a MovieInfo with information needed to rename a movie entry.
+//	path: The path of the movie.
+//	mType: The type of movie.
 func MovieRenamePrereqs(path string, mType string) (MovieInfo) {
 	info := MovieInfo{
 		path:      path,
