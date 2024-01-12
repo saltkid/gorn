@@ -40,6 +40,7 @@ func Help(val string) {
 		HelpSEN(false)
 		HelpS0(false)
 		HelpNS(false)
+		HelpLogs(false)
 	case "-h", "--help":
 		HelpHelp(true)
 	case "-v", "--version":
@@ -58,6 +59,8 @@ func Help(val string) {
 		HelpS0(true)
 	case "-ns", "--naming-scheme":
 		HelpNS(true)
+	case "-l", "--logs":
+		HelpLogs(true)
 	default:
 		log.Println(WARN, "invalid value for 'help':", val) 
 		Help("")
@@ -230,5 +233,30 @@ func HelpNS(verbose bool) {
 		fmt.Println("\n    4. <self>")
 		fmt.Println("       same as parent but instead of being based on the parent directory name, it is based on the name of the media file before renaming it")
 		fmt.Println("       additional options are the same as well except for `<p-number>`. self has no short form")
+	}
+}
+
+func HelpLogs(verbose bool) {
+	fmt.Printf("%-60s%s", "  --logs, -l",
+	"Prints the logs to the console\n")
+	fmt.Println("    args: all | none | <header/s> | <levels>")
+	if verbose {
+		fmt.Println("\n  examples: gorn -l all")
+		fmt.Println("            gorn -l info warn")
+		fmt.Println("            gorn -l level 2")
+		fmt.Println("\n  Headers:")
+		fmt.Println("    info: informational logs")
+		fmt.Println("    warn: warning logs; errors that can be safely skipped and does not interrupt process")
+		fmt.Println("    fatal: errors that cannot be safely skipped and will interrupt process")
+		fmt.Println("    time: logs for timing processes; for performance purposes")
+		fmt.Println("\n  Levels:")
+		fmt.Println("    1: show info, warn, and fatal logs")
+		fmt.Println("    2: show warn and fatal logs")
+		fmt.Println("    3: show only fatal logs")
+		log.Println("\n  Notes:")
+		log.Println("    - if no args are specified, all logs will be shown")
+		log.Println("    - if any header is specified, no other type of arg can be specified")
+		log.Println("      - same goes for <levels> and all/none args")
+		log.Println("      - example: 'gorn -l info level 1' is invalid because info is specified as a header, but a level is specified as an arg, which will confuse gorn")
 	}
 }
