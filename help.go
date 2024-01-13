@@ -237,13 +237,13 @@ func HelpNS(verbose bool) {
 }
 
 func HelpLogs(verbose bool) {
-	fmt.Printf("%-60s%s", "  --logs, -l",
+	fmt.Printf("%-60s%s", "  --log, -l",
 	"Prints the logs to the console\n")
 	fmt.Println("    args: all | none | <header>")
 	if verbose {
-		fmt.Println("\n  examples: gorn -l all")
-		fmt.Println("            gorn -l info warn")
-		fmt.Println("            gorn -l 2")
+		fmt.Println("\n  examples: gorn -l")
+		fmt.Println("            gorn -l all")
+		fmt.Println("            gorn -l info")
 		fmt.Println("\n  Headers:")
 		fmt.Println("    info: informational logs")
 		fmt.Println("        : shows info, warn, and fatal logs")
