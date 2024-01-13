@@ -215,22 +215,8 @@ func Test_ParseArgs(t *testing.T) {
 		} else {
 			t.Log(cmd, "\n\t", err)
 		}
-
-		t.Log("------------expects success------------")
 	}
-	cmd = "root ./test_files -l 1"
-	command = strings.Split(cmd, " ")
-	rawArgs, err = TokenizeArgs(command)
-	if err != nil {
-		t.Errorf("unexpected error: '%s'", err)
-	} else {
-		pa, err := ParseArgs(rawArgs)
-		if err != nil {
-			t.Errorf("unexpected error: %s", err)
-		} else {
-			t.Log(cmd, "\n\t", pa.log)
-		}
-	}
+	t.Log("------------expects success------------")
 	cmd = "root ./test_files -l all"
 	command = strings.Split(cmd, " ")
 	rawArgs, err = TokenizeArgs(command)

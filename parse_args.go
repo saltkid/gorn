@@ -14,17 +14,6 @@ type Arg struct {
 	name  string
 	value string
 }
-type LogFlag struct {
-	all    Option[bool]
-	header Option[[]string]
-	level  Option[int]
-}
-func IsValidLogHeader(header string) bool {
-	return 	header == "info" ||
-			header == "warn" ||
-			header == "fatal" ||
-			header == "time"
-}
 
 func TokenizeArgs(args []string) ([]Arg, error) {
 	defer timer("TokenizeArgs")()
@@ -35,11 +24,13 @@ func TokenizeArgs(args []string) ([]Arg, error) {
 		"root":   true,
 		"series": true,
 		"movies": true,
+
 		// switches
 		"--help":    true,
 		"-h":        true,
 		"--version": true,
 		"-v":        true,
+
 		// flags
 		"--options":         true,
 		"-o":                true,
@@ -107,6 +98,16 @@ type Flags struct {
 	hasSeason0    Option[bool]
 	namingScheme  Option[string]
 }
+type LogFlag struct {
+	all    Option[bool]
+	header Option[string]
+}
+func IsValidLogHeader(header string) bool {
+	return 	header == "info" ||
+			header == "warn" ||
+			header == "fatal" ||
+			header == "time"
+}
 func newArgs() Args {
 	return Args{
 		root:   make([]string, 0),
@@ -120,8 +121,7 @@ func newArgs() Args {
 		},
 		log: LogFlag{
 			all:    some[bool](true),
-			header: none[[]string](),
-			level:  none[int](),
+			header: none[string](),
 		},
 	}
 }
@@ -340,26 +340,12 @@ func ParseArgs(args []Arg) (Args, error) {
 				isAssigned["--logs"] = true
 
 			} else if IsValidLogHeader(arg.value) {
-				if parsedArgs.log.header.IsNone() {
-					parsedArgs.log.header = some[[]string]([]string{arg.value})
-					parsedArgs.log.all = none[bool]()
-					isAssigned["--logs"] = true
-					continue
-				}
-				logHeader, _ := parsedArgs.log.header.Get()
-				logHeader = append(logHeader, arg.value)
-				parsedArgs.log.header = some[[]string](logHeader)
-
-			} else if value, err := strconv.Atoi(arg.value); err == nil {
-				if value < 1 || value > 3 {
-					return Args{}, fmt.Errorf("invalid value '%s' for --logs. Levels must be 1, 2, or 3", arg.value)
-				}
-				parsedArgs.log.level = some[int](value)
+				parsedArgs.log.header = some[string](arg.value)
 				parsedArgs.log.all = none[bool]()
 				isAssigned["--logs"] = true
 
 			} else {
-				return Args{}, fmt.Errorf("invalid value '%s' for --logs. Must be 'all', 'none', a valid log header, or a log level (1,2,3)", arg.value)
+				return Args{}, fmt.Errorf("invalid value '%s' for --logs. Must be 'all', 'none', or a valid log header", arg.value)
 			}
 		} else {
 			return Args{}, fmt.Errorf("unknown flag: %s", arg.name)
