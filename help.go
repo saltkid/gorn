@@ -239,24 +239,22 @@ func HelpNS(verbose bool) {
 func HelpLogs(verbose bool) {
 	fmt.Printf("%-60s%s", "  --logs, -l",
 	"Prints the logs to the console\n")
-	fmt.Println("    args: all | none | <header/s> | <level>")
+	fmt.Println("    args: all | none | <header>")
 	if verbose {
 		fmt.Println("\n  examples: gorn -l all")
 		fmt.Println("            gorn -l info warn")
 		fmt.Println("            gorn -l 2")
 		fmt.Println("\n  Headers:")
 		fmt.Println("    info: informational logs")
+		fmt.Println("        : shows info, warn, and fatal logs")
 		fmt.Println("    warn: warning logs; errors that can be safely skipped and does not interrupt process")
+		fmt.Println("        : shows warn and fatal logs")
 		fmt.Println("    fatal: errors that cannot be safely skipped and will interrupt process")
+		fmt.Println("        : shows only fatal logs")
 		fmt.Println("    time: logs for timing processes; for performance purposes")
-		fmt.Println("\n  Levels:")
-		fmt.Println("    1: show info, warn, and fatal logs")
-		fmt.Println("    2: show warn and fatal logs")
-		fmt.Println("    3: show only fatal logs")
+		fmt.Println("        : shows time, info, warn, and fatal logs")
 		log.Println("\n  Notes:")
 		log.Println("    - if no args are specified, all logs will be shown")
-		log.Println("    - if any header is specified, no other type of arg can be specified")
-		log.Println("      - same goes for <levels> and all/none args")
-		log.Println("      - example: 'gorn -l info 1' is invalid because info is specified as a header, but a level is specified as an arg, which will confuse gorn")
+		log.Println("    - only one --logs arg can be specified")
 	}
 }
