@@ -260,6 +260,9 @@ func ParseArgs(args []Arg) (Args, error) {
 
 		} else if arg.name == "--version" || arg.name == "-v" {
 			Version(version)
+			if len(args) > i+1 {
+				gornLog(WARN, "There are no arguments for --version/-v. got:", args[i+1].name)
+			}
 			return Args{}, SafeErrorF("safe exit")
 
 		} else if IsValidCommand(arg.name) {
