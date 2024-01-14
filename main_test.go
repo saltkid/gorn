@@ -211,7 +211,7 @@ func Test_ParseArgs(t *testing.T) {
 
 		args, err := ParseArgs(rawArgs)
 		if err == nil {
-			t.Errorf("expected error 'invalid value for -ns: ye, not enclosed in double quotes'\n%s", args)
+			t.Errorf("expected error 'invalid value for -ns: ye, not enclosed in double quotes'\n%v", args)
 		} else {
 			t.Log(cmd, "\n\t", err)
 		}

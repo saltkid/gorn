@@ -98,16 +98,6 @@ type Flags struct {
 	hasSeason0    Option[bool]
 	namingScheme  Option[string]
 }
-type LogFlag struct {
-	all    Option[bool]
-	header Option[string]
-}
-func IsValidLogHeader(header string) bool {
-	return 	header == "info" ||
-			header == "warn" ||
-			header == "fatal" ||
-			header == "time"
-}
 func newArgs() Args {
 	return Args{
 		root:   make([]string, 0),
@@ -120,8 +110,7 @@ func newArgs() Args {
 			namingScheme:  none[string](),
 		},
 		log: LogFlag{
-			all:    some[bool](true),
-			header: none[string](),
+			level: INFO_LEVEL,
 		},
 	}
 }
@@ -162,6 +151,10 @@ func (args *Args) Log() {
 	ns, err := args.options.namingScheme.Get()
 	if err == nil {
 		log.Println(INFO, "naming scheme: ", ns)
+	}
+	level, err := args.log.Level()
+	if err == nil {
+		log.Println(INFO, "Showing the following logs:", level)
 	}
 }
 
@@ -331,22 +324,13 @@ func ParseArgs(args []Arg) (Args, error) {
 			if isAssigned["--logs"] {
 				return Args{}, fmt.Errorf("only one --logs flag is allowed")
 			}
-			// default value
-			if arg.value == "" || arg.value == "all"{
-				isAssigned["--logs"] = true
-
-			} else if arg.value == "none" {
-				parsedArgs.log.all = some[bool](false)
-				isAssigned["--logs"] = true
-
-			} else if IsValidLogHeader(arg.value) {
-				parsedArgs.log.header = some[string](arg.value)
-				parsedArgs.log.all = none[bool]()
-				isAssigned["--logs"] = true
-
-			} else {
-				return Args{}, fmt.Errorf("invalid value '%s' for --logs. Must be 'all', 'none', or a valid log header", arg.value)
+			tmp, err := ToLogLevel(arg.value)
+			if err != nil {
+				return Args{}, err
 			}
+			parsedArgs.log.level = tmp
+			isAssigned["--logs"] = true
+
 		} else {
 			return Args{}, fmt.Errorf("unknown flag: %s", arg.name)
 		}
@@ -357,8 +341,8 @@ func ParseArgs(args []Arg) (Args, error) {
 		return Args{}, err
 	}
 
+	// use default values for optional flags if not assigned var
 	if !isAssigned["--options"] {
-		// use default values for optional flags if not assigned var
 		if parsedArgs.options.hasSeason0.IsNone() && !isAssigned["--has-season-0"] {
 			parsedArgs.options.hasSeason0 = some[bool](false)
 		}
