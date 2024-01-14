@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 )
 
 func WelcomeMsg(version string) {
@@ -39,7 +38,9 @@ func Help(val string) {
 		HelpKEN(false)
 		HelpSEN(false)
 		HelpS0(false)
+		HelpOptions(false)
 		HelpNS(false)
+		HelpLogs(false)
 	case "-h", "--help":
 		HelpHelp(true)
 	case "-v", "--version":
@@ -58,8 +59,12 @@ func Help(val string) {
 		HelpS0(true)
 	case "-ns", "--naming-scheme":
 		HelpNS(true)
+	case "-o", "--options":
+		HelpOptions(true)
+	case "-l", "--logs":
+		HelpLogs(true)
 	default:
-		log.Println(WARN, "invalid value for 'help':", val) 
+		gornLog(WARN, "invalid value for 'help':", val)
 		Help("")
 	}
 }
@@ -230,5 +235,47 @@ func HelpNS(verbose bool) {
 		fmt.Println("\n    4. <self>")
 		fmt.Println("       same as parent but instead of being based on the parent directory name, it is based on the name of the media file before renaming it")
 		fmt.Println("       additional options are the same as well except for `<p-number>`. self has no short form")
+	}
+}
+
+func HelpLogs(verbose bool) {
+	fmt.Printf("%-60s%s", "  --log, -l",
+		"Prints the logs to the console\n")
+	fmt.Println("    args: all | none | <header>")
+	if verbose {
+		fmt.Println("\n  examples: gorn -l")
+		fmt.Println("            gorn -l all")
+		fmt.Println("            gorn -l info")
+		fmt.Println("\n  Headers:")
+		fmt.Println("    info: informational logs")
+		fmt.Println("        : shows info, warn, and fatal logs")
+		fmt.Println("    warn: warning logs; errors that can be safely skipped and does not interrupt process")
+		fmt.Println("        : shows warn and fatal logs")
+		fmt.Println("    fatal: errors that cannot be safely skipped and will interrupt process")
+		fmt.Println("        : shows only fatal logs")
+		fmt.Println("    time: logs for timing processes; for performance purposes")
+		fmt.Println("        : shows time, info, warn, and fatal logs")
+		fmt.Println("\n  Notes:")
+		fmt.Println("    - if no args are specified, all logs will be shown")
+		fmt.Println("    - only one --logs arg can be specified")
+	}
+}
+
+func HelpOptions(verbose bool) {
+	fmt.Printf("%-60s%s", "  --options, -o",
+		"Assign none to Flags that the user did not explicitly assign anything to in the initial execution of gorn\n")
+	fmt.Println("    args: all | none | <header>")
+	if verbose {
+		fmt.Println("\n  By default, without --options, if the user did not explicitly assign")
+		fmt.Println("  anything to the flags, gorn will assign default values to the flags.")
+		fmt.Println("  This behavior can be overridden by using --options")
+		fmt.Println("\n  example: gorn --options --keep-ep-nums")
+		fmt.Println("\n  In the example above, --keep-ep-nums will have the default value of true")
+		fmt.Println("  However, --starting-ep-num and --has-season-0 is not explicitly assigned")
+		fmt.Println("  to the flags. So, gorn will assign the default value of false to the flags")
+		fmt.Println("  This means the user will be prompted to assign a value to the above two flags at:")
+		fmt.Println("    1. per series type level")
+		fmt.Println("    2. per series entry level")
+		fmt.Println("    3. per season of series entry level")
 	}
 }

@@ -4,7 +4,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -57,6 +56,7 @@ func HasMovie(path string) (bool, error) {
 //
 // usage: sort.Sort(FilenameSort(slice of paths))
 type FilenameSort []string
+
 // implement sort.Interface (Len, Less, Swap)
 
 func (f FilenameSort) Len() int {
@@ -145,6 +145,7 @@ func CleanTitle(title string) string {
 // splits a regex by outermost pipes
 //
 // example:
+//
 //	`a|b|c|d|e` --> `a`, `b`, `c`, `d`, `e`
 //	`a|(b|c|d|e)` --> `a`, `(b|c|d|e)`
 func SplitRegexByPipe(s string) []string {
@@ -194,12 +195,13 @@ func SplitRegexByPipe(s string) []string {
 // note that this is usually called after SplitRegexByPipe so outermost pipes are removed first
 //
 // examples:
+//
 //	`a` 		--> true
 //	`(a)` 		--> true
 //	`(a|b)` 	--> true
 //	`(a(b)a)` 	--> false
 //	`(a\(b\)c)`	--> true
-// 	`(a[(b)]c)`	--> true
+//	`(a[(b)]c)`	--> true
 func HasOnlyOneMatchGroup(s string) bool {
 	openingCount := 0
 	closingCount := 0
@@ -240,7 +242,7 @@ func HasOnlyOneMatchGroup(s string) bool {
 				continue
 			}
 			inBrackets = true
-		
+
 		} else if c == ']' && inBrackets {
 			// check if escaped
 			if s[i-1] == '\\' {
@@ -256,9 +258,9 @@ func HasOnlyOneMatchGroup(s string) bool {
 // returns the nth parent directory
 //
 //	examples:
-// 	ParentN("path/to/dir", 1) --> "to"
-// 	ParentN("path/to/dir", 2) --> "path"
-// 	ParentN("path/to/dir", 3) --> ""
+//	ParentN("path/to/dir", 1) --> "to"
+//	ParentN("path/to/dir", 2) --> "path"
+//	ParentN("path/to/dir", 3) --> ""
 func ParentN(path string, n int) string {
 	for i := 0; i < n; i++ {
 		path = filepath.Dir(path)
@@ -267,6 +269,7 @@ func ParentN(path string, n int) string {
 }
 
 // specifically for exiting safely when user passed these switches:
+//
 //	`--help, -h`
 //	`--version, -v`
 type SafeError struct {
@@ -291,25 +294,11 @@ func (s SafeError) Error() string {
 //
 // Reference:
 //   - https://stackoverflow.com/questions/45766572/is-there-an-efficient-way-to-calculate-execution-time-in-golang
+//
 // thank you Cerise Limón
 func timer(name string) func() {
-    start := time.Now()
-    return func() {
-        log.Printf("%s %s took %v\n", TIME, name, time.Since(start))
-    }
+	start := time.Now()
+	return func() {
+		gornLog(TIME, name, "took", time.Since(start))
+	}
 }
-
-// for logging purposes
-const (
-	// for informational logs
-	INFO = "[INFO] " 					// no color
-
-	// can safely skip error, doesn't interrupt process
-	WARN = "\033[93m[WARN]\033[0m "		// yellow
-	
-	// cannot safely skip error, must interrupt process
-	FATAL = "\033[91m[FATAL]\033[0m "	// red
-	
-	// for timing purposes
-	TIME = "\033[94m[TIME]\033[0m "		// blue
-)

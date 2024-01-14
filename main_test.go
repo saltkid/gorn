@@ -211,12 +211,63 @@ func Test_ParseArgs(t *testing.T) {
 
 		args, err := ParseArgs(rawArgs)
 		if err == nil {
-			t.Errorf("expected error 'invalid value for -ns: ye, not enclosed in double quotes'\n%s", args)
+			t.Errorf("expected error 'invalid value for -ns: ye, not enclosed in double quotes'\n%v", args)
 		} else {
 			t.Log(cmd, "\n\t", err)
 		}
-
-		t.Log("------------expects success------------")
+	}
+	t.Log("------------expects success------------")
+	cmd = "root ./test_files -l all"
+	command = strings.Split(cmd, " ")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
+	} else {
+		pa, err := ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd, "\n\t", pa.log)
+		}
+	}
+	cmd = "root ./test_files -l none"
+	command = strings.Split(cmd, " ")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
+	} else {
+		pa, err := ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd, "\n\t", pa.log)
+		}
+	}
+	cmd = "root ./test_files -l"
+	command = strings.Split(cmd, " ")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
+	} else {
+		pa, err := ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd, "\n\t", pa.log)
+		}
+	}
+	cmd = "root ./test_files -l info"
+	command = strings.Split(cmd, " ")
+	rawArgs, err = TokenizeArgs(command)
+	if err != nil {
+		t.Errorf("unexpected error: '%s'", err)
+	} else {
+		pa, err := ParseArgs(rawArgs)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		} else {
+			t.Log(cmd, "\n\t", pa.log)
+		}
 	}
 	cmd = "root ./test_files -s0 yes"
 	command = strings.Split(cmd, " ")
@@ -231,7 +282,6 @@ func Test_ParseArgs(t *testing.T) {
 		} else {
 			t.Log(cmd)
 		}
-
 	}
 	cmd = "root ./test_files -s0 no"
 	command = strings.Split(cmd, " ")
@@ -515,14 +565,12 @@ func Test_ParseArgs(t *testing.T) {
 	if err != nil {
 		t.Errorf("unexpected error: '%s'", err)
 	} else {
-
 		_, err = ParseArgs(rawArgs)
 		if err == nil {
 			t.Errorf("supposed to exit safely")
 		} else {
 			t.Log(cmd, err)
 		}
-
 	}
 	cmd = "-h -v"
 	command = strings.Split(cmd, " ")
@@ -530,14 +578,12 @@ func Test_ParseArgs(t *testing.T) {
 	if err != nil {
 		t.Errorf("unexpected error: '%s'", err)
 	} else {
-
 		_, err = ParseArgs(rawArgs)
 		if err == nil {
 			t.Errorf("supposed to exit safely")
 		} else {
 			t.Log(cmd, err)
 		}
-
 	}
 	cmd = "-h -o"
 	command = strings.Split(cmd, " ")

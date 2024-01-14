@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -12,10 +11,11 @@ import (
 )
 
 // SeriesRenamePrereqs returns a SeriesInfo with information needed to rename a series entry.
+//
 //	path: The path of the series.
 //	sType: The type of series.
 //	options: Flags for the prompt.
-func SeriesRenamePrereqs(path string, sType string, options Flags) (SeriesInfo) {
+func SeriesRenamePrereqs(path string, sType string, options Flags) SeriesInfo {
 	// if flags are none aka user inputted var, ask for user input again
 	options = PromptOptionalFlags(options, path, 1)
 	info := SeriesInfo{
@@ -183,6 +183,7 @@ func PromptOptionalFlags(options Flags, path string, level int8) Flags {
 }
 
 // FetchSeriesContent retrieves the season directories and movie directories from the given series entry.
+//
 //	path: The path of the series entry.
 //	sType: The type of series.
 //	hasSeason0: Whether the series has a season 0 directory.
@@ -192,7 +193,7 @@ func FetchSeriesContent(path string, sType string, hasSeason0 bool) (map[int]str
 
 	subdirs, err := os.ReadDir(path)
 	if err != nil {
-		log.Println(WARN, "error reading series entry:", err, "; skipping renaming entry:", path)
+		gornLog(WARN, "error reading series entry:", err, "; skipping renaming entry:", path)
 		return seasons, movies
 	}
 
@@ -210,7 +211,7 @@ func FetchSeriesContent(path string, sType string, hasSeason0 bool) (map[int]str
 		if hasSeason0 {
 			if extrasPattern.MatchString(subdir.Name()) {
 				if seasons[0] != "" {
-					log.Println(WARN, "multiple specials/extras directories found [", seasons[0], ",", subdir.Name(), "]; skipping renaming entry:", path )
+					gornLog(WARN, "multiple specials/extras directories found [", seasons[0], ",", subdir.Name(), "]; skipping renaming entry:", path)
 					return make(map[int]string), make([]string, 0)
 				}
 				seasons[0] = subdir.Name()
@@ -261,9 +262,10 @@ func FetchSeriesContent(path string, sType string, hasSeason0 bool) (map[int]str
 }
 
 // MovieRenamePrereqs returns a MovieInfo with information needed to rename a movie entry.
+//
 //	path: The path of the movie.
 //	mType: The type of movie.
-func MovieRenamePrereqs(path string, mType string) (MovieInfo) {
+func MovieRenamePrereqs(path string, mType string) MovieInfo {
 	info := MovieInfo{
 		path:      path,
 		movieType: mType,
@@ -273,7 +275,7 @@ func MovieRenamePrereqs(path string, mType string) (MovieInfo) {
 
 	subdirs, err := os.ReadDir(path)
 	if err != nil {
-		log.Println(WARN, "error reading movie entry:", err, "; skipping renaming entry:", path)
+		gornLog(WARN, "error reading movie entry:", err, "; skipping renaming entry:", path)
 		return info
 	}
 
@@ -290,7 +292,7 @@ func MovieRenamePrereqs(path string, mType string) (MovieInfo) {
 					info.movies[filepath.Base(path)] = subdir.Name()
 					continue
 				} else {
-					log.Println(WARN, "multiple media files found in supposedly standalone movie directory: [", info.movies[filepath.Base(path)], ",", subdir.Name(), "]; skipping renaming entry:", path )
+					gornLog(WARN, "multiple media files found in supposedly standalone movie directory: [", info.movies[filepath.Base(path)], ",", subdir.Name(), "]; skipping renaming entry:", path)
 					return defaultInfo
 				}
 			}
@@ -307,7 +309,7 @@ func MovieRenamePrereqs(path string, mType string) (MovieInfo) {
 
 			files, err := os.ReadDir(filepath.Join(path, subdir.Name()))
 			if err != nil {
-				log.Println(WARN, "error reading entry:", filepath.Join(path, subdir.Name()), "; skipping renaming entry:", path)
+				gornLog(WARN, "error reading entry:", filepath.Join(path, subdir.Name()), "; skipping renaming entry:", path)
 				return defaultInfo
 			}
 
@@ -316,7 +318,7 @@ func MovieRenamePrereqs(path string, mType string) (MovieInfo) {
 			for _, file := range files {
 				if IsMediaFile(file.Name()) {
 					if movieCount > 0 {
-						log.Println(WARN, "multiple media files found in", file, ": [", info.movies[subdir.Name()], ",", file.Name(), "]; skipping renaming movie:", subdir, "under movie set:", path)
+						gornLog(WARN, "multiple media files found in", file, ": [", info.movies[subdir.Name()], ",", file.Name(), "]; skipping renaming movie:", subdir, "under movie set:", path)
 						skipEntry = true
 						break
 					}
@@ -330,7 +332,7 @@ func MovieRenamePrereqs(path string, mType string) (MovieInfo) {
 			}
 
 			if movieCount == 0 {
-				log.Println(WARN, "no media files found in", subdir.Name(), "; skipping renaming movie entry:", subdir)
+				gornLog(WARN, "no media files found in", subdir.Name(), "; skipping renaming movie entry:", subdir)
 				continue
 			}
 		}

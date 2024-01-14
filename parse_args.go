@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -10,46 +9,62 @@ import (
 	"strings"
 )
 
+// Arg represents an argument passed to the program at initial execution.
+// It has a name and a value where an Arg can only have one value
+//
+// An Arg can be a command, a switch, or a flag.
+//
+//	Commands generally have no dashes
+//	Switches and flags generally have a dash (-) prepended to their names
 type Arg struct {
 	name  string
 	value string
+}
+
+func IsValidCommand(name string) bool {
+	return name == "root" ||
+		name == "series" ||
+		name == "movies"
+}
+func IsValidSwitch(name string) bool {
+	return name == "--help" ||
+		name == "-h" ||
+		name == "--version" ||
+		name == "-v"
+}
+func IsValidFlag(name string) bool {
+	return name == "--keep-ep-nums" ||
+		name == "-ken" ||
+		name == "--starting-ep-num" ||
+		name == "-sen" ||
+		name == "--has-season-0" ||
+		name == "-s0" ||
+		name == "--naming-scheme" ||
+		name == "-ns" ||
+		name == "--logs" ||
+		name == "-l" ||
+
+		name == "--options" ||
+		name == "-o"
+}
+func IsValidArgName(name string) bool {
+	return IsValidCommand(name) || IsValidSwitch(name) || IsValidFlag(name)
 }
 
 func TokenizeArgs(args []string) ([]Arg, error) {
 	defer timer("TokenizeArgs")()
 
 	var tokenizedArgs []Arg
-	isValidName := map[string]bool{
-		// commands
-		"root":   true,
-		"series": true,
-		"movies": true,
-		// switches
-		"--help":    true,
-		"-h":        true,
-		"--version": true,
-		"-v":        true,
-		// flags
-		"--options":         true,
-		"-o":                true,
-		"--keep-ep-nums":    true,
-		"-ken":              true,
-		"--starting-ep-num": true,
-		"-sen":              true,
-		"--has-season-0":    true,
-		"-s0":               true,
-		"--naming-scheme":   true,
-		"-ns":               true,
-	}
 	var newArg Arg
 	var value string
 	readValues := false
+
 	for i, arg := range args {
 		if arg == "" {
 			continue
 		}
 		if !readValues {
-			if isValidName[arg] {
+			if IsValidArgName(arg) {
 				newArg.name = arg
 				readValues = true
 			} else {
@@ -60,7 +75,7 @@ func TokenizeArgs(args []string) ([]Arg, error) {
 				tokenizedArgs = append(tokenizedArgs, newArg)
 			}
 		} else {
-			if isValidName[arg] {
+			if IsValidArgName(arg) {
 				newArg.value = value
 				tokenizedArgs = append(tokenizedArgs, newArg)
 				newArg = Arg{name: arg}
@@ -81,12 +96,15 @@ func TokenizeArgs(args []string) ([]Arg, error) {
 	return tokenizedArgs, nil
 }
 
+// Args is a list of arguments needed by gorn to properly rename media files
 type Args struct {
 	root    []string
 	series  []string
 	movies  []string
 	options Flags
 }
+
+// Flags are options for modifying the behavior of renaming files
 type Flags struct {
 	keepEpNums    Option[bool]
 	startingEpNum Option[int]
@@ -94,56 +112,136 @@ type Flags struct {
 	namingScheme  Option[string]
 }
 
+// For text color on log headers
+type LogHeader string
+const (
+	// for informational logs
+	INFO LogHeader = "[INFO] " // default color (white)
+
+	// can safely skip error, doesn't interrupt process
+	WARN LogHeader = "\033[93m[WARN]\033[0m " // yellow
+
+	// cannot safely skip error, must interrupt process
+	FATAL LogHeader = "\033[91m[FATAL]\033[0m " // red
+
+	// for timing purposes
+	TIME LogHeader = "\033[94m[TIME]\033[0m " // blue
+)
+
+// LogLevel handles which logs to print based on level
+type LogLevel int8 // can only be 1-4
+const (
+	NONE 		LogLevel = 0
+	FATAL_LEVEL LogLevel = 1
+	WARN_ONLY 	LogLevel = 2
+	INFO_ONLY 	LogLevel = 3
+	TIME_ONLY 	LogLevel = 4
+	WARN_LEVEL 	LogLevel = 5
+	INFO_LEVEL 	LogLevel = 6
+	TIME_LEVEL 	LogLevel = 7
+)
+
+func (l *LogLevel) Headers() (string, error) {
+	var headers string
+	switch *l {
+	case FATAL_LEVEL:
+		headers += fmt.Sprint(FATAL)
+	case WARN_LEVEL, WARN_ONLY:
+		headers += fmt.Sprint(WARN)
+	case INFO_LEVEL, INFO_ONLY:
+		headers += fmt.Sprint(INFO)
+	case TIME_LEVEL, TIME_ONLY:
+		headers += fmt.Sprint(TIME)
+	default:
+		return "", fmt.Errorf("invalid log level: %d", *l)
+	}
+	return headers, nil
+}
+
+// ToLogLevel converts a string to a LogLevel if the string passed is valid; otherwise it returns an error.
+//
+// Valid log levels:
+//
+//	none, all, fatal, warn, info, time
+func ToLogLevel(s string) (LogLevel, error) {
+	switch s {
+	case "fatal", "fatal-only":
+		return FATAL_LEVEL, nil
+	case "warn-only":
+		return WARN_ONLY, nil
+	case "info-only":
+		return INFO_ONLY, nil
+	case "time-only":
+		return TIME_ONLY, nil
+	case "warn":
+		return WARN_LEVEL, nil
+	case "info", "", "all":
+		return INFO_LEVEL, nil
+	case "time":
+		return TIME_LEVEL, nil
+	case "none":
+		return NONE, nil
+	}
+	return -1, fmt.Errorf("invalid value '%s' for --logs. Must be 'all', 'none', or a valid log header", s)
+}
+
+// newArgs returns a new Args struct with default values for the Flags
+//
+// Commands though are empty by default and need to be populated
 func newArgs() Args {
 	return Args{
 		root:   make([]string, 0),
 		series: make([]string, 0),
 		movies: make([]string, 0),
 		options: Flags{
-			hasSeason0:    none[bool](),
-			keepEpNums:    none[bool](),
-			startingEpNum: none[int](),
-			namingScheme:  none[string](),
+			hasSeason0:    some[bool](false),
+			keepEpNums:    some[bool](false),
+			startingEpNum: some[int](1),
+			namingScheme:  some[string]("default"),
 		},
 	}
 }
 
 func (args *Args) Log() {
 	defer timer("Args.Log")()
-	
+
 	if len(args.root) > 0 {
-		log.Println(INFO, "root directories: ")
+		gornLog(INFO, "root directories: ")
 		for _, root := range args.root {
-			log.Println(INFO, "\t", root)
+			gornLog(INFO, "\t", root)
 		}
 	}
 	if len(args.series) > 0 {
-		log.Println(INFO, "series sources:")
+		gornLog(INFO, "series sources:")
 		for _, series := range args.series {
-			log.Println(INFO, "\t", series)
+			gornLog(INFO, "\t", series)
 		}
 	}
 	if len(args.movies) > 0 {
-		log.Println(INFO, "movies sources:")
+		gornLog(INFO, "movies sources:")
 		for _, movie := range args.movies {
-			log.Println(INFO, "\t", movie)
+			gornLog(INFO, "\t", movie)
 		}
 	}
 	ken, err := args.options.keepEpNums.Get()
 	if err == nil {
-		log.Println(INFO, "keep episode numbers: ", ken)
+		gornLog(INFO, "keep episode numbers: ", ken)
 	}
 	sen, err := args.options.startingEpNum.Get()
 	if err == nil {
-		log.Println(INFO, "starting episode number: ", sen)
+		gornLog(INFO, "starting episode number: ", sen)
 	}
 	s0, err := args.options.hasSeason0.Get()
 	if err == nil {
-		log.Println(INFO, "has season 0: ", s0)
+		gornLog(INFO, "has season 0: ", s0)
 	}
 	ns, err := args.options.namingScheme.Get()
 	if err == nil {
-		log.Println(INFO, "naming scheme: ", ns)
+		gornLog(INFO, "naming scheme: ", ns)
+	}
+	headers, err := logLevel.Headers()
+	if err == nil {
+		gornLog(INFO, "Showing the following logs:", headers)
 	}
 }
 
@@ -153,18 +251,13 @@ func ParseArgs(args []Arg) (Args, error) {
 	if len(args) < 1 {
 		return Args{}, fmt.Errorf("not enough arguments: '%v'", args)
 	}
-
-	directoryArgs := map[string]bool{
-		"root":   true,
-		"series": true,
-		"movies": true,
-	}
 	isAssigned := map[string]bool{
 		"--options":         false,
 		"--keep-ep-nums":    false,
 		"--starting-ep-num": false,
 		"--has-season-0":    false,
 		"--naming-scheme":   false,
+		"--logs":            false,
 	}
 
 	parsedArgs := newArgs()
@@ -179,10 +272,13 @@ func ParseArgs(args []Arg) (Args, error) {
 
 		} else if arg.name == "--version" || arg.name == "-v" {
 			Version(version)
+			if len(args) > i+1 {
+				gornLog(WARN, "There are no arguments for --version/-v. got:", args[i+1].name)
+			}
 			return Args{}, SafeErrorF("safe exit")
 
-		} else if directoryArgs[arg.name] {
-			// no value after flag / flag after flag
+		} else if IsValidCommand(arg.name) {
+			// no value after command
 			if arg.value == "" {
 				return Args{}, fmt.Errorf("missing dir path value for flag '%s'", arg)
 			}
@@ -206,7 +302,7 @@ func ParseArgs(args []Arg) (Args, error) {
 			}
 
 		} else if arg.name == "--has-season-0" || arg.name == "-s0" {
-			if parsedArgs.options.hasSeason0.IsSome() {
+			if parsedArgs.options.hasSeason0.IsSome() && isAssigned["--has-season-0"] {
 				return Args{}, fmt.Errorf("only one --has-season-0 flag is allowed")
 			}
 			// use default value
@@ -230,7 +326,7 @@ func ParseArgs(args []Arg) (Args, error) {
 			}
 
 		} else if arg.name == "--keep-ep-nums" || arg.name == "-ken" {
-			if parsedArgs.options.keepEpNums.IsSome() {
+			if parsedArgs.options.keepEpNums.IsSome() && isAssigned["--keep-ep-nums"] {
 				return Args{}, fmt.Errorf("only one --keep-ep-nums flag is allowed")
 			}
 
@@ -255,7 +351,7 @@ func ParseArgs(args []Arg) (Args, error) {
 			}
 
 		} else if arg.name == "--starting-ep-num" || arg.name == "-sen" {
-			if parsedArgs.options.startingEpNum.IsSome() {
+			if parsedArgs.options.startingEpNum.IsSome() && isAssigned["--starting-ep-num"] {
 				return Args{}, fmt.Errorf("only one --starting-ep-num flag is allowed")
 			}
 
@@ -285,8 +381,21 @@ func ParseArgs(args []Arg) (Args, error) {
 			}
 			isAssigned["--options"] = true
 
+			if !isAssigned["--keep-ep-nums"] {
+				parsedArgs.options.keepEpNums = none[bool]()
+			}
+			if !isAssigned["--has-season-0"] {
+				parsedArgs.options.hasSeason0 = none[bool]()
+			}
+			if !isAssigned["--starting-ep-num"] {
+				parsedArgs.options.startingEpNum = none[int]()
+			}
+			if !isAssigned["--naming-scheme"] {
+				parsedArgs.options.namingScheme = none[string]()
+			}
+
 		} else if arg.name == "--naming-scheme" || arg.name == "-ns" {
-			if parsedArgs.options.namingScheme.IsSome() {
+			if parsedArgs.options.namingScheme.IsSome() && isAssigned["--naming-scheme"] {
 				return Args{}, fmt.Errorf("only one --naming-scheme flag is allowed")
 			}
 			if arg.value == "" {
@@ -308,6 +417,16 @@ func ParseArgs(args []Arg) (Args, error) {
 					parsedArgs.options.namingScheme = some[string](namingScheme)
 				}
 			}
+		} else if arg.name == "--logs" || arg.name == "-l" {
+			if isAssigned["--logs"] {
+				return Args{}, fmt.Errorf("only one --logs flag is allowed")
+			}
+			tmp, err := ToLogLevel(strings.ToLower(arg.value))
+			if err != nil {
+				return Args{}, err
+			}
+			logLevel = tmp
+			isAssigned["--logs"] = true
 
 		} else {
 			return Args{}, fmt.Errorf("unknown flag: %s", arg.name)
@@ -319,24 +438,13 @@ func ParseArgs(args []Arg) (Args, error) {
 		return Args{}, err
 	}
 
-	if !isAssigned["--options"] {
-		// use default values for optional flags if not assigned var
-		if parsedArgs.options.hasSeason0.IsNone() && !isAssigned["--has-season-0"] {
-			parsedArgs.options.hasSeason0 = some[bool](false)
-		}
-		if parsedArgs.options.keepEpNums.IsNone() && !isAssigned["--keep-ep-nums"] {
-			parsedArgs.options.keepEpNums = some[bool](false)
-		}
-		if parsedArgs.options.startingEpNum.IsNone() && !isAssigned["--starting-ep-num"] {
-			parsedArgs.options.startingEpNum = some[int](1)
-		}
-		if parsedArgs.options.namingScheme.IsNone() && !isAssigned["--naming-scheme"] {
-			parsedArgs.options.namingScheme = some[string]("default")
-		}
-	}
 	return parsedArgs, nil
 }
 
+// ValidateNamingScheme checks if a naming scheme is valid by:
+//   - tokenizing APIs
+//   - checking if each API is valid
+//   - validating each API's value if user provided any
 func ValidateNamingScheme(s string) error {
 	if s[0] != '"' || s[len(s)-1] != '"' {
 		return fmt.Errorf("naming scheme must be enclosed in double quotes: %s", s)
@@ -436,6 +544,7 @@ func ValidateNamingScheme(s string) error {
 	return nil
 }
 
+// Splits the naming scheme into a list of APIs
 func TokenizeNamingScheme(s string) ([]string, error) {
 	isToken := false
 	builder := strings.Builder{}
@@ -471,6 +580,11 @@ func TokenizeNamingScheme(s string) ([]string, error) {
 	return namingScheme, nil
 }
 
+// ValidateRoots checks if:
+//   - there is at least one root/source directory
+//   - each root/source directory exists
+//   - each root/source directory is not a subdirectory of another root/source directory
+//   - each root/source directory is not a duplicate of another root/source directory
 func ValidateRoots(root []string, series []string, movies []string) error {
 	// must at least have one of any
 	if len(root) == 0 && len(series) == 0 && len(movies) == 0 {
