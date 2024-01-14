@@ -102,7 +102,6 @@ type Args struct {
 	series  []string
 	movies  []string
 	options Flags
-	log     LogFlag
 }
 
 // Flags are options for modifying the behavior of renaming files
@@ -113,17 +112,11 @@ type Flags struct {
 	namingScheme  Option[string]
 }
 
-// LogFlag is a flag specifically for logging.
-// It handles which logs to print based on level
-type LogFlag struct {
-	level LogLevel
-}
-type LogHeader string
-
 // For text color on log headers
+type LogHeader string
 const (
 	// for informational logs
-	INFO LogHeader = "[INFO] " // no color
+	INFO LogHeader = "[INFO] " // default color (white)
 
 	// can safely skip error, doesn't interrupt process
 	WARN LogHeader = "\033[93m[WARN]\033[0m " // yellow
@@ -135,6 +128,7 @@ const (
 	TIME LogHeader = "\033[94m[TIME]\033[0m " // blue
 )
 
+// LogLevel handles which logs to print based on level
 type LogLevel int8 // can only be 1-4
 const (
 	FATAL_LEVEL LogLevel = iota + 1
@@ -143,8 +137,8 @@ const (
 	TIME_LEVEL
 )
 
-func (l *LogFlag) Level() (string, error) {
-	switch l.level {
+func (l *LogLevel) Headers() (string, error) {
+	switch *l {
 	case FATAL_LEVEL:
 		return fmt.Sprintln(FATAL), nil
 	case WARN_LEVEL:
@@ -154,7 +148,7 @@ func (l *LogFlag) Level() (string, error) {
 	case TIME_LEVEL:
 		return fmt.Sprintln(FATAL, WARN, INFO, TIME), nil
 	default:
-		return "", fmt.Errorf("invalid log level: %d", l.level)
+		return "", fmt.Errorf("invalid log level: %d", *l)
 	}
 }
 
@@ -192,9 +186,6 @@ func newArgs() Args {
 			keepEpNums:    some[bool](false),
 			startingEpNum: some[int](1),
 			namingScheme:  some[string]("default"),
-		},
-		log: LogFlag{
-			level: INFO_LEVEL,
 		},
 	}
 }
@@ -236,9 +227,9 @@ func (args *Args) Log() {
 	if err == nil {
 		gornLog(INFO, "naming scheme: ", ns)
 	}
-	level, err := args.log.Level()
+	headers, err := logLevel.Headers()
 	if err == nil {
-		gornLog(INFO, "Showing the following logs:", level)
+		gornLog(INFO, "Showing the following logs:", headers)
 	}
 }
 
@@ -419,7 +410,7 @@ func ParseArgs(args []Arg) (Args, error) {
 			if err != nil {
 				return Args{}, err
 			}
-			parsedArgs.log.level = tmp
+			logLevel = tmp
 			isAssigned["--logs"] = true
 
 		} else {
