@@ -10,12 +10,12 @@ import (
 //	This uses `gornLog` and `log.Fatalln` under the hood.
 func gornLog(header LogHeader, v ...any) {
 	if header == FATAL && logLevel >= FATAL_LEVEL {
-		log.Fatalln(header, fmt.Sprintln(v...))
+		log.Fatal(header, fmt.Sprintln(v...))
 	} else if header == WARN && logLevel >= WARN_LEVEL {
-		gornLog(header, fmt.Sprintln(v...))
+		log.Print(header, fmt.Sprintln(v...))
 	} else if header == INFO && logLevel >= INFO_LEVEL {
-		gornLog(header, fmt.Sprintln(v...))
+		log.Print(header, fmt.Sprintln(v...))
 	} else if header == TIME && logLevel >= TIME_LEVEL {
-		gornLog(header, fmt.Sprintln(v...))
+		log.Print(header, fmt.Sprintln(v...))
 	}
 }
