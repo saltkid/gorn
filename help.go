@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 )
 
 func WelcomeMsg(version string) {
@@ -61,8 +60,10 @@ func Help(val string) {
 		HelpNS(true)
 	case "-l", "--logs":
 		HelpLogs(true)
+	case "-o", "--options":
+		HelpOptions(true)
 	default:
-		log.Println(WARN, "invalid value for 'help':", val) 
+		gornLog(WARN, "invalid value for 'help':", val)
 		Help("")
 	}
 }
@@ -238,7 +239,7 @@ func HelpNS(verbose bool) {
 
 func HelpLogs(verbose bool) {
 	fmt.Printf("%-60s%s", "  --log, -l",
-	"Prints the logs to the console\n")
+		"Prints the logs to the console\n")
 	fmt.Println("    args: all | none | <header>")
 	if verbose {
 		fmt.Println("\n  examples: gorn -l")
@@ -253,8 +254,27 @@ func HelpLogs(verbose bool) {
 		fmt.Println("        : shows only fatal logs")
 		fmt.Println("    time: logs for timing processes; for performance purposes")
 		fmt.Println("        : shows time, info, warn, and fatal logs")
-		log.Println("\n  Notes:")
-		log.Println("    - if no args are specified, all logs will be shown")
-		log.Println("    - only one --logs arg can be specified")
+		fmt.Println("\n  Notes:")
+		fmt.Println("    - if no args are specified, all logs will be shown")
+		fmt.Println("    - only one --logs arg can be specified")
+	}
+}
+
+func HelpOptions(verbose bool) {
+	fmt.Printf("%-60s%s", "  --options, -o",
+		"Assign none to Flags that the user did not explicitly assign anything to in the initial execution of gorn\n")
+	fmt.Println("    args: all | none | <header>")
+	if verbose {
+		fmt.Println("\n  By default, without --options, if the user did not explicitly assign")
+		fmt.Println("  anything to the flags, gorn will assign default values to the flags.")
+		fmt.Println("  This behavior can be overridden by using --options")
+		fmt.Println("\n  example: gorn --options --keep-ep-nums")
+		fmt.Println("\n  In the example above, --keep-ep-nums will have the default value of true")
+		fmt.Println("  However, --starting-ep-num and --has-season-0 is not explicitly assigned")
+		fmt.Println("  to the flags. So, gorn will assign the default value of false to the flags")
+		fmt.Println("  This means the user will be prompted to assign a value to the above two flags at:")
+		fmt.Println("    1. per series type level")
+		fmt.Println("    2. per series entry level")
+		fmt.Println("    3. per season of series entry level")
 	}
 }
