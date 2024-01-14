@@ -7,7 +7,7 @@ import (
 
 // gornLog prints a log with a specific header to stdout depending on logLevel.
 //
-//	This uses `gornLog` and `log.Fatalln` under the hood.
+//	This uses `log.Println` and `log.Fatalln` under the hood.
 func gornLog(header LogHeader, v ...any) {
 	if header == FATAL && logLevel >= FATAL_LEVEL {
 		log.Fatal(header, fmt.Sprintln(v...))
