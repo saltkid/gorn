@@ -131,25 +131,31 @@ const (
 // LogLevel handles which logs to print based on level
 type LogLevel int8 // can only be 1-4
 const (
-	FATAL_LEVEL LogLevel = iota + 1
-	WARN_LEVEL
-	INFO_LEVEL
-	TIME_LEVEL
+	NONE 		LogLevel = 0
+	FATAL_LEVEL LogLevel = 1
+	WARN_ONLY 	LogLevel = 2
+	INFO_ONLY 	LogLevel = 3
+	TIME_ONLY 	LogLevel = 4
+	WARN_LEVEL 	LogLevel = 5
+	INFO_LEVEL 	LogLevel = 6
+	TIME_LEVEL 	LogLevel = 7
 )
 
 func (l *LogLevel) Headers() (string, error) {
+	var headers string
 	switch *l {
 	case FATAL_LEVEL:
-		return fmt.Sprintln(FATAL), nil
-	case WARN_LEVEL:
-		return fmt.Sprintln(FATAL, WARN), nil
-	case INFO_LEVEL:
-		return fmt.Sprintln(FATAL, WARN, INFO), nil
-	case TIME_LEVEL:
-		return fmt.Sprintln(FATAL, WARN, INFO, TIME), nil
+		headers += fmt.Sprint(FATAL)
+	case WARN_LEVEL, WARN_ONLY:
+		headers += fmt.Sprint(WARN)
+	case INFO_LEVEL, INFO_ONLY:
+		headers += fmt.Sprint(INFO)
+	case TIME_LEVEL, TIME_ONLY:
+		headers += fmt.Sprint(TIME)
 	default:
 		return "", fmt.Errorf("invalid log level: %d", *l)
 	}
+	return headers, nil
 }
 
 // ToLogLevel converts a string to a LogLevel if the string passed is valid; otherwise it returns an error.
@@ -159,8 +165,14 @@ func (l *LogLevel) Headers() (string, error) {
 //	none, all, fatal, warn, info, time
 func ToLogLevel(s string) (LogLevel, error) {
 	switch s {
-	case "fatal":
+	case "fatal", "fatal-only":
 		return FATAL_LEVEL, nil
+	case "warn-only":
+		return WARN_ONLY, nil
+	case "info-only":
+		return INFO_ONLY, nil
+	case "time-only":
+		return TIME_ONLY, nil
 	case "warn":
 		return WARN_LEVEL, nil
 	case "info", "", "all":
@@ -168,7 +180,7 @@ func ToLogLevel(s string) (LogLevel, error) {
 	case "time":
 		return TIME_LEVEL, nil
 	case "none":
-		return 0, nil
+		return NONE, nil
 	}
 	return -1, fmt.Errorf("invalid value '%s' for --logs. Must be 'all', 'none', or a valid log header", s)
 }
@@ -409,7 +421,7 @@ func ParseArgs(args []Arg) (Args, error) {
 			if isAssigned["--logs"] {
 				return Args{}, fmt.Errorf("only one --logs flag is allowed")
 			}
-			tmp, err := ToLogLevel(arg.value)
+			tmp, err := ToLogLevel(strings.ToLower(arg.value))
 			if err != nil {
 				return Args{}, err
 			}
