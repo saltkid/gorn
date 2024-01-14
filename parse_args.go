@@ -14,46 +14,50 @@ type Arg struct {
 	name  string
 	value string
 }
+func IsValidCommand(name string) bool {
+	return name == "root" ||
+		name == "series" ||
+		name == "movies"
+}
+func IsValidSwitch(name string) bool {
+	return name == "--help" ||
+		name == "-h" ||
+		name == "--version" ||
+		name == "-v"
+}
+func IsValidFlag(name string) bool {
+	return name == "--keep-ep-nums" ||
+		name == "-ken" ||
+		name == "--starting-ep-num" ||
+		name == "-sen" ||
+		name == "--has-season-0" ||
+		name == "-s0" ||
+		name == "--naming-scheme" ||
+		name == "-ns" ||
+		name == "--logs" ||
+		name == "-l" ||
+
+		name == "--options" ||
+		name == "-o"
+}
+func IsValidArgName(name string) bool {
+		return IsValidCommand(name) || IsValidSwitch(name) || IsValidFlag(name)
+}
 
 func TokenizeArgs(args []string) ([]Arg, error) {
 	defer timer("TokenizeArgs")()
 
 	var tokenizedArgs []Arg
-	isValidName := map[string]bool{
-		// commands
-		"root":   true,
-		"series": true,
-		"movies": true,
-
-		// switches
-		"--help":    true,
-		"-h":        true,
-		"--version": true,
-		"-v":        true,
-
-		// flags
-		"--options":         true,
-		"-o":                true,
-		"--keep-ep-nums":    true,
-		"-ken":              true,
-		"--starting-ep-num": true,
-		"-sen":              true,
-		"--has-season-0":    true,
-		"-s0":               true,
-		"--naming-scheme":   true,
-		"-ns":               true,
-		"--logs":            true,
-		"-l":                true,
-	}
 	var newArg Arg
 	var value string
 	readValues := false
+
 	for i, arg := range args {
 		if arg == "" {
 			continue
 		}
 		if !readValues {
-			if isValidName[arg] {
+			if IsValidArgName(arg) {
 				newArg.name = arg
 				readValues = true
 			} else {
@@ -64,7 +68,7 @@ func TokenizeArgs(args []string) ([]Arg, error) {
 				tokenizedArgs = append(tokenizedArgs, newArg)
 			}
 		} else {
-			if isValidName[arg] {
+			if IsValidArgName(arg) {
 				newArg.value = value
 				tokenizedArgs = append(tokenizedArgs, newArg)
 				newArg = Arg{name: arg}
@@ -104,10 +108,10 @@ func newArgs() Args {
 		series: make([]string, 0),
 		movies: make([]string, 0),
 		options: Flags{
-			hasSeason0:    none[bool](),
-			keepEpNums:    none[bool](),
-			startingEpNum: none[int](),
-			namingScheme:  none[string](),
+			hasSeason0:    some[bool](false),
+			keepEpNums:    some[bool](false),
+			startingEpNum: some[int](1),
+			namingScheme:  some[string]("default"),
 		},
 		log: LogFlag{
 			level: INFO_LEVEL,
@@ -164,12 +168,6 @@ func ParseArgs(args []Arg) (Args, error) {
 	if len(args) < 1 {
 		return Args{}, fmt.Errorf("not enough arguments: '%v'", args)
 	}
-
-	directoryArgs := map[string]bool{
-		"root":   true,
-		"series": true,
-		"movies": true,
-	}
 	isAssigned := map[string]bool{
 		"--options":         false,
 		"--keep-ep-nums":    false,
@@ -193,8 +191,8 @@ func ParseArgs(args []Arg) (Args, error) {
 			Version(version)
 			return Args{}, SafeErrorF("safe exit")
 
-		} else if directoryArgs[arg.name] {
-			// no value after flag / flag after flag
+		} else if IsValidCommand(arg.name) {
+			// no value after command
 			if arg.value == "" {
 				return Args{}, fmt.Errorf("missing dir path value for flag '%s'", arg)
 			}
@@ -218,7 +216,7 @@ func ParseArgs(args []Arg) (Args, error) {
 			}
 
 		} else if arg.name == "--has-season-0" || arg.name == "-s0" {
-			if parsedArgs.options.hasSeason0.IsSome() {
+			if parsedArgs.options.hasSeason0.IsSome() && isAssigned["--has-season-0"] {
 				return Args{}, fmt.Errorf("only one --has-season-0 flag is allowed")
 			}
 			// use default value
@@ -242,7 +240,7 @@ func ParseArgs(args []Arg) (Args, error) {
 			}
 
 		} else if arg.name == "--keep-ep-nums" || arg.name == "-ken" {
-			if parsedArgs.options.keepEpNums.IsSome() {
+			if parsedArgs.options.keepEpNums.IsSome() && isAssigned["--keep-ep-nums"] {
 				return Args{}, fmt.Errorf("only one --keep-ep-nums flag is allowed")
 			}
 
@@ -267,7 +265,7 @@ func ParseArgs(args []Arg) (Args, error) {
 			}
 
 		} else if arg.name == "--starting-ep-num" || arg.name == "-sen" {
-			if parsedArgs.options.startingEpNum.IsSome() {
+			if parsedArgs.options.startingEpNum.IsSome() && isAssigned["--starting-ep-num"] {
 				return Args{}, fmt.Errorf("only one --starting-ep-num flag is allowed")
 			}
 
@@ -297,8 +295,21 @@ func ParseArgs(args []Arg) (Args, error) {
 			}
 			isAssigned["--options"] = true
 
+			if !isAssigned["--keep-ep-nums"] {
+				parsedArgs.options.keepEpNums = none[bool]()
+			}
+			if !isAssigned["--has-season-0"] {
+				parsedArgs.options.hasSeason0 = none[bool]()
+			}
+			if !isAssigned["--starting-ep-num"] {
+				parsedArgs.options.startingEpNum = none[int]()
+			}
+			if !isAssigned["--naming-scheme"] {
+				parsedArgs.options.namingScheme = none[string]()
+			}
+
 		} else if arg.name == "--naming-scheme" || arg.name == "-ns" {
-			if parsedArgs.options.namingScheme.IsSome() {
+			if parsedArgs.options.namingScheme.IsSome() && isAssigned["--naming-scheme"] {
 				return Args{}, fmt.Errorf("only one --naming-scheme flag is allowed")
 			}
 			if arg.value == "" {
@@ -341,21 +352,6 @@ func ParseArgs(args []Arg) (Args, error) {
 		return Args{}, err
 	}
 
-	// use default values for optional flags if not assigned var
-	if !isAssigned["--options"] {
-		if parsedArgs.options.hasSeason0.IsNone() && !isAssigned["--has-season-0"] {
-			parsedArgs.options.hasSeason0 = some[bool](false)
-		}
-		if parsedArgs.options.keepEpNums.IsNone() && !isAssigned["--keep-ep-nums"] {
-			parsedArgs.options.keepEpNums = some[bool](false)
-		}
-		if parsedArgs.options.startingEpNum.IsNone() && !isAssigned["--starting-ep-num"] {
-			parsedArgs.options.startingEpNum = some[int](1)
-		}
-		if parsedArgs.options.namingScheme.IsNone() && !isAssigned["--naming-scheme"] {
-			parsedArgs.options.namingScheme = some[string]("default")
-		}
-	}
 	return parsedArgs, nil
 }
 
