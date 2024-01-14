@@ -38,6 +38,7 @@ func Help(val string) {
 		HelpKEN(false)
 		HelpSEN(false)
 		HelpS0(false)
+		HelpOptions(false)
 		HelpNS(false)
 		HelpLogs(false)
 	case "-h", "--help":
@@ -58,10 +59,10 @@ func Help(val string) {
 		HelpS0(true)
 	case "-ns", "--naming-scheme":
 		HelpNS(true)
-	case "-l", "--logs":
-		HelpLogs(true)
 	case "-o", "--options":
 		HelpOptions(true)
+	case "-l", "--logs":
+		HelpLogs(true)
 	default:
 		gornLog(WARN, "invalid value for 'help':", val)
 		Help("")

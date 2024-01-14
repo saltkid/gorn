@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -10,6 +9,7 @@ import (
 )
 
 var version string
+var logLevel LogLevel = INFO_LEVEL // default log level
 
 func main() {
 	defer timer("main")()
@@ -21,12 +21,16 @@ func main() {
 		return
 	}
 	rawArgs, err := TokenizeArgs(os.Args[1:])
-	if err != nil { log.Fatalln(FATAL, err) }
+	if err != nil {
+		gornLog(FATAL, err)
+	}
 
 	args, err := ParseArgs(rawArgs)
 	if err != nil {
 		// scuffed safe exit for --help and --version
-		if _, ok := err.(SafeError); !ok { log.Fatalln(FATAL, err) }
+		if _, ok := err.(SafeError); !ok {
+			gornLog(FATAL, err)
+		}
 		return
 	}
 	args.Log()
@@ -54,7 +58,8 @@ func main() {
 }
 
 // ProcessMedia first categorizes the entries by type, then renames them using the given flags.
-// 	mediaFiles: The media files to process. This should be a pointer to a struct that implements the MediaFiles interface
+//
+//	mediaFiles: The media files to process. This should be a pointer to a struct that implements the MediaFiles interface
 //	entries: The entries to categorize by type
 //	flags: The flags to use for renaming
 //	wg: The wait group to use for synchronization
@@ -68,14 +73,14 @@ func ProcessMedia(mediaFiles MediaFiles, entries []string, flags Flags, wg *sync
 // LogRawEntries logs the uncategorized series and movie entries to the console.
 func LogRawEntries(seriesEntries []string, movieEntries []string) {
 	defer timer("LogRawEntries")()
-	
-	log.Println(INFO, "series dirs (", len(seriesEntries), "): ")
+
+	gornLog(INFO, "series dirs (", len(seriesEntries), "): ")
 	for _, series := range seriesEntries {
-		log.Println(INFO, "\t", series)
+		gornLog(INFO, "\t", series)
 	}
-	log.Println(INFO, "movie dirs (", len(movieEntries), "): ")
+	gornLog(INFO, "movie dirs (", len(movieEntries), "): ")
 	for _, movie := range movieEntries {
-		log.Println(INFO, "\t", movie)
+		gornLog(INFO, "\t", movie)
 	}
 	fmt.Println()
 }
@@ -120,9 +125,9 @@ func FetchEntries(rootDirs []string, seriesSourceDirs []string, movieSourceDirs 
 // FetchSourcesFromRoot retrieves the source directories from the given root.
 //
 // Sources are directories containing entries:
-//	- series source directories contains series entries
-//	- movie source directories contains movie entries
-func FetchSourcesFromRoot(root string) (map[string][]string) {
+//   - series source directories contains series entries
+//   - movie source directories contains movie entries
+func FetchSourcesFromRoot(root string) map[string][]string {
 	sourceDirs := map[string][]string{
 		"movies": {},
 		"series": {},
@@ -162,19 +167,19 @@ func FetchSourcesFromRoot(root string) (map[string][]string) {
 	})
 
 	if err != nil {
-		log.Println(WARN, "reading root directory error:", err)
+		gornLog(WARN, "reading root directory error:", err)
 	}
 
 	if len(sourceDirs["movies"]) == 0 && len(sourceDirs["series"]) == 0 {
-		log.Println(WARN, "no movie and/or series source directories found under:", root)
+		gornLog(WARN, "no movie and/or series source directories found under:", root)
 	}
 
 	return sourceDirs
 }
 
 // FetchSubdirs retrieves the actual entries of the given source directory.
-// 	- if source is a series source, this returns series entries
-//	- if source is a movie source, this returns movie entries
+//   - if source is a series source, this returns series entries
+//   - if source is a movie source, this returns movie entries
 func FetchSubdirs(source string) []string {
 	entries := []string{}
 	err := filepath.WalkDir(source, func(path string, d os.DirEntry, err error) error {
@@ -192,11 +197,11 @@ func FetchSubdirs(source string) []string {
 	})
 
 	if err != nil {
-		log.Println(WARN, "there was an error reading directory:", err)
+		gornLog(WARN, "there was an error reading directory:", err)
 	}
 
 	if len(entries) == 0 {
-		log.Println(WARN, "no entries found under", source)
+		gornLog(WARN, "no entries found under", source)
 	}
 
 	return entries

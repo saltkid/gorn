@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -51,7 +50,7 @@ func (info *SeriesInfo) Rename() {
 			return nil
 		})
 		if err != nil {
-			log.Println(WARN, "error reading media files:", err, "; skipping renaming all episodes in:", seasonPath)
+			gornLog(WARN, "error reading media files:", err, "; skipping renaming all episodes in:", seasonPath)
 			continue
 		}
 		sort.Sort(FilenameSort(mediaFiles))
@@ -88,7 +87,7 @@ func (info *SeriesInfo) Rename() {
 			for i, file := range mediaFiles {
 				epNum, err = ReadEpisodeNum(file)
 				if err != nil {
-					log.Println(WARN, "error reading episode number from", file, ":", err, "; skipping renaming")
+					gornLog(WARN, "error reading episode number from", file, ":", err, "; skipping renaming")
 					// don't include this episode in renaming
 					mediaFiles = append(mediaFiles[:i], mediaFiles[i+1:]...)
 				}
@@ -129,23 +128,23 @@ func (info *SeriesInfo) Rename() {
 				maxSeasonDigits, num, // season_pad, season_num
 				maxEpDigits, epNums[i], // ep_pad, epNum
 				title, file) // title, file path
-			
+
 			// TODO: decide whether to turn this into log or not
 			// fmt.Println(fmt.Sprintf("%-*s", 20, file), " --> ", fmt.Sprintf("%*s", 20, newName))
 			// fmt.Println("old", file, "\nnew", newName)
 
 			_, err = os.Stat(newName)
 			if err == nil {
-				log.Println(WARN, "file already exists: renaming", filepath.Base(file), "to", filepath.Base(newName), "failed; skipping renaming:", file)
+				gornLog(WARN, "file already exists: renaming", filepath.Base(file), "to", filepath.Base(newName), "failed; skipping renaming:", file)
 				continue
 			} else if os.IsNotExist(err) {
 				err = os.Rename(file, newName)
 				if err != nil {
-					log.Println(WARN, "renaming error:", err, "; skipping renaming:", file)
+					gornLog(WARN, "renaming error:", err, "; skipping renaming:", file)
 					continue
 				}
 			} else {
-				log.Println(WARN, "unexpected error when checking if file exists before renaming:", err)
+				gornLog(WARN, "unexpected error when checking if file exists before renaming:", err)
 				continue
 			}
 		}
@@ -156,7 +155,7 @@ func (info *SeriesInfo) Rename() {
 		for _, movie := range info.movies {
 			files, err := os.ReadDir(info.path + "/" + movie)
 			if err != nil {
-				log.Println(WARN, "error reading media files under ", info.path+"/"+movie, ":", err, "; skipping renaming")
+				gornLog(WARN, "error reading media files under ", info.path+"/"+movie, ":", err, "; skipping renaming")
 				continue
 			}
 
@@ -171,10 +170,10 @@ func (info *SeriesInfo) Rename() {
 			}
 
 			if len(mediaFiles) > 1 {
-				log.Println(WARN, "multiple media files found in supposed movie directory under series:", info.path+"/"+movie, "; skipping renaming")
+				gornLog(WARN, "multiple media files found in supposed movie directory under series:", info.path+"/"+movie, "; skipping renaming")
 				continue
 			} else if len(mediaFiles) == 0 {
-				log.Println(WARN, "no media files found in:", info.path+"/"+movie, "; skipping renaming")
+				gornLog(WARN, "no media files found in:", info.path+"/"+movie, "; skipping renaming")
 				continue
 			}
 
@@ -184,7 +183,7 @@ func (info *SeriesInfo) Rename() {
 			// fmt.Println("old", info.path+"/"+movie+"/"+mediaFiles[0], "new", info.path+"/"+movie+"/"+newName)
 			err = os.Rename(info.path+"/"+movie+"/"+mediaFiles[0], info.path+"/"+movie+"/"+newName)
 			if err != nil {
-				log.Println(WARN, "renaming error:", err, "; skipping renaming:", info.path+"/"+movie+"/"+mediaFiles[0])
+				gornLog(WARN, "renaming error:", err, "; skipping renaming:", info.path+"/"+movie+"/"+mediaFiles[0])
 				continue
 			}
 		}
@@ -203,22 +202,22 @@ func (info *MovieInfo) Rename(wg *sync.WaitGroup) {
 				old_name = dir + "/" + old_name
 				newName = dir + "/" + newName
 			}
-	
+
 			// TODO: decide whether to turn this into log or not
 			// fmt.Println(fmt.Sprintf("%-*s", 20, old_name), " --> ", fmt.Sprintf("%*s", 20, newName))
 			// fmt.Println("old", info.path+"/"+old_name, "new", info.path+"/"+newName)
-			_, err := os.Stat(info.path+"/"+newName)
+			_, err := os.Stat(info.path + "/" + newName)
 			if err == nil {
-				log.Println(WARN, "file already exists: renaming", filepath.Base(old_name), "to", filepath.Base(newName), "failed; skipping renaming:", info.path+"/"+old_name)
+				gornLog(WARN, "file already exists: renaming", filepath.Base(old_name), "to", filepath.Base(newName), "failed; skipping renaming:", info.path+"/"+old_name)
 				return
 			} else if os.IsNotExist(err) {
 				err = os.Rename(info.path+"/"+old_name, info.path+"/"+newName)
 				if err != nil {
-					log.Println(WARN, "renaming error:", err, "; skipping renaming:", info.path+"/"+old_name)
+					gornLog(WARN, "renaming error:", err, "; skipping renaming:", info.path+"/"+old_name)
 					return
 				}
 			} else {
-				log.Println(WARN, "unexpected error when checking if file exists before renaming:", err)
+				gornLog(WARN, "unexpected error when checking if file exists before renaming:", err)
 				return
 			}
 		}(dir, file)
@@ -363,7 +362,7 @@ func GenerateNewName(namingScheme Option[string], season_pad int, season_num int
 				regex_pattern := strings.Trim(val, "'")
 				_, err := regexp.Compile(regex_pattern)
 				if err != nil {
-					log.Println(WARN, "invalid regex:", regex_pattern, "; using entire parent name:", parent_name, " instead in renaming:", abs_path, "using naming scheme:", scheme)	
+					gornLog(WARN, "invalid regex:", regex_pattern, "; using entire parent name:", parent_name, " instead in renaming:", abs_path, "using naming scheme:", scheme)
 					return parent_name
 				}
 				sub_regexes := SplitRegexByPipe(regex_pattern)
@@ -374,7 +373,7 @@ func GenerateNewName(namingScheme Option[string], season_pad int, season_num int
 						return sub_match[1]
 					}
 				}
-				log.Println(WARN, "no substring match found in regex:", regex_pattern, "; using entire parent name:", parent_name, " instead in renaming:", abs_path, "using naming scheme:", scheme)
+				gornLog(WARN, "no substring match found in regex:", regex_pattern, "; using entire parent name:", parent_name, " instead in renaming:", abs_path, "using naming scheme:", scheme)
 				return parent_name
 
 			// <parent: 1>

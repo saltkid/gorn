@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -14,12 +13,14 @@ import (
 // It has a name and a value where an Arg can only have one value
 //
 // An Arg can be a command, a switch, or a flag.
+//
 //	Commands generally have no dashes
 //	Switches and flags generally have a dash (-) prepended to their names
 type Arg struct {
 	name  string
 	value string
 }
+
 func IsValidCommand(name string) bool {
 	return name == "root" ||
 		name == "series" ||
@@ -47,7 +48,7 @@ func IsValidFlag(name string) bool {
 		name == "-o"
 }
 func IsValidArgName(name string) bool {
-		return IsValidCommand(name) || IsValidSwitch(name) || IsValidFlag(name)
+	return IsValidCommand(name) || IsValidSwitch(name) || IsValidFlag(name)
 }
 
 func TokenizeArgs(args []string) ([]Arg, error) {
@@ -101,8 +102,9 @@ type Args struct {
 	series  []string
 	movies  []string
 	options Flags
-	log 	LogFlag
+	log     LogFlag
 }
+
 // Flags are options for modifying the behavior of renaming files
 type Flags struct {
 	keepEpNums    Option[bool]
@@ -116,20 +118,23 @@ type Flags struct {
 type LogFlag struct {
 	level LogLevel
 }
+type LogHeader string
+
 // For text color on log headers
 const (
 	// for informational logs
-	INFO = "[INFO] " // no color
+	INFO LogHeader = "[INFO] " // no color
 
 	// can safely skip error, doesn't interrupt process
-	WARN = "\033[93m[WARN]\033[0m " // yellow
+	WARN LogHeader = "\033[93m[WARN]\033[0m " // yellow
 
 	// cannot safely skip error, must interrupt process
-	FATAL = "\033[91m[FATAL]\033[0m " // red
+	FATAL LogHeader = "\033[91m[FATAL]\033[0m " // red
 
 	// for timing purposes
-	TIME = "\033[94m[TIME]\033[0m " // blue
+	TIME LogHeader = "\033[94m[TIME]\033[0m " // blue
 )
+
 type LogLevel int8 // can only be 1-4
 const (
 	FATAL_LEVEL LogLevel = iota + 1
@@ -137,6 +142,7 @@ const (
 	INFO_LEVEL
 	TIME_LEVEL
 )
+
 func (l *LogFlag) Level() (string, error) {
 	switch l.level {
 	case FATAL_LEVEL:
@@ -151,9 +157,11 @@ func (l *LogFlag) Level() (string, error) {
 		return "", fmt.Errorf("invalid log level: %d", l.level)
 	}
 }
+
 // ToLogLevel converts a string to a LogLevel if the string passed is valid; otherwise it returns an error.
-// 
+//
 // Valid log levels:
+//
 //	none, all, fatal, warn, info, time
 func ToLogLevel(s string) (LogLevel, error) {
 	switch s {
@@ -170,6 +178,7 @@ func ToLogLevel(s string) (LogLevel, error) {
 	}
 	return -1, fmt.Errorf("invalid value '%s' for --logs. Must be 'all', 'none', or a valid log header", s)
 }
+
 // newArgs returns a new Args struct with default values for the Flags
 //
 // Commands though are empty by default and need to be populated
@@ -194,42 +203,42 @@ func (args *Args) Log() {
 	defer timer("Args.Log")()
 
 	if len(args.root) > 0 {
-		log.Println(INFO, "root directories: ")
+		gornLog(INFO, "root directories: ")
 		for _, root := range args.root {
-			log.Println(INFO, "\t", root)
+			gornLog(INFO, "\t", root)
 		}
 	}
 	if len(args.series) > 0 {
-		log.Println(INFO, "series sources:")
+		gornLog(INFO, "series sources:")
 		for _, series := range args.series {
-			log.Println(INFO, "\t", series)
+			gornLog(INFO, "\t", series)
 		}
 	}
 	if len(args.movies) > 0 {
-		log.Println(INFO, "movies sources:")
+		gornLog(INFO, "movies sources:")
 		for _, movie := range args.movies {
-			log.Println(INFO, "\t", movie)
+			gornLog(INFO, "\t", movie)
 		}
 	}
 	ken, err := args.options.keepEpNums.Get()
 	if err == nil {
-		log.Println(INFO, "keep episode numbers: ", ken)
+		gornLog(INFO, "keep episode numbers: ", ken)
 	}
 	sen, err := args.options.startingEpNum.Get()
 	if err == nil {
-		log.Println(INFO, "starting episode number: ", sen)
+		gornLog(INFO, "starting episode number: ", sen)
 	}
 	s0, err := args.options.hasSeason0.Get()
 	if err == nil {
-		log.Println(INFO, "has season 0: ", s0)
+		gornLog(INFO, "has season 0: ", s0)
 	}
 	ns, err := args.options.namingScheme.Get()
 	if err == nil {
-		log.Println(INFO, "naming scheme: ", ns)
+		gornLog(INFO, "naming scheme: ", ns)
 	}
 	level, err := args.log.Level()
 	if err == nil {
-		log.Println(INFO, "Showing the following logs:", level)
+		gornLog(INFO, "Showing the following logs:", level)
 	}
 }
 
@@ -425,10 +434,11 @@ func ParseArgs(args []Arg) (Args, error) {
 
 	return parsedArgs, nil
 }
+
 // ValidateNamingScheme checks if a naming scheme is valid by:
-//  - tokenizing APIs
-//  - checking if each API is valid
-//  - validating each API's value if user provided any
+//   - tokenizing APIs
+//   - checking if each API is valid
+//   - validating each API's value if user provided any
 func ValidateNamingScheme(s string) error {
 	if s[0] != '"' || s[len(s)-1] != '"' {
 		return fmt.Errorf("naming scheme must be enclosed in double quotes: %s", s)
@@ -527,6 +537,7 @@ func ValidateNamingScheme(s string) error {
 
 	return nil
 }
+
 // Splits the naming scheme into a list of APIs
 func TokenizeNamingScheme(s string) ([]string, error) {
 	isToken := false
@@ -562,11 +573,12 @@ func TokenizeNamingScheme(s string) ([]string, error) {
 
 	return namingScheme, nil
 }
+
 // ValidateRoots checks if:
-//  - there is at least one root/source directory
-//  - each root/source directory exists
-//  - each root/source directory is not a subdirectory of another root/source directory
-//  - each root/source directory is not a duplicate of another root/source directory
+//   - there is at least one root/source directory
+//   - each root/source directory exists
+//   - each root/source directory is not a subdirectory of another root/source directory
+//   - each root/source directory is not a duplicate of another root/source directory
 func ValidateRoots(root []string, series []string, movies []string) error {
 	// must at least have one of any
 	if len(root) == 0 && len(series) == 0 && len(movies) == 0 {

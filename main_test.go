@@ -565,14 +565,12 @@ func Test_ParseArgs(t *testing.T) {
 	if err != nil {
 		t.Errorf("unexpected error: '%s'", err)
 	} else {
-
 		_, err = ParseArgs(rawArgs)
 		if err == nil {
 			t.Errorf("supposed to exit safely")
 		} else {
 			t.Log(cmd, err)
 		}
-
 	}
 	cmd = "-h -v"
 	command = strings.Split(cmd, " ")
@@ -580,14 +578,12 @@ func Test_ParseArgs(t *testing.T) {
 	if err != nil {
 		t.Errorf("unexpected error: '%s'", err)
 	} else {
-
 		_, err = ParseArgs(rawArgs)
 		if err == nil {
 			t.Errorf("supposed to exit safely")
 		} else {
 			t.Log(cmd, err)
 		}
-
 	}
 	cmd = "-h -o"
 	command = strings.Split(cmd, " ")
