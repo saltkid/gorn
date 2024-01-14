@@ -91,7 +91,9 @@ These are additional options that can be passed to the cli. For a more detailed 
     - **values:** `yes | no | default | var`
 4. `--options | -o`
     - **values:** none
-5. `--naming-scheme | -ns`
+5.  `--logs | -l`
+    - **values:** `all | none | <log-header>`
+6. `--naming-scheme | -ns`
     - **values:** `"<scheme>"| default | var`
 
 ### [*scheme*](https://github.com/saltkid/gorn/wiki/Usage#naming-scheme-apis)
