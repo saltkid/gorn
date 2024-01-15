@@ -602,10 +602,6 @@ func ValidateRoots(root []string, series []string, movies []string) error {
 	}
 
 	for i, dir := range combinedDirs {
-		// check if exists
-		if _, err := os.Stat(dir); err != nil {
-			return fmt.Errorf("directory %s does not exist", dir)
-		}
 		// check if any directory is duplicated, or is a subdirectory of another directory
 		for _, dir2 := range combinedDirs[i+1:] {
 			if strings.EqualFold(dir, dir2) {
