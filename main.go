@@ -40,17 +40,20 @@ func main() {
 	//   - we already checked for errors in ParseArgs and TokenizeArgs
 	//   - we can safely skip renaming a file if an error does occur
 	seriesEntries, movieEntries := FetchEntries(args.root, args.series, args.movies)
+	if len(seriesEntries) == 0 && args.flags.AnyAssigned() {
+		gornLog(WARN, "Flags were set, but no series entries were found. Flags modify the behavior of renaming series entries only.")
+	}
 	LogRawEntries(seriesEntries, movieEntries)
 
 	wg := new(sync.WaitGroup)
 
 	series := &Series{}
 	wg.Add(1)
-	go ProcessMedia(series, seriesEntries, args.options, wg)
+	go ProcessMedia(series, seriesEntries, args.flags, wg)
 
 	movies := &Movies{}
 	wg.Add(1)
-	go ProcessMedia(movies, movieEntries, args.options, wg)
+	go ProcessMedia(movies, movieEntries, args.flags, wg)
 
 	wg.Wait()
 	movies.LogEntries()

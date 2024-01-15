@@ -101,7 +101,7 @@ type Args struct {
 	root    []string
 	series  []string
 	movies  []string
-	options Flags
+	flags Flags
 }
 
 // Flags are options for modifying the behavior of renaming files
@@ -110,6 +110,10 @@ type Flags struct {
 	startingEpNum Option[int]
 	hasSeason0    Option[bool]
 	namingScheme  Option[string]
+}
+// Returns true if any of the flags are assigned
+func (f *Flags) AnyAssigned() bool {
+	return f.keepEpNums.IsSome() || f.startingEpNum.IsSome() || f.hasSeason0.IsSome() || f.namingScheme.IsSome()
 }
 
 // For text color on log headers
@@ -193,7 +197,7 @@ func newArgs() Args {
 		root:   make([]string, 0),
 		series: make([]string, 0),
 		movies: make([]string, 0),
-		options: Flags{
+		flags: Flags{
 			hasSeason0:    some[bool](false),
 			keepEpNums:    some[bool](false),
 			startingEpNum: some[int](1),
@@ -223,19 +227,19 @@ func (args *Args) Log() {
 			gornLog(INFO, "\t", movie)
 		}
 	}
-	ken, err := args.options.keepEpNums.Get()
+	ken, err := args.flags.keepEpNums.Get()
 	if err == nil {
 		gornLog(INFO, "keep episode numbers: ", ken)
 	}
-	sen, err := args.options.startingEpNum.Get()
+	sen, err := args.flags.startingEpNum.Get()
 	if err == nil {
 		gornLog(INFO, "starting episode number: ", sen)
 	}
-	s0, err := args.options.hasSeason0.Get()
+	s0, err := args.flags.hasSeason0.Get()
 	if err == nil {
 		gornLog(INFO, "has season 0: ", s0)
 	}
-	ns, err := args.options.namingScheme.Get()
+	ns, err := args.flags.namingScheme.Get()
 	if err == nil {
 		gornLog(INFO, "naming scheme: ", ns)
 	}
@@ -302,12 +306,12 @@ func ParseArgs(args []Arg) (Args, error) {
 			}
 
 		} else if arg.name == "--has-season-0" || arg.name == "-s0" {
-			if parsedArgs.options.hasSeason0.IsSome() && isAssigned["--has-season-0"] {
+			if parsedArgs.flags.hasSeason0.IsSome() && isAssigned["--has-season-0"] {
 				return Args{}, fmt.Errorf("only one --has-season-0 flag is allowed")
 			}
 			// use default value
 			if arg.value == "" {
-				parsedArgs.options.hasSeason0 = some[bool](true)
+				parsedArgs.flags.hasSeason0 = some[bool](true)
 				isAssigned["--has-season-0"] = true
 
 			} else if arg.value != "yes" && arg.value != "var" && arg.value != "no" && arg.value != "default" {
@@ -316,23 +320,23 @@ func ParseArgs(args []Arg) (Args, error) {
 			} else {
 				switch arg.value {
 				case "yes":
-					parsedArgs.options.hasSeason0 = some[bool](true)
+					parsedArgs.flags.hasSeason0 = some[bool](true)
 				case "no", "default":
-					parsedArgs.options.hasSeason0 = some[bool](false)
+					parsedArgs.flags.hasSeason0 = some[bool](false)
 				case "var":
-					parsedArgs.options.hasSeason0 = none[bool]()
+					parsedArgs.flags.hasSeason0 = none[bool]()
 				}
 				isAssigned["--has-season-0"] = true
 			}
 
 		} else if arg.name == "--keep-ep-nums" || arg.name == "-ken" {
-			if parsedArgs.options.keepEpNums.IsSome() && isAssigned["--keep-ep-nums"] {
+			if parsedArgs.flags.keepEpNums.IsSome() && isAssigned["--keep-ep-nums"] {
 				return Args{}, fmt.Errorf("only one --keep-ep-nums flag is allowed")
 			}
 
 			// use default value
 			if arg.value == "" {
-				parsedArgs.options.keepEpNums = some[bool](true)
+				parsedArgs.flags.keepEpNums = some[bool](true)
 				isAssigned["--keep-ep-nums"] = true
 
 			} else if arg.value != "yes" && arg.value != "var" && arg.value != "no" && arg.value != "default" {
@@ -341,23 +345,23 @@ func ParseArgs(args []Arg) (Args, error) {
 			} else {
 				switch arg.value {
 				case "yes":
-					parsedArgs.options.keepEpNums = some[bool](true)
+					parsedArgs.flags.keepEpNums = some[bool](true)
 				case "no", "default":
-					parsedArgs.options.keepEpNums = some[bool](false)
+					parsedArgs.flags.keepEpNums = some[bool](false)
 				case "var":
-					parsedArgs.options.keepEpNums = none[bool]()
+					parsedArgs.flags.keepEpNums = none[bool]()
 				}
 				isAssigned["--keep-ep-nums"] = true
 			}
 
 		} else if arg.name == "--starting-ep-num" || arg.name == "-sen" {
-			if parsedArgs.options.startingEpNum.IsSome() && isAssigned["--starting-ep-num"] {
+			if parsedArgs.flags.startingEpNum.IsSome() && isAssigned["--starting-ep-num"] {
 				return Args{}, fmt.Errorf("only one --starting-ep-num flag is allowed")
 			}
 
 			// use default value
 			if arg.value == "" {
-				parsedArgs.options.startingEpNum = some[int](1)
+				parsedArgs.flags.startingEpNum = some[int](1)
 				isAssigned["--starting-ep-num"] = true
 
 			} else if value, err := strconv.Atoi(arg.value); err != nil && value < 1 && arg.value != "var" && arg.value != "default" {
@@ -366,11 +370,11 @@ func ParseArgs(args []Arg) (Args, error) {
 			} else {
 				switch arg.value {
 				case "var":
-					parsedArgs.options.startingEpNum = none[int]()
+					parsedArgs.flags.startingEpNum = none[int]()
 				case "default":
-					parsedArgs.options.startingEpNum = some[int](1)
+					parsedArgs.flags.startingEpNum = some[int](1)
 				default:
-					parsedArgs.options.startingEpNum = some[int](value)
+					parsedArgs.flags.startingEpNum = some[int](value)
 				}
 				isAssigned["--starting-ep-num"] = true
 			}
@@ -382,20 +386,20 @@ func ParseArgs(args []Arg) (Args, error) {
 			isAssigned["--options"] = true
 
 			if !isAssigned["--keep-ep-nums"] {
-				parsedArgs.options.keepEpNums = none[bool]()
+				parsedArgs.flags.keepEpNums = none[bool]()
 			}
 			if !isAssigned["--has-season-0"] {
-				parsedArgs.options.hasSeason0 = none[bool]()
+				parsedArgs.flags.hasSeason0 = none[bool]()
 			}
 			if !isAssigned["--starting-ep-num"] {
-				parsedArgs.options.startingEpNum = none[int]()
+				parsedArgs.flags.startingEpNum = none[int]()
 			}
 			if !isAssigned["--naming-scheme"] {
-				parsedArgs.options.namingScheme = none[string]()
+				parsedArgs.flags.namingScheme = none[string]()
 			}
 
 		} else if arg.name == "--naming-scheme" || arg.name == "-ns" {
-			if parsedArgs.options.namingScheme.IsSome() && isAssigned["--naming-scheme"] {
+			if parsedArgs.flags.namingScheme.IsSome() && isAssigned["--naming-scheme"] {
 				return Args{}, fmt.Errorf("only one --naming-scheme flag is allowed")
 			}
 			if arg.value == "" {
@@ -409,12 +413,12 @@ func ParseArgs(args []Arg) (Args, error) {
 			} else {
 				switch arg.value {
 				case "default":
-					parsedArgs.options.namingScheme = some[string]("default")
+					parsedArgs.flags.namingScheme = some[string]("default")
 				case "var":
-					parsedArgs.options.namingScheme = none[string]()
+					parsedArgs.flags.namingScheme = none[string]()
 				default:
 					namingScheme := strings.Trim(arg.value, `"`)
-					parsedArgs.options.namingScheme = some[string](namingScheme)
+					parsedArgs.flags.namingScheme = some[string](namingScheme)
 				}
 			}
 		} else if arg.name == "--logs" || arg.name == "-l" {
