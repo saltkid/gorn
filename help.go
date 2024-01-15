@@ -148,61 +148,65 @@ func HelpMovies(verbose bool) {
 func HelpKEN(verbose bool) {
 	fmt.Printf("%-60s%s", "  --keep-ep-num, -ken",
 		"Keep original episode numbers in filename based on common naming patterns\n")
-	fmt.Println("    args: yes | no | default | var")
+	fmt.Println("    args: var | no input")
 	if verbose {
+		fmt.Println("\n  examples: gorn -ken root /path/to/root")
+		fmt.Println(`            gorn --keep-ep-nums var root /path/to/root"`)
 		fmt.Println("\n  common naming patterns taken into account are:")
 		fmt.Println("    S01E02     | S03.E04   | S05_E06 | S07-E08 | S09xE10 | S11 E12")
 		fmt.Println("    01.02      | 03_04     | 05-06   | 07 x 08 | 09 10   | [11x12]")
 		fmt.Println("    Episode 01 | Episode02 | EP03    | EP-04   | E_05    | EP.06")
-		fmt.Println("\n  '.', '-', 'x', '_', and ' ' are valid season-episode separators.")
-		fmt.Println("  NOTE: This is not how the default naming scheme looks like in gorn. These common naming cases are just here to read the episode number from the filename.")
+		fmt.Println("\n  NOTES:")
+		fmt.Println("        If -ken is omitted, the default value is 'false'")
+		fmt.Println("        If no input follows -ken, the default value is 'true'")
+		fmt.Println("\n        '.', '-', 'x', '_', and ' ' are valid season-episode separators.")
 		fmt.Println("        second number is episode")
+		fmt.Println("        This is not how the default naming scheme looks like in gorn.")
+		fmt.Println("        These common naming cases are only used to read the episode number from the filename.")
 		fmt.Println("        if no common naming pattern is found, the file will not be renamed.")
-		fmt.Println("\n  examples: gorn -ken yes root /path/to/root")
-		fmt.Println("            gorn -ken no root /path/to/root")
-		fmt.Println("            gorn -ken default root /path/to/root")
-		fmt.Println("            gorn -ken var root /path/to/root")
 	}
 }
 
 func HelpSEN(verbose bool) {
 	fmt.Printf("%-60s%s", "  --starting-ep-num, -sen",
 		"Set the starting episode number in renaming.\n")
-	fmt.Println("    args: <int> | default | var")
+	fmt.Println("    args: <int> | var | no input")
 	if verbose {
+		fmt.Println("\n  examples: gorn -sen 1 root /path/to/root")
+		fmt.Println("            gorn -sen var root /path/to/root")
+		fmt.Println("            gorn --starting-ep-num 25 root /path/to/root")
 		fmt.Println("\n  This can be useful if episodes are in absolute order but in different season directories for separation")
 		fmt.Println("  User can specify different starting episode number for each of those seasons")
-		fmt.Println("\n  examples: gorn -sen 1 root /path/to/root")
-		fmt.Println("            gorn -sen 25 root /path/to/root")
-		fmt.Println("            gorn -sen default root /path/to/root")
-		fmt.Println("            gorn -sen var root /path/to/root")
+		fmt.Println("\n  NOTES: If -sen is omitted or no input follows -sen, the default value is '1'")
 	}
 }
 
 func HelpS0(verbose bool) {
 	fmt.Printf("%-60s%s", "  --has-season-0, -s0",
 		"Treat extras/specials/OVA/etc directory as season 0\n")
-	fmt.Println("    args: yes | no | default | var")
+	fmt.Println("    args: var | no input")
 	if verbose {
+		fmt.Println("\n  examples: gorn -s0 root /path/to/root")
+		fmt.Println(`            gorn --has-season-0 var root /path/to/root"`)
 		fmt.Println("\n  Note that if this is set, there must be only one specials/extras/OVA directory under a series entry")
 		fmt.Println("\n  This is more useful if specified at the series entry level by doing")
 		fmt.Println("  'gorn -r path/to/root -s0 var'")
 		fmt.Println("  This will let gorn prompt the user at: per series type level and per series entry level")
 		fmt.Println("  if var is inputted at the per series type level, it will prompt the user at per series entry level which is where this flag will be most useful")
-		fmt.Println("\n  examples: gorn -s0 yes root /path/to/root")
-		fmt.Println("            gorn -s0 no root /path/to/root")
-		fmt.Println("            gorn -s0 default root /path/to/root")
-		fmt.Println("            gorn -s0 var root /path/to/root")
+		fmt.Println("\n  NOTES:")
+		fmt.Println("        If -s0 is omitted, the default value is 'false'")
+		fmt.Println("        If no input follows -s0, the default value is 'true'")
+
 	}
 }
 
 func HelpNS(verbose bool) {
 	fmt.Printf("%-60s%s", "  --naming-scheme, -ns",
 		"Change the naming scheme\n")
-	fmt.Println("    args: <scheme> | default | var")
+	fmt.Println(`    args: "<scheme>" | default | var`)
 	if verbose {
 		fmt.Println("\n  examples: gorn -ns default root /path/to/root")
-		fmt.Println(`            gorn -ns "S<season_num>E<episode_num> <parent: 1,5> <parent-parent: '_(\d+)_'> <p-3: 2,5> [<self: '\.(\w+)$'>] root /path/to/root"`)
+		fmt.Println(`            gorn --naming-scheme "S<season_num>E<episode_num> <parent: 1,5> <parent-parent: '_(\d+)_'> <p-3: 2,5> [<self: '\.(\w+)$'>] root /path/to/root"`)
 		fmt.Println("\n  Naming Scheme APIs:")
 		fmt.Println("    1. <season_num>")
 		fmt.Println("       represents the season number which is based on series type, and directory structure and naming")
@@ -235,17 +239,19 @@ func HelpNS(verbose bool) {
 		fmt.Println("\n    4. <self>")
 		fmt.Println("       same as parent but instead of being based on the parent directory name, it is based on the name of the media file before renaming it")
 		fmt.Println("       additional options are the same as well except for `<p-number>`. self has no short form")
+		fmt.Println("\n  NOTES:")
+		fmt.Println("    -ns must be followed by a value")
 	}
 }
 
 func HelpLogs(verbose bool) {
 	fmt.Printf("%-60s%s", "  --log, -l",
 		"Prints the logs to the console\n")
-	fmt.Println("    args: all | none | <header>")
+	fmt.Println("    args: <log-header> | no input")
 	if verbose {
-		fmt.Println("\n  examples: gorn -l")
-		fmt.Println("            gorn -l all")
-		fmt.Println("            gorn -l info")
+		fmt.Println("\n  examples: gorn -l root /path/to/root")
+		fmt.Println("            gorn -l info root /path/to/root")
+		fmt.Println("            gorn --logs time-only")
 		fmt.Println("\n  Headers:")
 		fmt.Println("    info: informational logs")
 		fmt.Println("        : shows info, warn, and fatal logs")
@@ -255,25 +261,24 @@ func HelpLogs(verbose bool) {
 		fmt.Println("        : shows only fatal logs")
 		fmt.Println("    time: logs for timing processes; for performance purposes")
 		fmt.Println("        : shows time, info, warn, and fatal logs")
-		fmt.Println("\n  Notes:")
-		fmt.Println("    - if no args are specified, all logs will be shown")
-		fmt.Println("    - only one --logs arg can be specified")
+		fmt.Println("\n  NOTE: if --logs is omitted no input follows --logs, the default value of 'info' will be the value")
 	}
 }
 
 func HelpOptions(verbose bool) {
 	fmt.Printf("%-60s%s", "  --options, -o",
 		"Assign none to Flags that the user did not explicitly assign anything to in the initial execution of gorn\n")
-	fmt.Println("    args: all | none | <header>")
 	if verbose {
+		fmt.Println("\n  example: gorn -o root /path/to/root")
+		fmt.Println("           gorn --options root /path/to/root")
 		fmt.Println("\n  By default, without --options, if the user did not explicitly assign")
 		fmt.Println("  anything to the flags, gorn will assign default values to the flags.")
 		fmt.Println("  This behavior can be overridden by using --options")
 		fmt.Println("\n  example: gorn --options --keep-ep-nums")
 		fmt.Println("\n  In the example above, --keep-ep-nums will have the default value of true")
-		fmt.Println("  However, --starting-ep-num and --has-season-0 is not explicitly assigned")
-		fmt.Println("  to the flags. So, gorn will assign the default value of false to the flags")
-		fmt.Println("  This means the user will be prompted to assign a value to the above two flags at:")
+		fmt.Println("  However, --starting-ep-num, --has-season-0, and --naming-scheme is not explicitly")
+		fmt.Println("  passed by the user. So, gorn will assign none to the flags")
+		fmt.Println("\n  This means the user will be prompted to assign a value to the above two flags at:")
 		fmt.Println("    1. per series type level")
 		fmt.Println("    2. per series entry level")
 		fmt.Println("    3. per season of series entry level")
