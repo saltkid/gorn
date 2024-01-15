@@ -170,14 +170,16 @@ func HelpKEN(verbose bool) {
 func HelpSEN(verbose bool) {
 	fmt.Printf("%-60s%s", "  --starting-ep-num, -sen",
 		"Set the starting episode number in renaming.\n")
-	fmt.Println("    args: <int> | var | no input")
+	fmt.Println("    args: <int> | var")
 	if verbose {
 		fmt.Println("\n  examples: gorn -sen 1 root /path/to/root")
 		fmt.Println("            gorn -sen var root /path/to/root")
 		fmt.Println("            gorn --starting-ep-num 25 root /path/to/root")
 		fmt.Println("\n  This can be useful if episodes are in absolute order but in different season directories for separation")
 		fmt.Println("  User can specify different starting episode number for each of those seasons")
-		fmt.Println("\n  NOTES: If -sen is omitted or no input follows -sen, the default value is '1'")
+		fmt.Println("\n  NOTES:")
+		fmt.Println("        If -sen is omitted, the default value is '1'")
+		fmt.Println("        -sen must be followed by a value")
 	}
 }
 

@@ -86,7 +86,7 @@ These are additional options that can be passed to the cli. For a more detailed 
 1. `--keep-ep-num | -ken`
     - **values:** `var` or none
 2. `--starting-ep-num | -sen`
-    - **values:** `var` or none
+    - **values:** `<int> | var`
 3. `--has-season-0 | -s0`
     - **values:** `var` or none
 4. `--options | -o`
