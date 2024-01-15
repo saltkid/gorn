@@ -312,74 +312,42 @@ func ParseArgs(args []Arg) (Args, Mode, error) {
 			if parsedArgs.flags.hasSeason0.IsSome() && isAssigned["--has-season-0"] {
 				return Args{}, 0, fmt.Errorf("only one --has-season-0 flag is allowed")
 			}
-			// use default value
-			if arg.value == "" {
+			switch arg.value {
+			case "":
 				parsedArgs.flags.hasSeason0 = some[bool](true)
 				isAssigned["--has-season-0"] = true
-
-			} else if arg.value != "yes" && arg.value != "var" && arg.value != "no" && arg.value != "default" {
-				return Args{}, 0, fmt.Errorf("invalid value '%s' for flag --has-season-0. Must be 'yes', 'no', 'var, or 'default", arg.value)
-
-			} else {
-				switch arg.value {
-				case "yes":
-					parsedArgs.flags.hasSeason0 = some[bool](true)
-				case "no", "default":
-					parsedArgs.flags.hasSeason0 = some[bool](false)
-				case "var":
-					parsedArgs.flags.hasSeason0 = none[bool]()
-				}
+			case "var":
+				parsedArgs.flags.hasSeason0 = none[bool]()
 				isAssigned["--has-season-0"] = true
+			default:
+				return Args{}, 0, fmt.Errorf("invalid value '%s' for flag --has-season-0. Must be 'var, or no input", arg.value)
 			}
 
 		} else if arg.name == "--keep-ep-nums" || arg.name == "-ken" {
 			if parsedArgs.flags.keepEpNums.IsSome() && isAssigned["--keep-ep-nums"] {
 				return Args{}, 0, fmt.Errorf("only one --keep-ep-nums flag is allowed")
 			}
-
-			// use default value
-			if arg.value == "" {
+			switch arg.value {
+			case "":
 				parsedArgs.flags.keepEpNums = some[bool](true)
 				isAssigned["--keep-ep-nums"] = true
-
-			} else if arg.value != "yes" && arg.value != "var" && arg.value != "no" && arg.value != "default" {
-				return Args{}, 0, fmt.Errorf("invalid value '%s' for --keep-ep-nums. Must be 'yes', 'no', 'var', or 'default", arg.value)
-
-			} else {
-				switch arg.value {
-				case "yes":
-					parsedArgs.flags.keepEpNums = some[bool](true)
-				case "no", "default":
-					parsedArgs.flags.keepEpNums = some[bool](false)
-				case "var":
-					parsedArgs.flags.keepEpNums = none[bool]()
-				}
+			case "var":
+				parsedArgs.flags.keepEpNums = none[bool]()
 				isAssigned["--keep-ep-nums"] = true
+			default:
+				return Args{}, 0, fmt.Errorf("invalid value '%s' for --keep-ep-nums. Must be 'var', or no input", arg.value)
 			}
 
 		} else if arg.name == "--starting-ep-num" || arg.name == "-sen" {
 			if parsedArgs.flags.startingEpNum.IsSome() && isAssigned["--starting-ep-num"] {
 				return Args{}, 0, fmt.Errorf("only one --starting-ep-num flag is allowed")
 			}
-
-			// use default value
-			if arg.value == "" {
-				parsedArgs.flags.startingEpNum = some[int](1)
+			switch arg.value {
+			case "var":
+				parsedArgs.flags.startingEpNum = none[int]()
 				isAssigned["--starting-ep-num"] = true
-
-			} else if value, err := strconv.Atoi(arg.value); err != nil && value < 1 && arg.value != "var" && arg.value != "default" {
-				return Args{}, 0, fmt.Errorf("invalid value '%s' for --starting-ep-num. Must be a valid positive int or 'var", arg.value)
-
-			} else {
-				switch arg.value {
-				case "var":
-					parsedArgs.flags.startingEpNum = none[int]()
-				case "default":
-					parsedArgs.flags.startingEpNum = some[int](1)
-				default:
-					parsedArgs.flags.startingEpNum = some[int](value)
-				}
-				isAssigned["--starting-ep-num"] = true
+			default:
+				return Args{}, 0, fmt.Errorf("invalid value '%s' for --starting-ep-num. Must be a valid positive int, or 'var'", arg.value)
 			}
 
 		} else if arg.name == "--options" || arg.name == "-o" {
