@@ -148,7 +148,7 @@ func HelpMovies(verbose bool) {
 func HelpKEN(verbose bool) {
 	fmt.Printf("%-60s%s", "  --keep-ep-num, -ken",
 		"Keep original episode numbers in filename based on common naming patterns\n")
-	fmt.Println("    args: var | no input")
+	fmt.Println("    args: var | no value")
 	if verbose {
 		fmt.Println("\n  examples: gorn -ken root /path/to/root")
 		fmt.Println(`            gorn --keep-ep-nums var root /path/to/root"`)
@@ -158,7 +158,7 @@ func HelpKEN(verbose bool) {
 		fmt.Println("    Episode 01 | Episode02 | EP03    | EP-04   | E_05    | EP.06")
 		fmt.Println("\n  NOTES:")
 		fmt.Println("        If -ken is omitted, the default value is 'false'")
-		fmt.Println("        If no input follows -ken, the default value is 'true'")
+		fmt.Println("        If no value follows -ken, the default value is 'true'")
 		fmt.Println("\n        '.', '-', 'x', '_', and ' ' are valid season-episode separators.")
 		fmt.Println("        second number is episode")
 		fmt.Println("        This is not how the default naming scheme looks like in gorn.")
@@ -186,7 +186,7 @@ func HelpSEN(verbose bool) {
 func HelpS0(verbose bool) {
 	fmt.Printf("%-60s%s", "  --has-season-0, -s0",
 		"Treat extras/specials/OVA/etc directory as season 0\n")
-	fmt.Println("    args: var | no input")
+	fmt.Println("    args: var | no value")
 	if verbose {
 		fmt.Println("\n  examples: gorn -s0 root /path/to/root")
 		fmt.Println(`            gorn --has-season-0 var root /path/to/root"`)
@@ -197,7 +197,7 @@ func HelpS0(verbose bool) {
 		fmt.Println("  if var is inputted at the per series type level, it will prompt the user at per series entry level which is where this flag will be most useful")
 		fmt.Println("\n  NOTES:")
 		fmt.Println("        If -s0 is omitted, the default value is 'false'")
-		fmt.Println("        If no input follows -s0, the default value is 'true'")
+		fmt.Println("        If no value follows -s0, the default value is 'true'")
 
 	}
 }
@@ -249,7 +249,7 @@ func HelpNS(verbose bool) {
 func HelpLogs(verbose bool) {
 	fmt.Printf("%-60s%s", "  --log, -l",
 		"Prints the logs to the console\n")
-	fmt.Println("    args: <log-header> | none | no input")
+	fmt.Println("    args: <log-header> | none | no value")
 	if verbose {
 		fmt.Println("\n  examples: gorn -l root /path/to/root")
 		fmt.Println("            gorn -l info root /path/to/root")
@@ -263,7 +263,7 @@ func HelpLogs(verbose bool) {
 		fmt.Println("        : shows only fatal logs")
 		fmt.Println("    time: logs for timing processes; for performance purposes")
 		fmt.Println("        : shows time, info, warn, and fatal logs")
-		fmt.Println("\n  NOTE: if --logs is omitted no input follows --logs, the default value of 'info' will be the value")
+		fmt.Println("\n  NOTE: if --logs is omitted or no value follows --logs, the default value of 'info' will be the value")
 	}
 }
 
