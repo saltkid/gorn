@@ -84,15 +84,15 @@ Switches are flags that switch the behavior of **gorn** from its default behavio
 These are additional options that can be passed to the cli. For a more detailed explanation, see [this wiki page](https://github.com/saltkid/gorn/wiki/Usage#optional-flags)
 
 1. `--keep-ep-num | -ken`
-    - **values:** `var` or none
+    - **values:** `var` or no input
 2. `--starting-ep-num | -sen`
     - **values:** `<int> | var`
 3. `--has-season-0 | -s0`
-    - **values:** `var` or none
+    - **values:** `var` or no input
 4. `--options | -o`
-    - **values:** none
+    - **values:** no input
 5.  `--logs | -l`
-    - **values:** `<log-header>` or none
+    - **values:** `<log-header> | none` or no input
 6. `--naming-scheme | -ns`
     - **values:** `"<scheme>"| default | var`
 
