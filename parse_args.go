@@ -98,10 +98,11 @@ func TokenizeArgs(args []string) ([]Arg, error) {
 
 // Args is a list of arguments needed by gorn to properly rename media files
 type Args struct {
-	root    []string
-	series  []string
-	movies  []string
-	flags Flags
+	root      []string
+	series    []string
+	movies    []string
+	switchVal string
+	flags 	  Flags
 }
 
 // Flags are options for modifying the behavior of renaming files
@@ -197,6 +198,7 @@ func newArgs() Args {
 		root:   make([]string, 0),
 		series: make([]string, 0),
 		movies: make([]string, 0),
+		switchVal: "",
 		flags: Flags{
 			hasSeason0:    some[bool](false),
 			keepEpNums:    some[bool](false),
@@ -249,11 +251,11 @@ func (args *Args) Log() {
 	}
 }
 
-func ParseArgs(args []Arg) (Args, error) {
+func ParseArgs(args []Arg) (Args, Mode, error) {
 	defer timer("ParseArgs")()
 
 	if len(args) < 1 {
-		return Args{}, fmt.Errorf("not enough arguments: '%v'", args)
+		return Args{}, 0, fmt.Errorf("not enough arguments: '%v'", args)
 	}
 	isAssigned := map[string]bool{
 		"--options":         false,
@@ -268,32 +270,33 @@ func ParseArgs(args []Arg) (Args, error) {
 	for i, arg := range args {
 		if arg.name == "--help" || arg.name == "-h" {
 			if len(args) <= i+1 {
-				Help(arg.value)
-			} else if len(args) > i+1 {
-				Help(args[i+1].name)
+				parsedArgs.switchVal = arg.value
+			} else {
+				parsedArgs.switchVal = args[i+1].name
 			}
-			return Args{}, SafeErrorF("safe exit")
+			return parsedArgs, HELP, nil
 
 		} else if arg.name == "--version" || arg.name == "-v" {
-			Version(version)
-			if len(args) > i+1 {
+			if arg.value != "" {
+				gornLog(WARN, "There are no arguments for --version/-v. got:", arg.value)
+			} else if len(args) > i+1 {
 				gornLog(WARN, "There are no arguments for --version/-v. got:", args[i+1].name)
 			}
-			return Args{}, SafeErrorF("safe exit")
+			return parsedArgs, VERSION, nil
 
 		} else if IsValidCommand(arg.name) {
 			// no value after command
 			if arg.value == "" {
-				return Args{}, fmt.Errorf("missing dir path value for flag '%s'", arg)
+				return Args{}, 0, fmt.Errorf("missing dir path value for flag '%s'", arg)
 			}
 
 			dir, err := filepath.Abs(arg.value)
 			if err != nil {
-				return Args{}, err
+				return Args{}, 0, err
 			}
 			_, err = os.Stat(dir)
 			if os.IsNotExist(err) {
-				return Args{}, fmt.Errorf("'%s' is not a valid directory", dir)
+				return Args{}, 0, fmt.Errorf("'%s' is not a valid directory", dir)
 			}
 
 			switch arg.name {
@@ -307,7 +310,7 @@ func ParseArgs(args []Arg) (Args, error) {
 
 		} else if arg.name == "--has-season-0" || arg.name == "-s0" {
 			if parsedArgs.flags.hasSeason0.IsSome() && isAssigned["--has-season-0"] {
-				return Args{}, fmt.Errorf("only one --has-season-0 flag is allowed")
+				return Args{}, 0, fmt.Errorf("only one --has-season-0 flag is allowed")
 			}
 			// use default value
 			if arg.value == "" {
@@ -315,7 +318,7 @@ func ParseArgs(args []Arg) (Args, error) {
 				isAssigned["--has-season-0"] = true
 
 			} else if arg.value != "yes" && arg.value != "var" && arg.value != "no" && arg.value != "default" {
-				return Args{}, fmt.Errorf("invalid value '%s' for flag --has-season-0. Must be 'yes', 'no', 'var, or 'default", arg.value)
+				return Args{}, 0, fmt.Errorf("invalid value '%s' for flag --has-season-0. Must be 'yes', 'no', 'var, or 'default", arg.value)
 
 			} else {
 				switch arg.value {
@@ -331,7 +334,7 @@ func ParseArgs(args []Arg) (Args, error) {
 
 		} else if arg.name == "--keep-ep-nums" || arg.name == "-ken" {
 			if parsedArgs.flags.keepEpNums.IsSome() && isAssigned["--keep-ep-nums"] {
-				return Args{}, fmt.Errorf("only one --keep-ep-nums flag is allowed")
+				return Args{}, 0, fmt.Errorf("only one --keep-ep-nums flag is allowed")
 			}
 
 			// use default value
@@ -340,7 +343,7 @@ func ParseArgs(args []Arg) (Args, error) {
 				isAssigned["--keep-ep-nums"] = true
 
 			} else if arg.value != "yes" && arg.value != "var" && arg.value != "no" && arg.value != "default" {
-				return Args{}, fmt.Errorf("invalid value '%s' for --keep-ep-nums. Must be 'yes', 'no', 'var', or 'default", arg.value)
+				return Args{}, 0, fmt.Errorf("invalid value '%s' for --keep-ep-nums. Must be 'yes', 'no', 'var', or 'default", arg.value)
 
 			} else {
 				switch arg.value {
@@ -356,7 +359,7 @@ func ParseArgs(args []Arg) (Args, error) {
 
 		} else if arg.name == "--starting-ep-num" || arg.name == "-sen" {
 			if parsedArgs.flags.startingEpNum.IsSome() && isAssigned["--starting-ep-num"] {
-				return Args{}, fmt.Errorf("only one --starting-ep-num flag is allowed")
+				return Args{}, 0, fmt.Errorf("only one --starting-ep-num flag is allowed")
 			}
 
 			// use default value
@@ -365,7 +368,7 @@ func ParseArgs(args []Arg) (Args, error) {
 				isAssigned["--starting-ep-num"] = true
 
 			} else if value, err := strconv.Atoi(arg.value); err != nil && value < 1 && arg.value != "var" && arg.value != "default" {
-				return Args{}, fmt.Errorf("invalid value '%s' for --starting-ep-num. Must be a valid positive int or 'var", arg.value)
+				return Args{}, 0, fmt.Errorf("invalid value '%s' for --starting-ep-num. Must be a valid positive int or 'var", arg.value)
 
 			} else {
 				switch arg.value {
@@ -381,7 +384,7 @@ func ParseArgs(args []Arg) (Args, error) {
 
 		} else if arg.name == "--options" || arg.name == "-o" {
 			if isAssigned["--options"] {
-				return Args{}, fmt.Errorf("only one --options flag is allowed")
+				return Args{}, 0, fmt.Errorf("only one --options flag is allowed")
 			}
 			isAssigned["--options"] = true
 
@@ -400,15 +403,15 @@ func ParseArgs(args []Arg) (Args, error) {
 
 		} else if arg.name == "--naming-scheme" || arg.name == "-ns" {
 			if parsedArgs.flags.namingScheme.IsSome() && isAssigned["--naming-scheme"] {
-				return Args{}, fmt.Errorf("only one --naming-scheme flag is allowed")
+				return Args{}, 0, fmt.Errorf("only one --naming-scheme flag is allowed")
 			}
 			if arg.value == "" {
-				return Args{}, fmt.Errorf("missing value for --naming-scheme")
+				return Args{}, 0, fmt.Errorf("missing value for --naming-scheme")
 			}
 
 			err := ValidateNamingScheme(arg.value)
 			if err != nil && arg.value != "default" && arg.value != "var" {
-				return Args{}, fmt.Errorf("invalid value '%s' for --naming-scheme. Must be 'default', 'var', or a naming scheme enclosed in double quotes", arg.value)
+				return Args{}, 0, fmt.Errorf("invalid value '%s' for --naming-scheme. Must be 'default', 'var', or a naming scheme enclosed in double quotes", arg.value)
 
 			} else {
 				switch arg.value {
@@ -423,26 +426,26 @@ func ParseArgs(args []Arg) (Args, error) {
 			}
 		} else if arg.name == "--logs" || arg.name == "-l" {
 			if isAssigned["--logs"] {
-				return Args{}, fmt.Errorf("only one --logs flag is allowed")
+				return Args{}, 0, fmt.Errorf("only one --logs flag is allowed")
 			}
 			tmp, err := ToLogLevel(strings.ToLower(arg.value))
 			if err != nil {
-				return Args{}, err
+				return Args{}, 0, err
 			}
 			logLevel = tmp
 			isAssigned["--logs"] = true
 
 		} else {
-			return Args{}, fmt.Errorf("unknown flag: %s", arg.name)
+			return Args{}, 0, fmt.Errorf("unknown flag: %s", arg.name)
 		}
 	}
 
 	err := ValidateRoots(parsedArgs.root, parsedArgs.series, parsedArgs.movies)
 	if err != nil {
-		return Args{}, err
+		return Args{}, 0, err
 	}
 
-	return parsedArgs, nil
+	return parsedArgs, NORMAL, nil
 }
 
 // ValidateNamingScheme checks if a naming scheme is valid by:
