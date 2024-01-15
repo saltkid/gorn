@@ -3,7 +3,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -266,26 +265,6 @@ func ParentN(path string, n int) string {
 		path = filepath.Dir(path)
 	}
 	return filepath.Base(path)
-}
-
-// specifically for exiting safely when user passed these switches:
-//
-//	`--help, -h`
-//	`--version, -v`
-type SafeError struct {
-	safe error
-}
-
-// acts exactly like fmt.Errorf but returns a SafeError instead of error
-func SafeErrorF(s string, args ...interface{}) SafeError {
-	return SafeError{
-		safe: fmt.Errorf(s, args...),
-	}
-}
-
-// returns the underlying safe error as a string
-func (s SafeError) Error() string {
-	return s.safe.Error()
 }
 
 // Usage: put `defer timer("func_name")()` at the start of a function

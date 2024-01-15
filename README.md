@@ -84,17 +84,17 @@ Switches are flags that switch the behavior of **gorn** from its default behavio
 These are additional options that can be passed to the cli. For a more detailed explanation, see [this wiki page](https://github.com/saltkid/gorn/wiki/Usage#optional-flags)
 
 1. `--keep-ep-num | -ken`
-    - **values:** `yes | no | default | var`
+    - **values:** `var` or no value
 2. `--starting-ep-num | -sen`
-    - **values:** `<num> | default | var`
+    - **values:** `<int>`, `var`
 3. `--has-season-0 | -s0`
-    - **values:** `yes | no | default | var`
+    - **values:** `var` or no value
 4. `--options | -o`
-    - **values:** none
+    - **values:** no value
 5.  `--logs | -l`
-    - **values:** `all | none | <log-header>`
+    - **values:** `<log-header>`, `none` or no value
 6. `--naming-scheme | -ns`
-    - **values:** `"<scheme>"| default | var`
+    - **values:** `"<scheme>"`, `default`, `var`
 
 ### [*scheme*](https://github.com/saltkid/gorn/wiki/Usage#naming-scheme-apis)
 scheme can be composed of any character (as long as its a valid filename) and/or APIs enclosed in <> like:

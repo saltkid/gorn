@@ -10,6 +10,13 @@ import (
 
 var version string
 var logLevel LogLevel = INFO_LEVEL // default log level
+type Mode uint8
+const (
+	_ Mode = iota
+	NORMAL
+	HELP
+	VERSION
+)
 
 func main() {
 	defer timer("main")()
@@ -17,7 +24,7 @@ func main() {
 	// handling input of user
 	// errors can happen here and interrupt the process
 	if len(os.Args) < 2 {
-		WelcomeMsg(version)
+		WelcomeMsg()
 		return
 	}
 	rawArgs, err := TokenizeArgs(os.Args[1:])
@@ -25,36 +32,44 @@ func main() {
 		gornLog(FATAL, err)
 	}
 
-	args, err := ParseArgs(rawArgs)
+	args, mode, err := ParseArgs(rawArgs)
 	if err != nil {
-		// scuffed safe exit for --help and --version
-		if _, ok := err.(SafeError); !ok {
-			gornLog(FATAL, err)
-		}
-		return
+		gornLog(FATAL, err)
 	}
-	args.Log()
+	
+	if mode == NORMAL {
+		// renaming process
+		// there should be no errors in renaming process since:
+		//   - we already checked for errors in ParseArgs and TokenizeArgs
+		//   - we can safely skip renaming a file if an error does occur
+		args.Log()
 
-	// renaming process
-	// there should be no errors in renaming process since:
-	//   - we already checked for errors in ParseArgs and TokenizeArgs
-	//   - we can safely skip renaming a file if an error does occur
-	seriesEntries, movieEntries := FetchEntries(args.root, args.series, args.movies)
-	LogRawEntries(seriesEntries, movieEntries)
+		seriesEntries, movieEntries := FetchEntries(args.root, args.series, args.movies)
+		if len(seriesEntries) == 0 && args.flags.AnyAssigned() {
+			gornLog(WARN, "Flags were set, but no series entries were found. Flags modify the behavior of renaming series entries only. These won't affect movie entries.")
+		}
+		LogRawEntries(seriesEntries, movieEntries)
 
-	wg := new(sync.WaitGroup)
+		wg := new(sync.WaitGroup)
 
-	series := &Series{}
-	wg.Add(1)
-	go ProcessMedia(series, seriesEntries, args.options, wg)
+		series := &Series{}
+		wg.Add(1)
+		go ProcessMedia(series, seriesEntries, args.flags, wg)
 
-	movies := &Movies{}
-	wg.Add(1)
-	go ProcessMedia(movies, movieEntries, args.options, wg)
+		movies := &Movies{}
+		wg.Add(1)
+		go ProcessMedia(movies, movieEntries, args.flags, wg)
 
-	wg.Wait()
-	movies.LogEntries()
-	series.LogEntries()
+		wg.Wait()
+		movies.LogEntries()
+		series.LogEntries()
+
+	} else if mode == HELP {
+		Help(args.switchVal)
+	
+	} else if mode == VERSION {
+		Version()
+	}
 }
 
 // ProcessMedia first categorizes the entries by type, then renames them using the given flags.

@@ -98,10 +98,11 @@ func TokenizeArgs(args []string) ([]Arg, error) {
 
 // Args is a list of arguments needed by gorn to properly rename media files
 type Args struct {
-	root    []string
-	series  []string
-	movies  []string
-	options Flags
+	root      []string
+	series    []string
+	movies    []string
+	switchVal string
+	flags 	  Flags
 }
 
 // Flags are options for modifying the behavior of renaming files
@@ -110,6 +111,10 @@ type Flags struct {
 	startingEpNum Option[int]
 	hasSeason0    Option[bool]
 	namingScheme  Option[string]
+}
+// Returns true if any of the flags are assigned
+func (f *Flags) AnyAssigned() bool {
+	return f.keepEpNums.IsSome() || f.startingEpNum.IsSome() || f.hasSeason0.IsSome() || f.namingScheme.IsSome()
 }
 
 // For text color on log headers
@@ -175,7 +180,7 @@ func ToLogLevel(s string) (LogLevel, error) {
 		return TIME_ONLY, nil
 	case "warn":
 		return WARN_LEVEL, nil
-	case "info", "", "all":
+	case "info", "":
 		return INFO_LEVEL, nil
 	case "time":
 		return TIME_LEVEL, nil
@@ -193,7 +198,8 @@ func newArgs() Args {
 		root:   make([]string, 0),
 		series: make([]string, 0),
 		movies: make([]string, 0),
-		options: Flags{
+		switchVal: "",
+		flags: Flags{
 			hasSeason0:    some[bool](false),
 			keepEpNums:    some[bool](false),
 			startingEpNum: some[int](1),
@@ -223,19 +229,19 @@ func (args *Args) Log() {
 			gornLog(INFO, "\t", movie)
 		}
 	}
-	ken, err := args.options.keepEpNums.Get()
+	ken, err := args.flags.keepEpNums.Get()
 	if err == nil {
 		gornLog(INFO, "keep episode numbers: ", ken)
 	}
-	sen, err := args.options.startingEpNum.Get()
+	sen, err := args.flags.startingEpNum.Get()
 	if err == nil {
 		gornLog(INFO, "starting episode number: ", sen)
 	}
-	s0, err := args.options.hasSeason0.Get()
+	s0, err := args.flags.hasSeason0.Get()
 	if err == nil {
 		gornLog(INFO, "has season 0: ", s0)
 	}
-	ns, err := args.options.namingScheme.Get()
+	ns, err := args.flags.namingScheme.Get()
 	if err == nil {
 		gornLog(INFO, "naming scheme: ", ns)
 	}
@@ -245,11 +251,11 @@ func (args *Args) Log() {
 	}
 }
 
-func ParseArgs(args []Arg) (Args, error) {
+func ParseArgs(args []Arg) (Args, Mode, error) {
 	defer timer("ParseArgs")()
 
 	if len(args) < 1 {
-		return Args{}, fmt.Errorf("not enough arguments: '%v'", args)
+		return Args{}, 0, fmt.Errorf("not enough arguments: '%v'", args)
 	}
 	isAssigned := map[string]bool{
 		"--options":         false,
@@ -264,32 +270,33 @@ func ParseArgs(args []Arg) (Args, error) {
 	for i, arg := range args {
 		if arg.name == "--help" || arg.name == "-h" {
 			if len(args) <= i+1 {
-				Help(arg.value)
-			} else if len(args) > i+1 {
-				Help(args[i+1].name)
+				parsedArgs.switchVal = arg.value
+			} else {
+				parsedArgs.switchVal = args[i+1].name
 			}
-			return Args{}, SafeErrorF("safe exit")
+			return parsedArgs, HELP, nil
 
 		} else if arg.name == "--version" || arg.name == "-v" {
-			Version(version)
-			if len(args) > i+1 {
+			if arg.value != "" {
+				gornLog(WARN, "There are no arguments for --version/-v. got:", arg.value)
+			} else if len(args) > i+1 {
 				gornLog(WARN, "There are no arguments for --version/-v. got:", args[i+1].name)
 			}
-			return Args{}, SafeErrorF("safe exit")
+			return parsedArgs, VERSION, nil
 
 		} else if IsValidCommand(arg.name) {
 			// no value after command
 			if arg.value == "" {
-				return Args{}, fmt.Errorf("missing dir path value for flag '%s'", arg)
+				return Args{}, 0, fmt.Errorf("missing dir path value for flag '%s'", arg)
 			}
 
 			dir, err := filepath.Abs(arg.value)
 			if err != nil {
-				return Args{}, err
+				return Args{}, 0, err
 			}
 			_, err = os.Stat(dir)
 			if os.IsNotExist(err) {
-				return Args{}, fmt.Errorf("'%s' is not a valid directory", dir)
+				return Args{}, 0, fmt.Errorf("'%s' is not a valid directory", dir)
 			}
 
 			switch arg.name {
@@ -302,143 +309,116 @@ func ParseArgs(args []Arg) (Args, error) {
 			}
 
 		} else if arg.name == "--has-season-0" || arg.name == "-s0" {
-			if parsedArgs.options.hasSeason0.IsSome() && isAssigned["--has-season-0"] {
-				return Args{}, fmt.Errorf("only one --has-season-0 flag is allowed")
+			if parsedArgs.flags.hasSeason0.IsSome() && isAssigned["--has-season-0"] {
+				return Args{}, 0, fmt.Errorf("only one --has-season-0 flag is allowed")
 			}
-			// use default value
-			if arg.value == "" {
-				parsedArgs.options.hasSeason0 = some[bool](true)
+			switch arg.value {
+			case "":
+				parsedArgs.flags.hasSeason0 = some[bool](true)
 				isAssigned["--has-season-0"] = true
-
-			} else if arg.value != "yes" && arg.value != "var" && arg.value != "no" && arg.value != "default" {
-				return Args{}, fmt.Errorf("invalid value '%s' for flag --has-season-0. Must be 'yes', 'no', 'var, or 'default", arg.value)
-
-			} else {
-				switch arg.value {
-				case "yes":
-					parsedArgs.options.hasSeason0 = some[bool](true)
-				case "no", "default":
-					parsedArgs.options.hasSeason0 = some[bool](false)
-				case "var":
-					parsedArgs.options.hasSeason0 = none[bool]()
-				}
+			case "var":
+				parsedArgs.flags.hasSeason0 = none[bool]()
 				isAssigned["--has-season-0"] = true
+			default:
+				return Args{}, 0, fmt.Errorf("invalid value '%s' for flag --has-season-0. Must be 'var, or no input", arg.value)
 			}
 
 		} else if arg.name == "--keep-ep-nums" || arg.name == "-ken" {
-			if parsedArgs.options.keepEpNums.IsSome() && isAssigned["--keep-ep-nums"] {
-				return Args{}, fmt.Errorf("only one --keep-ep-nums flag is allowed")
+			if parsedArgs.flags.keepEpNums.IsSome() && isAssigned["--keep-ep-nums"] {
+				return Args{}, 0, fmt.Errorf("only one --keep-ep-nums flag is allowed")
 			}
-
-			// use default value
-			if arg.value == "" {
-				parsedArgs.options.keepEpNums = some[bool](true)
+			switch arg.value {
+			case "":
+				parsedArgs.flags.keepEpNums = some[bool](true)
 				isAssigned["--keep-ep-nums"] = true
-
-			} else if arg.value != "yes" && arg.value != "var" && arg.value != "no" && arg.value != "default" {
-				return Args{}, fmt.Errorf("invalid value '%s' for --keep-ep-nums. Must be 'yes', 'no', 'var', or 'default", arg.value)
-
-			} else {
-				switch arg.value {
-				case "yes":
-					parsedArgs.options.keepEpNums = some[bool](true)
-				case "no", "default":
-					parsedArgs.options.keepEpNums = some[bool](false)
-				case "var":
-					parsedArgs.options.keepEpNums = none[bool]()
-				}
+			case "var":
+				parsedArgs.flags.keepEpNums = none[bool]()
 				isAssigned["--keep-ep-nums"] = true
+			default:
+				return Args{}, 0, fmt.Errorf("invalid value '%s' for --keep-ep-nums. Must be 'var', or no input", arg.value)
 			}
 
 		} else if arg.name == "--starting-ep-num" || arg.name == "-sen" {
-			if parsedArgs.options.startingEpNum.IsSome() && isAssigned["--starting-ep-num"] {
-				return Args{}, fmt.Errorf("only one --starting-ep-num flag is allowed")
+			if parsedArgs.flags.startingEpNum.IsSome() && isAssigned["--starting-ep-num"] {
+				return Args{}, 0, fmt.Errorf("only one --starting-ep-num flag is allowed")
 			}
-
-			// use default value
-			if arg.value == "" {
-				parsedArgs.options.startingEpNum = some[int](1)
+			switch arg.value {
+			case "var":
+				parsedArgs.flags.startingEpNum = none[int]()
 				isAssigned["--starting-ep-num"] = true
-
-			} else if value, err := strconv.Atoi(arg.value); err != nil && value < 1 && arg.value != "var" && arg.value != "default" {
-				return Args{}, fmt.Errorf("invalid value '%s' for --starting-ep-num. Must be a valid positive int or 'var", arg.value)
-
-			} else {
-				switch arg.value {
-				case "var":
-					parsedArgs.options.startingEpNum = none[int]()
-				case "default":
-					parsedArgs.options.startingEpNum = some[int](1)
-				default:
-					parsedArgs.options.startingEpNum = some[int](value)
+			default:
+				int_val, err := strconv.Atoi(arg.value)
+				if err != nil {
+					return Args{}, 0, fmt.Errorf("invalid value '%s' for --starting-ep-num. Must be a valid positive int, or 'var'", arg.value)	
 				}
+				parsedArgs.flags.startingEpNum = some[int](int_val)
 				isAssigned["--starting-ep-num"] = true
 			}
 
 		} else if arg.name == "--options" || arg.name == "-o" {
 			if isAssigned["--options"] {
-				return Args{}, fmt.Errorf("only one --options flag is allowed")
+				return Args{}, 0, fmt.Errorf("only one --options flag is allowed")
 			}
 			isAssigned["--options"] = true
 
 			if !isAssigned["--keep-ep-nums"] {
-				parsedArgs.options.keepEpNums = none[bool]()
+				parsedArgs.flags.keepEpNums = none[bool]()
 			}
 			if !isAssigned["--has-season-0"] {
-				parsedArgs.options.hasSeason0 = none[bool]()
+				parsedArgs.flags.hasSeason0 = none[bool]()
 			}
 			if !isAssigned["--starting-ep-num"] {
-				parsedArgs.options.startingEpNum = none[int]()
+				parsedArgs.flags.startingEpNum = none[int]()
 			}
 			if !isAssigned["--naming-scheme"] {
-				parsedArgs.options.namingScheme = none[string]()
+				parsedArgs.flags.namingScheme = none[string]()
 			}
 
 		} else if arg.name == "--naming-scheme" || arg.name == "-ns" {
-			if parsedArgs.options.namingScheme.IsSome() && isAssigned["--naming-scheme"] {
-				return Args{}, fmt.Errorf("only one --naming-scheme flag is allowed")
+			if parsedArgs.flags.namingScheme.IsSome() && isAssigned["--naming-scheme"] {
+				return Args{}, 0, fmt.Errorf("only one --naming-scheme flag is allowed")
 			}
 			if arg.value == "" {
-				return Args{}, fmt.Errorf("missing value for --naming-scheme")
+				return Args{}, 0, fmt.Errorf("missing value for --naming-scheme")
 			}
 
 			err := ValidateNamingScheme(arg.value)
 			if err != nil && arg.value != "default" && arg.value != "var" {
-				return Args{}, fmt.Errorf("invalid value '%s' for --naming-scheme. Must be 'default', 'var', or a naming scheme enclosed in double quotes", arg.value)
+				return Args{}, 0, fmt.Errorf("invalid value '%s' for --naming-scheme. Must be 'default', 'var', or a naming scheme enclosed in double quotes", arg.value)
 
 			} else {
 				switch arg.value {
 				case "default":
-					parsedArgs.options.namingScheme = some[string]("default")
+					parsedArgs.flags.namingScheme = some[string]("default")
 				case "var":
-					parsedArgs.options.namingScheme = none[string]()
+					parsedArgs.flags.namingScheme = none[string]()
 				default:
 					namingScheme := strings.Trim(arg.value, `"`)
-					parsedArgs.options.namingScheme = some[string](namingScheme)
+					parsedArgs.flags.namingScheme = some[string](namingScheme)
 				}
 			}
 		} else if arg.name == "--logs" || arg.name == "-l" {
 			if isAssigned["--logs"] {
-				return Args{}, fmt.Errorf("only one --logs flag is allowed")
+				return Args{}, 0, fmt.Errorf("only one --logs flag is allowed")
 			}
 			tmp, err := ToLogLevel(strings.ToLower(arg.value))
 			if err != nil {
-				return Args{}, err
+				return Args{}, 0, err
 			}
 			logLevel = tmp
 			isAssigned["--logs"] = true
 
 		} else {
-			return Args{}, fmt.Errorf("unknown flag: %s", arg.name)
+			return Args{}, 0, fmt.Errorf("unknown flag: %s", arg.name)
 		}
 	}
 
 	err := ValidateRoots(parsedArgs.root, parsedArgs.series, parsedArgs.movies)
 	if err != nil {
-		return Args{}, err
+		return Args{}, 0, err
 	}
 
-	return parsedArgs, nil
+	return parsedArgs, NORMAL, nil
 }
 
 // ValidateNamingScheme checks if a naming scheme is valid by:
@@ -586,90 +566,28 @@ func TokenizeNamingScheme(s string) ([]string, error) {
 //   - each root/source directory is not a subdirectory of another root/source directory
 //   - each root/source directory is not a duplicate of another root/source directory
 func ValidateRoots(root []string, series []string, movies []string) error {
+	combinedDirs := append(root, series...)
+	combinedDirs = append(combinedDirs, movies...)
+
 	// must at least have one of any
-	if len(root) == 0 && len(series) == 0 && len(movies) == 0 {
-		return fmt.Errorf("must specify at least one root directory")
+	if len(combinedDirs) == 0 {
+		return fmt.Errorf("must specify at least one root directory or one series/movies source directory")
 	}
 
-	// check if exists
-	for _, r := range root {
-		if _, err := os.Stat(r); err != nil {
-			return fmt.Errorf("root directory %s does not exist", r)
-		}
-	}
-	for _, r := range series {
-		if _, err := os.Stat(r); err != nil {
-			return fmt.Errorf("series directory %s does not exist", r)
-		}
-	}
-	for _, r := range movies {
-		if _, err := os.Stat(r); err != nil {
-			return fmt.Errorf("movies directory %s does not exist", r)
-		}
-	}
-
-	// check if any of the series and movies directories are subdirectories of a root directory OR vice versa
-	// and in turn checking if any of the series and movies directories are duplicates of root directories
-	for _, r := range root {
-		for _, s := range series {
-			if strings.EqualFold(filepath.Dir(s), r) {
-				return fmt.Errorf("series directory %s is a subdirectory of root directory %s", s, r)
-			} else if strings.EqualFold(filepath.Dir(r), s) {
-				return fmt.Errorf("root directory %s is a subdirectory of series directory %s", r, s)
-			} else if strings.EqualFold(s, r) {
-				return fmt.Errorf("series directory %s is a duplicate of root directory %s", s, r)
-			}
-		}
-		for _, m := range movies {
-			if strings.EqualFold(filepath.Dir(m), r) {
-				return fmt.Errorf("movies directory %s is a subdirectory of root directory %s", m, r)
-			} else if strings.EqualFold(filepath.Dir(r), m) {
-				return fmt.Errorf("root directory %s is a subdirectory of movies directory %s", r, m)
-			} else if strings.EqualFold(m, r) {
-				return fmt.Errorf("movies directory %s is a duplicate of root directory %s", m, r)
+	for i, dir := range combinedDirs {
+		// check if any directory is duplicated, or is a subdirectory of another directory
+		for _, dir2 := range combinedDirs[i+1:] {
+			if strings.EqualFold(dir, dir2) {
+				return fmt.Errorf("directory %s is a duplicate of directory %s", dir, dir2)
+			
+			} else if strings.EqualFold(filepath.Dir(dir), dir2) {
+				return fmt.Errorf("directory %s is a subdirectory of directory %s", dir, dir2)
+			
+			} else if strings.EqualFold(dir, filepath.Dir(dir2)) {
+				return fmt.Errorf("directory %s is a subdirectory of directory %s", dir, dir2)
 			}
 		}
 	}
 
-	// check if any of the series and movies directories are subdirectories of each other
-	// and in turn checking if any of the series and movies directories are duplicates of each other
-	for _, s := range series {
-		for _, m := range movies {
-			if strings.EqualFold(filepath.Dir(m), s) {
-				return fmt.Errorf("series directory %s is a subdirectory of movies directory %s", s, m)
-
-			} else if strings.EqualFold(filepath.Dir(s), m) {
-				return fmt.Errorf("movies directory %s is a subdirectory of series directory %s", m, s)
-
-			} else if strings.EqualFold(s, m) {
-				return fmt.Errorf("series directory %s is a duplicate of movies directory %s", s, m)
-			}
-		}
-	}
-
-	// check if there are any duplicates in each individually
-	for i, r := range root {
-		for _, r1 := range root[i+1:] {
-			if strings.EqualFold(r, r1) {
-				return fmt.Errorf("there are multiple root directories that share the same path: %s", r)
-			}
-		}
-	}
-	for i, s := range series {
-		for _, s1 := range series[i+1:] {
-			if strings.EqualFold(s, s1) {
-				return fmt.Errorf("there are multiple series directories that share the same path: %s", s)
-			}
-		}
-	}
-	for i, m := range movies {
-		for _, m1 := range movies[i+1:] {
-			if strings.EqualFold(m, m1) {
-				return fmt.Errorf("there are multiple movies directories that share the same path: %s", m)
-			}
-		}
-	}
-
-	// all done
 	return nil
 }
