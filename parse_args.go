@@ -180,7 +180,7 @@ func ToLogLevel(s string) (LogLevel, error) {
 		return TIME_ONLY, nil
 	case "warn":
 		return WARN_LEVEL, nil
-	case "info", "", "all":
+	case "info", "":
 		return INFO_LEVEL, nil
 	case "time":
 		return TIME_LEVEL, nil
@@ -347,7 +347,12 @@ func ParseArgs(args []Arg) (Args, Mode, error) {
 				parsedArgs.flags.startingEpNum = none[int]()
 				isAssigned["--starting-ep-num"] = true
 			default:
-				return Args{}, 0, fmt.Errorf("invalid value '%s' for --starting-ep-num. Must be a valid positive int, or 'var'", arg.value)
+				int_val, err := strconv.Atoi(arg.value)
+				if err != nil {
+					return Args{}, 0, fmt.Errorf("invalid value '%s' for --starting-ep-num. Must be a valid positive int, or 'var'", arg.value)	
+				}
+				parsedArgs.flags.startingEpNum = some[int](int_val)
+				isAssigned["--starting-ep-num"] = true
 			}
 
 		} else if arg.name == "--options" || arg.name == "-o" {
@@ -578,8 +583,8 @@ func ValidateRoots(root []string, series []string, movies []string) error {
 			} else if strings.EqualFold(filepath.Dir(dir), dir2) {
 				return fmt.Errorf("directory %s is a subdirectory of directory %s", dir, dir2)
 			
-			} else if strings.EqualFold(dir2, filepath.Dir(dir)) {
-				return fmt.Errorf("directory %s is a subdirectory of directory %s", dir2, dir)
+			} else if strings.EqualFold(dir, filepath.Dir(dir2)) {
+				return fmt.Errorf("directory %s is a subdirectory of directory %s", dir, dir2)
 			}
 		}
 	}
